@@ -3,11 +3,11 @@ import { ReactNode } from 'react';
 
 import Footer from 'src/components/Footer';
 
-interface IWalletContainerWrapperProps {
+interface IContainerWrapperProps {
 	children?: ReactNode;
 }
 
-export default ({ children }: IWalletContainerWrapperProps) => {
+export default ({ children }: IContainerWrapperProps) => {
 	return (
 		<>
 			<Container sx={{ mt: 3, minHeight: '1024px' }} maxWidth="xl">

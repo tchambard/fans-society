@@ -1,6 +1,8 @@
 import { ReactNode } from 'react';
 import HomeIcon from '@mui/icons-material/Home';
 import ArtTrackIcon from '@mui/icons-material/ArtTrack';
+import TokenIcon from '@mui/icons-material/Token';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 export interface IMenuItem {
 	link?: string;
@@ -28,6 +30,16 @@ const menuItems: IMenuItems[] = [
 				name: 'Projects',
 				link: '/projects',
 				icon: ArtTrackIcon,
+			},
+			{
+				name: 'Tokens',
+				link: '/tokens',
+				icon: TokenIcon,
+			},
+			{
+				name: 'Dashboard',
+				link: '/dashboard',
+				icon: DashboardIcon,
 			},
 		],
 	},

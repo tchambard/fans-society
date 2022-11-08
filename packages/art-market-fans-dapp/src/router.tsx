@@ -6,7 +6,7 @@ import { RouteObject } from 'react-router';
 import BaseLayout from './layouts/BaseLayout';
 import SuspenseLoader from './components/SuspenseLoader';
 import SidebarLayout from './layouts/SidebarLayout';
-import ProjectWrapper from './content/project/components/ProjectWrapper';
+import ContainerWrapper from './components/ContainerWrapper';
 
 const Loader = (Component) => (props) =>
 	(
@@ -21,6 +21,14 @@ const ProjectHome = Loader(
 	lazy(() => import('src/content/project/components/ProjectHome')),
 );
 
+const TokenHome = Loader(
+	lazy(() => import('src/content/token/components/TokenHome')),
+);
+
+const DashboardHome = Loader(
+	lazy(() => import('src/content/dashboard/components/DashboardHome')),
+);
+
 const Status404 = Loader(lazy(() => import('src/content/not-found')));
 
 export class Routes {
@@ -28,6 +36,8 @@ export class Routes {
 	public static HOME = `/home`;
 
 	public static PROJECT_LIST = `/projects`;
+	public static TOKEN_LIST = `/tokens`;
+	public static DASHBOARD = `/dashboard`;
 }
 
 export function buildRoute(route: string, params?: any) {
@@ -72,9 +82,37 @@ export const routes: RouteObject[] = [
 			{
 				path: Routes.PROJECT_LIST,
 				element: (
-					<ProjectWrapper>
+					<ContainerWrapper>
 						<ProjectHome />
-					</ProjectWrapper>
+					</ContainerWrapper>
+				),
+			},
+		],
+	},
+	{
+		path: 'tokens',
+		element: <SidebarLayout />,
+		children: [
+			{
+				path: Routes.TOKEN_LIST,
+				element: (
+					<ContainerWrapper>
+						<TokenHome />
+					</ContainerWrapper>
+				),
+			},
+		],
+	},
+	{
+		path: 'dashboard',
+		element: <SidebarLayout />,
+		children: [
+			{
+				path: Routes.DASHBOARD,
+				element: (
+					<ContainerWrapper>
+						<DashboardHome />
+					</ContainerWrapper>
 				),
 			},
 		],

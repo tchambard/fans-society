@@ -1,4 +1,3 @@
-import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
@@ -17,21 +16,22 @@ export default () => {
 			<Helmet>
 				<title>Welcome to Art Market Fans</title>
 			</Helmet>
-			<Container sx={{ mt: 3, minHeight: '1024px' }} maxWidth="xl">
+			<Container sx={{ mt: 5, minHeight: '1024px' }} maxWidth="xl">
 				<Grid
 					container
-					spacing={{ xs: 2, md: 3 }}
-					columns={{ xs: 4, sm: 8, md: 12 }}
+					spacing={3}
+					justifyContent={'flex-end'}
+					alignItems={'center'}
 				>
-					<Grid item xs={3}>
-						<Card sx={{ maxWidth: 345 }}>
+					<Grid item xs={12} md={4}>
+						<Card sx={{ maxWidth: 400 }}>
 							<Link to={Routes.PROJECT_LIST}>
 								<CardActionArea>
 									<CardMedia
 										component="img"
-										height="140"
-										image="/static/images/cards/eth-voting-240.jpeg"
-										alt="ethereum voting"
+										height="400"
+										image="/static/images/cards/crowdfunding.jpg"
+										alt="crowdfunding"
 									/>
 									<CardContent>
 										<Typography gutterBottom variant="h5" component="div">
@@ -39,6 +39,50 @@ export default () => {
 										</Typography>
 										<Typography variant="body2" color="text.secondary">
 											Entertainment projects
+										</Typography>
+									</CardContent>
+								</CardActionArea>
+							</Link>
+						</Card>
+					</Grid>
+					<Grid item xs={12} md={4}>
+						<Card sx={{ maxWidth: 400 }}>
+							<Link to={Routes.PROJECT_LIST}>
+								<CardActionArea>
+									<CardMedia
+										component="img"
+										height="400"
+										image="/static/images/cards/tokens.jpg"
+										alt="tokens"
+									/>
+									<CardContent>
+										<Typography gutterBottom variant="h5" component="div">
+											Tokens
+										</Typography>
+										<Typography variant="body2" color="text.secondary">
+											Projects tokens exchange
+										</Typography>
+									</CardContent>
+								</CardActionArea>
+							</Link>
+						</Card>
+					</Grid>
+					<Grid item xs={12} md={4}>
+						<Card sx={{ maxWidth: 400 }}>
+							<Link to={Routes.PROJECT_LIST}>
+								<CardActionArea>
+									<CardMedia
+										component="img"
+										height="400"
+										image="/static/images/cards/dashboard.jpg"
+										alt="dashboard"
+									/>
+									<CardContent>
+										<Typography gutterBottom variant="h5" component="div">
+											Dashboard
+										</Typography>
+										<Typography variant="body2" color="text.secondary">
+											My projects
 										</Typography>
 									</CardContent>
 								</CardActionArea>

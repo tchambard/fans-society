@@ -49,7 +49,7 @@ const EthIcon = styled('img')(
 function Logo() {
 	return (
 		<LogoWrapper to="/">
-			<EthIcon src={'/ETH-icon-64.png'} alt={''} />
+			<EthIcon src={'/static//images/tickets-64.png'} alt={''} />
 			<Hidden smDown>
 				<LogoTextWrapper>
 					<Tooltip title="Version 1.0" arrow placement="right">

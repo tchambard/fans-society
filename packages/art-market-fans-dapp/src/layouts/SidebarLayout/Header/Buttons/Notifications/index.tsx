@@ -1,11 +1,9 @@
 import { useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 import * as _ from 'lodash';
 import {
 	alpha,
 	Badge,
 	Box,
-	Divider,
 	IconButton,
 	Popover,
 	Tooltip,
@@ -13,8 +11,6 @@ import {
 	styled,
 } from '@mui/material';
 import NotificationsActiveTwoToneIcon from '@mui/icons-material/NotificationsActiveTwoTone';
-
-import NotificationList from '../../../../../content/home/components/Home';
 
 const NotificationsBadge = styled(Badge)(
 	({ theme }) => `  
@@ -91,8 +87,6 @@ function HeaderNotifications() {
 				>
 					<Typography variant={'h5'}>Notifications</Typography>
 				</Box>
-				<Divider />
-				<NotificationList />
 			</Popover>
 		</>
 	);

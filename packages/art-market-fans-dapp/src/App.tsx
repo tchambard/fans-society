@@ -10,20 +10,13 @@ import { RootState } from 'state-types';
 import { routes } from './router';
 import ThemeProvider from './theme/ThemeProvider';
 import { useNetwork } from './eth-network/helpers';
-import SuspenseLoader from './components/SuspenseLoader';
 
 export default () => {
-	const { account, networkId } = useSelector(
-		(state: RootState) => state.ethNetwork,
-	);
+	const { account } = useSelector((state: RootState) => state.ethNetwork);
 
 	useNetwork(account);
 
 	const content = useRoutes(routes);
-
-	if (!networkId) {
-		return <SuspenseLoader />;
-	}
 
 	return (
 		<>

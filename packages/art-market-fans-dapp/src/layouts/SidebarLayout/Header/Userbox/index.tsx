@@ -2,18 +2,16 @@ import { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import {
-	Avatar,
 	Box,
 	Button,
-	Divider,
+	Chip,
+	Grid,
 	Hidden,
-	lighten,
 	Popover,
 	Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ExpandMoreTwoToneIcon from '@mui/icons-material/ExpandMoreTwoTone';
-import LockOpenTwoToneIcon from '@mui/icons-material/LockOpenTwoTone';
 
 import { RootState } from 'state-types';
 
@@ -48,16 +46,12 @@ const UserBoxLabel = styled(Typography)(
 `,
 );
 
-const UserBoxDescription = styled(Typography)(
-	({ theme }) => `
-        color: ${lighten(theme.palette.secondary.main, 0.5)}
-`,
-);
-
 function HeaderUserbox() {
 	const ref = useRef<any>(null);
 	const [isOpen, setOpen] = useState<boolean>(false);
-	const { account } = useSelector((state: RootState) => state.ethNetwork);
+	const { account, networkAlias } = useSelector(
+		(state: RootState) => state.ethNetwork,
+	);
 
 	const handleOpen = (): void => {
 		setOpen(true);
@@ -96,27 +90,33 @@ function HeaderUserbox() {
 					horizontal: 'right',
 				}}
 			>
-				<MenuUserBox sx={{ minWidth: 210 }} display="flex">
-					<AddressAvatar address={account} />
+				<MenuUserBox sx={{ minWidth: 210 }} display={'flex'}>
 					<Hidden mdDown>
-						<UserBoxText>
-							<UserBoxLabel variant="body1">{account}</UserBoxLabel>
-						</UserBoxText>
+						<Grid
+							container
+							display={'flex'}
+							direction={'column'}
+							justifyContent={'center'}
+						>
+							<Grid container justifyContent={'flex-end'} alignItems={'center'}>
+								<AddressAvatar address={account} size={24} />
+								<UserBoxText>
+									<UserBoxLabel variant={'body1'}>{account}</UserBoxLabel>
+								</UserBoxText>
+							</Grid>
+							<UserBoxText>
+								<Grid container justifyContent={'center'} alignItems={'center'}>
+									<Chip
+										label={networkAlias}
+										color={'info'}
+										size={'medium'}
+										variant={'outlined'}
+									/>
+								</Grid>
+							</UserBoxText>
+						</Grid>
 					</Hidden>
 				</MenuUserBox>
-				<Divider sx={{ mb: 0 }} />
-				<Box sx={{ m: 1 }}>
-					<Button
-						color="primary"
-						fullWidth
-						onClick={() => {
-							//window.auth.logout();
-						}}
-					>
-						<LockOpenTwoToneIcon sx={{ mr: 1 }} />
-						Sign out
-					</Button>
-				</Box>
 			</Popover>
 		</>
 	);
