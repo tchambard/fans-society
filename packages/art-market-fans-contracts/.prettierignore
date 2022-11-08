@@ -1,0 +1,6 @@
+artifacts
+cache
+deployments
+coverage
+types
+node_modules

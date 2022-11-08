@@ -1,0 +1,9 @@
+package-lock.json
+yarn.lock
+.npmignore
+.gitignore
+.history
+tsconfig.json
+/node_modules
+/resources
+/resources

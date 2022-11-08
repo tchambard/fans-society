@@ -1,0 +1,14 @@
+{
+    "tslint.configFile": "tslint.json",
+    "tslint.jsEnable": false,
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 160,
+    "editor.formatOnSave": true,
+    "prettier.documentSelectors": [
+        "*.ts",
+        "*.tsx"
+    ],
+    "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+    "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" }
+}

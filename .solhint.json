@@ -1,0 +1,7 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "quotes": ["warn", "single"],
+    "compiler-version": "^0.8.17"
+  }
+}
