@@ -8,13 +8,13 @@ export default () => {
 	return (
 		<>
 			<Helmet>
-				<title>Art Market Fans - Projects tokens exchange</title>
+				<title>Fans Society - Projects dashboard</title>
 			</Helmet>
 			<PageTitleWrapper>
 				<Grid container justifyContent={'space-between'} alignItems={'center'}>
 					<Grid item>
 						<Typography variant={'h3'} component={'h3'} gutterBottom>
-							Projects tokens exchange coming soon !!!
+							Projects dashboard coming soon !!!
 						</Typography>
 					</Grid>
 				</Grid>

@@ -1,7 +1,7 @@
 {
-	"name": "art-market-fans-dapp",
+	"name": "fans-society-dapp",
 	"version": "1.0.0",
-	"title": "Art Market Fans decentralized application",
+	"title": "Fans Society decentralized application",
 	"dependencies": {
 		"-": "^0.0.1",
 		"@emotion/react": "^11.8.2",

@@ -1,5 +1,5 @@
 {
-  "name": "art-market-fans",
+  "name": "fans-society",
   "version": "1.0.0",
   "scripts": {
     "hardhat-start": "hardhat node",

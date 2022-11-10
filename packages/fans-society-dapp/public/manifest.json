@@ -4,7 +4,7 @@
 	"display": "standalone",
 	"start_url": ".",
 	"short_name": "AMF",
-	"name": "Art Market Fans",
+	"name": "Fans Society",
 	"icons": [
 		{
 			"src": "/static/images/tickets-64.png",

@@ -20,9 +20,7 @@ function Footer() {
 					justifyContent={'space-between'}
 				>
 					<Box>
-						<Typography variant={'subtitle1'}>
-							&copy; 2022 - Art Market Fans
-						</Typography>
+						<Typography variant={'subtitle1'}>&copy; 2022 - Fans Society</Typography>
 					</Box>
 				</Box>
 			</Container>

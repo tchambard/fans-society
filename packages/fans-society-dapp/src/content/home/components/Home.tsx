@@ -14,7 +14,7 @@ export default () => {
 	return (
 		<>
 			<Helmet>
-				<title>Welcome to Art Market Fans</title>
+				<title>Welcome to Fans Society</title>
 			</Helmet>
 			<Container sx={{ mt: 5, minHeight: '1024px' }} maxWidth="xl">
 				<Grid

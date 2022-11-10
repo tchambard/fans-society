@@ -55,7 +55,7 @@ function Logo() {
 					<Tooltip title="Version 1.0" arrow placement="right">
 						<VersionBadge>1.0</VersionBadge>
 					</Tooltip>
-					<LogoText>Art Market Fans</LogoText>
+					<LogoText>Fans Society</LogoText>
 				</LogoTextWrapper>
 			</Hidden>
 		</LogoWrapper>
