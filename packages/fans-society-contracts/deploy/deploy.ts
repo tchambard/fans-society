@@ -7,10 +7,47 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	const [deployer] = await getUnnamedAccounts();
 
-	await deploy('Voting', {
+	let wethTokenAddress: string;
+	if (hre.network.name === 'localhost') {
+		wethTokenAddress = (
+			await deploy('WETHToken', {
+				from: deployer,
+				log: true,
+				autoMine: true,
+			})
+		).address;
+	} else {
+		// TODO
+		wethTokenAddress = '';
+	}
+
+	const { address: projectTokenFactoryAddress } = await deploy(
+		'ProjectTokenFactory',
+		{
+			from: deployer,
+			log: true,
+			autoMine: true,
+		},
+	);
+
+	const { address: tokensPoolFactoryAddress } = await deploy(
+		'TokensPoolFactory',
+		{
+			from: deployer,
+			log: true,
+			autoMine: true,
+		},
+	);
+
+	await deploy('FansSociety', {
 		from: deployer,
 		log: true,
-		autoMine: true, // speed up deployment on local network, no effect on live networks
+		autoMine: true,
+		args: [
+			wethTokenAddress,
+			projectTokenFactoryAddress,
+			tokensPoolFactoryAddress,
+		],
 	});
 };
 export default func;
