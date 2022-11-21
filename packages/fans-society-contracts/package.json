@@ -13,7 +13,8 @@
 		"deploy-goerli": "yarn g:hardhat-deploy-goerli"
 	},
 	"devDependencies": {
-		"@openzeppelin/contracts": "^4.7.3"
+		"@openzeppelin/contracts": "^4.7.3",
+		"@openzeppelin/contracts-upgradeable": "^4.8.0"
 	},
 	"author": "teddy.chambard@gmail.com",
 	"license": "MIT"

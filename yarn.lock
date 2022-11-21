@@ -3819,6 +3819,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openzeppelin/contracts-upgradeable@npm:^4.8.0":
+  version: 4.8.0
+  resolution: "@openzeppelin/contracts-upgradeable@npm:4.8.0"
+  checksum: c39f3a719830c068d0ae413a8beee4072fa19f777b55bf6155fe21023414eab0633a641318845ac50929837b71848de1efbd00d4c181ddd6d8b735ceb0a82070
+  languageName: node
+  linkType: hard
+
 "@openzeppelin/contracts@npm:^4.7.3":
   version: 4.7.3
   resolution: "@openzeppelin/contracts@npm:4.7.3"
@@ -11016,6 +11023,7 @@ __metadata:
   resolution: "fans-society-contracts@workspace:packages/fans-society-contracts"
   dependencies:
     "@openzeppelin/contracts": ^4.7.3
+    "@openzeppelin/contracts-upgradeable": ^4.8.0
   languageName: unknown
   linkType: soft
 
