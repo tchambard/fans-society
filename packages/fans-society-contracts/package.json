@@ -9,11 +9,12 @@
 		"test": "yarn g:hardhat-test",
 		"coverage": "yarn g:hardhat-coverage",
 		"migrate": "yarn g:hardhat-migrate",
-		"deploy-localhost": "yarn g:hardhat-deploy-localhost",
-		"deploy-goerli": "yarn g:hardhat-deploy-goerli"
+		"deploy:localhost": "yarn g:hardhat-deploy:localhost",
+		"deploy:goerli": "yarn g:hardhat-deploy:goerli"
 	},
 	"devDependencies": {
-		"@openzeppelin/contracts": "^4.7.3"
+		"@openzeppelin/contracts": "^4.7.3",
+		"@openzeppelin/contracts-upgradeable": "^4.8.0"
 	},
 	"author": "teddy.chambard@gmail.com",
 	"license": "MIT"

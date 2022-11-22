@@ -2,17 +2,100 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import { InitializableContract } from "./Initializable";
+import { ERC20UpgradeableContract } from "./ERC20Upgradeable";
+import { IERC20MetadataUpgradeableContract } from "./IERC20MetadataUpgradeable";
+import { IERC20UpgradeableContract } from "./IERC20Upgradeable";
+import { ContextUpgradeableContract } from "./ContextUpgradeable";
 import { OwnableContract } from "./Ownable";
-import { CrowdfundingContract } from "./Crowdfunding";
+import { ERC20Contract } from "./ERC20";
+import { IERC20MetadataContract } from "./IERC20Metadata";
+import { IERC20Contract } from "./IERC20";
+import { FansSocietyContract } from "./FansSociety";
+import { MainContract } from "./Main";
+import { ITokensPoolFactoryContract } from "./ITokensPoolFactory";
+import { TokensPoolContract } from "./TokensPool";
+import { TokensPoolFactoryContract } from "./TokensPoolFactory";
+import { ProjectsContract } from "./Projects";
+import { WETHTokenContract } from "./WETHToken";
+import { IProjectTokenFactoryContract } from "./IProjectTokenFactory";
+import { ProjectTokenERC20Contract } from "./ProjectTokenERC20";
+import { ProjectTokenFactoryContract } from "./ProjectTokenFactory";
 
 declare global {
   namespace Truffle {
     interface Artifacts {
+      require(name: "Initializable"): InitializableContract;
+      require(name: "ERC20Upgradeable"): ERC20UpgradeableContract;
+      require(
+        name: "IERC20MetadataUpgradeable"
+      ): IERC20MetadataUpgradeableContract;
+      require(name: "IERC20Upgradeable"): IERC20UpgradeableContract;
+      require(name: "ContextUpgradeable"): ContextUpgradeableContract;
       require(name: "Ownable"): OwnableContract;
-      require(name: "Crowdfunding"): CrowdfundingContract;
+      require(name: "ERC20"): ERC20Contract;
+      require(name: "IERC20Metadata"): IERC20MetadataContract;
+      require(name: "IERC20"): IERC20Contract;
+      require(name: "FansSociety"): FansSocietyContract;
+      require(name: "Main"): MainContract;
+      require(name: "ITokensPoolFactory"): ITokensPoolFactoryContract;
+      require(name: "TokensPool"): TokensPoolContract;
+      require(name: "TokensPoolFactory"): TokensPoolFactoryContract;
+      require(name: "Projects"): ProjectsContract;
+      require(name: "WETHToken"): WETHTokenContract;
+      require(name: "IProjectTokenFactory"): IProjectTokenFactoryContract;
+      require(name: "ProjectTokenERC20"): ProjectTokenERC20Contract;
+      require(name: "ProjectTokenFactory"): ProjectTokenFactoryContract;
     }
   }
 }
 
+export { InitializableContract, InitializableInstance } from "./Initializable";
+export {
+  ERC20UpgradeableContract,
+  ERC20UpgradeableInstance,
+} from "./ERC20Upgradeable";
+export {
+  IERC20MetadataUpgradeableContract,
+  IERC20MetadataUpgradeableInstance,
+} from "./IERC20MetadataUpgradeable";
+export {
+  IERC20UpgradeableContract,
+  IERC20UpgradeableInstance,
+} from "./IERC20Upgradeable";
+export {
+  ContextUpgradeableContract,
+  ContextUpgradeableInstance,
+} from "./ContextUpgradeable";
 export { OwnableContract, OwnableInstance } from "./Ownable";
-export { CrowdfundingContract, CrowdfundingInstance } from "./Crowdfunding";
+export { ERC20Contract, ERC20Instance } from "./ERC20";
+export {
+  IERC20MetadataContract,
+  IERC20MetadataInstance,
+} from "./IERC20Metadata";
+export { IERC20Contract, IERC20Instance } from "./IERC20";
+export { FansSocietyContract, FansSocietyInstance } from "./FansSociety";
+export { MainContract, MainInstance } from "./Main";
+export {
+  ITokensPoolFactoryContract,
+  ITokensPoolFactoryInstance,
+} from "./ITokensPoolFactory";
+export { TokensPoolContract, TokensPoolInstance } from "./TokensPool";
+export {
+  TokensPoolFactoryContract,
+  TokensPoolFactoryInstance,
+} from "./TokensPoolFactory";
+export { ProjectsContract, ProjectsInstance } from "./Projects";
+export { WETHTokenContract, WETHTokenInstance } from "./WETHToken";
+export {
+  IProjectTokenFactoryContract,
+  IProjectTokenFactoryInstance,
+} from "./IProjectTokenFactory";
+export {
+  ProjectTokenERC20Contract,
+  ProjectTokenERC20Instance,
+} from "./ProjectTokenERC20";
+export {
+  ProjectTokenFactoryContract,
+  ProjectTokenFactoryInstance,
+} from "./ProjectTokenFactory";
