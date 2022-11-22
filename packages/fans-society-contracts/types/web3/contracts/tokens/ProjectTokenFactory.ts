@@ -27,6 +27,14 @@ export type OwnershipTransferred = ContractEventLog<{
   0: string;
   1: string;
 }>;
+export type TokenCreated = ContractEventLog<{
+  token: string;
+  name: string;
+  symbol: string;
+  0: string;
+  1: string;
+  2: string;
+}>;
 
 export interface ProjectTokenFactory extends BaseContract {
   constructor(
@@ -61,6 +69,12 @@ export interface ProjectTokenFactory extends BaseContract {
       cb?: Callback<OwnershipTransferred>
     ): EventEmitter;
 
+    TokenCreated(cb?: Callback<TokenCreated>): EventEmitter;
+    TokenCreated(
+      options?: EventOptions,
+      cb?: Callback<TokenCreated>
+    ): EventEmitter;
+
     allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter;
   };
 
@@ -69,5 +83,12 @@ export interface ProjectTokenFactory extends BaseContract {
     event: "OwnershipTransferred",
     options: EventOptions,
     cb: Callback<OwnershipTransferred>
+  ): void;
+
+  once(event: "TokenCreated", cb: Callback<TokenCreated>): void;
+  once(
+    event: "TokenCreated",
+    options: EventOptions,
+    cb: Callback<TokenCreated>
   ): void;
 }

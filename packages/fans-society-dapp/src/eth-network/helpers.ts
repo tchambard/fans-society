@@ -68,10 +68,8 @@ export function useNetwork(account: string | undefined): void {
 		const provider = web3.givenProvider;
 
 		provider.on('accountsChanged', async (accounts: string[]) => {
-			console.log('accounts changed');
 			// force get account address as accounts[0] does not have correct case
 			const _account = (await web3.eth.requestAccounts())[0];
-			console.log('account', _account);
 			dispatch(SET_CURRENT_ACCOUNT(_account));
 		});
 

@@ -10,16 +10,22 @@ import { IProjectTokenFactory } from './tokens/interfaces/IProjectTokenFactory.s
 import { ITokensPoolFactory } from './pools/interfaces/ITokensPoolFactory.sol';
 
 contract Projects is Ownable {
+	enum ProjectStatus {
+		Opened,
+		Aborted,
+		Completed,
+		Launched
+	}
+
 	struct Project {
 		string name;
 		string description;
 		string symbol;
-		uint256 target;
 		uint256 fund;
 		uint256 liquidity;
-		uint32 startsAt;
-		uint32 endsAt;
-		bool completed;
+		uint32 target;
+		uint16 minInvest;
+		ProjectStatus status;
 		address authorAddress;
 		address tokenAddress;
 	}
@@ -48,14 +54,12 @@ contract Projects is Ownable {
 	event ProjectCreated(
 		uint256 id,
 		string name,
+		string symbol,
 		string description,
-		uint256 target,
-		uint32 indexed startsAt,
-		uint32 indexed endsAt,
-		address indexed author
+		uint32 target,
+		uint16 minInvest,
+		address indexed authorAddress
 	);
-
-	event ProjectCancelled(uint256 id);
 
 	event Committed(uint256 indexed id, address indexed caller, uint256 amount);
 
@@ -63,27 +67,15 @@ contract Projects is Ownable {
 
 	event Claimed(uint256 indexed id, address indexed caller, uint256 amount);
 
-	event ProjectCompleted(uint256 indexed id, uint fund, uint liquidity);
-
-	event ProjectValidated(uint256 indexed id);
+	event ProjectStatusChanged(uint256 indexed id, ProjectStatus status);
 
 	modifier onlyAuthor(uint256 _id) {
 		require(msg.sender == projects[_id].authorAddress, 'Not author');
 		_;
 	}
 
-	modifier crowdfundingOpened(uint256 _id) {
-		//require(block.timestamp >= projects[_id].startsAt, 'not started');
-		require(block.timestamp <= projects[_id].endsAt, 'Already ended');
-		require(projects[_id].completed == false, 'Project completed');
-		_;
-	}
-
-	modifier crowdfundingClosed(uint256 _id) {
-		require(
-			block.timestamp > projects[_id].endsAt || projects[_id].completed,
-			'not closed'
-		);
+	modifier statusIs(uint256 _id, ProjectStatus _status) {
+		require(projects[_id].status == _status, 'Bad project status');
 		_;
 	}
 
@@ -107,29 +99,21 @@ contract Projects is Ownable {
 		string calldata _name,
 		string calldata _symbol,
 		string calldata _description,
-		uint256 _target,
-		uint32 _startsAt,
-		uint32 _endsAt
+		uint32 _target,
+		uint16 _minInvest
 	) external onlyOwner {
-		require(_startsAt >= block.timestamp, 'Invalid start time');
-		require(_endsAt > _startsAt, 'Invalid end time');
-		require(
-			_endsAt <= block.timestamp + MAX_DURATION,
-			'Maximum duration exceeded'
-		);
 
 		count++;
 
 		projects[count] = Project({
 			name: _name,
-			description: _description,
 			symbol: _symbol,
-			target: _target,
+			description: _description,
 			fund: 0,
 			liquidity: 0,
-			startsAt: _startsAt,
-			endsAt: _endsAt,
-			completed: false,
+			target: _target,
+			minInvest: _minInvest,
+			status: ProjectStatus.Opened,
 			authorAddress: _authorAddress,
 			tokenAddress: address(0)
 		});
@@ -137,21 +121,20 @@ contract Projects is Ownable {
 		emit ProjectCreated(
 			count,
 			_name,
+			_symbol,
 			_description,
 			_target,
-			_startsAt,
-			_endsAt,
+			_minInvest,
 			_authorAddress
 		);
 	}
 
-	function cancelProject(uint256 _id) external onlyOwner crowdfundingOpened(_id) {
-		require(projects[_id].startsAt > block.timestamp, 'Project already started');
-		delete projects[_id];
-		emit ProjectCancelled(_id);
+	function abortProject(uint256 _id) external onlyOwner statusIs(_id, ProjectStatus.Opened) {
+		projects[_id].status = ProjectStatus.Aborted;
+		emit ProjectStatusChanged(_id, ProjectStatus.Aborted);
 	}
 
-	function commitOnProject(uint256 _id) external payable crowdfundingOpened(_id) {
+	function commitOnProject(uint256 _id) external payable statusIs(_id, ProjectStatus.Opened) {
 		require(msg.value >= 0.01 ether, 'min 0.01 ether');
 
 		Project memory project = projects[_id];
@@ -165,12 +148,12 @@ contract Projects is Ownable {
 		emit Committed(_id, msg.sender, msg.value);
 
 		if (project.fund >= project.target) {
-			project.completed = true;
-			emit ProjectCompleted(_id, project.fund, project.liquidity);
+			project.status = ProjectStatus.Completed;
+			emit ProjectStatusChanged(_id, ProjectStatus.Completed);
 		}
 	}
 
-	function withdrawOnProject(uint256 _id) external crowdfundingOpened(_id) isCommited(_id) {
+	function withdrawOnProject(uint256 _id) external statusIs(_id, ProjectStatus.Opened) isCommited(_id) {
 		uint256 commitment = commitments[_id][msg.sender];
 
 		(uint value, uint liquidity) = computeValueAndLiquidity(commitment);
@@ -185,7 +168,7 @@ contract Projects is Ownable {
 		emit Withdrawed(_id, msg.sender, commitment);
 	}
 
-	function validateProject(uint256 _id) external onlyAuthor(_id) crowdfundingClosed(_id) {
+	function launchProject(uint256 _id) external onlyAuthor(_id) statusIs(_id, ProjectStatus.Completed) {
 		Project memory project = projects[_id];
 
 		address tokenAddress = IProjectTokenFactory(tokenFactoryAddress).createToken(
@@ -205,10 +188,10 @@ contract Projects is Ownable {
 
 		// TODO: add pool liquidity here 
 
-		emit ProjectValidated(_id);
+		emit ProjectStatusChanged(_id, ProjectStatus.Launched);
 	}
 
-	function claimProjectTokens(uint256 _id) external crowdfundingClosed(_id) isCommited(_id) {
+	function claimProjectTokens(uint256 _id) external statusIs(_id, ProjectStatus.Completed) isCommited(_id) {
 		uint256 commitment = commitments[_id][msg.sender];
 
 		(uint value, ) = computeValueAndLiquidity(commitment);
