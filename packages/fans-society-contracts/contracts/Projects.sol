@@ -19,8 +19,8 @@ contract Projects is Ownable {
 
 	struct Project {
 		string name;
-		string description;
 		string symbol;
+		string description;
 		uint256 fund;
 		uint256 liquidity;
 		uint32 target;

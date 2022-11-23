@@ -112,8 +112,8 @@ export interface FansSociety extends BaseContract {
 
     projects(arg0: number | string | BN): NonPayableTransactionObject<{
       name: string;
-      description: string;
       symbol: string;
+      description: string;
       fund: string;
       liquidity: string;
       target: string;

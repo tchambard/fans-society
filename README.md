@@ -14,6 +14,8 @@ yarn install
 cd packages/fans-society-contracts
 # Compilation
 yarn compile
+# Tests
+yarn test
 # Deployment on ganache
 yarn deploy:localhost
 ```
