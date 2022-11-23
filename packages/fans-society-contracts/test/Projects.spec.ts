@@ -7,13 +7,13 @@ import { deployProjectsInstances } from './TestHelpers';
 contract('Projects', (accounts) => {
 	const administrator = accounts[0];
 	const fsociety = accounts[1];
-	const author = accounts[2];
+	const authorAddress = accounts[2];
 
-	let projects: ProjectsInstance;
+	let projectsContract: ProjectsInstance;
 
 	beforeEach(async () => {
 		const contracts = await deployProjectsInstances(administrator, fsociety);
-		projects = contracts.projects;
+		projectsContract = contracts.projects;
 	});
 
 	describe('> createProject', () => {
@@ -22,43 +22,40 @@ contract('Projects', (accounts) => {
 			const description = 'A very famous mafia film';
 			const symbol = 'TGF';
 			const target = 10000;
-			const startsAt = Math.floor(Date.now() / 1000) + 10;
-			const endsAt = Math.floor(Date.now() / 1000) + 3600;
+			const minInvest = 10;
 
-			const receipt = await projects.createProject(
-				author,
+			const receipt = await projectsContract.createProject(
+				authorAddress,
 				name,
 				symbol,
 				description,
-				target,
-				startsAt,
-				endsAt,
+				BN(target),
+				BN(minInvest),
 				{ from: administrator },
 			);
 
 			await expectEvent(receipt, 'ProjectCreated', {
 				id: BN(1),
 				name,
+				symbol,
 				description,
-				author: author,
 				target: BN(target),
-				startsAt: BN(startsAt),
-				endsAt: BN(endsAt),
+				minInvest: BN(minInvest),
+				authorAddress,
 			});
 
-			const createdProject = await projects.projects(1);
-			assert.equal(createdProject['0'], name);
-			assert.equal(createdProject['1'], description);
-			assert.equal(createdProject['2'], symbol);
-			assert.equal(createdProject['3'].toNumber(), target);
-			assert.equal(createdProject['4'].toNumber(), 0);
-			assert.equal(createdProject['5'].toNumber(), 0);
-			assert.equal(createdProject['6'].toNumber(), startsAt);
-			assert.equal(createdProject['7'].toNumber(), endsAt);
-			assert.equal(createdProject['8'], false);
-			assert.equal(createdProject['9'], author);
+			const createdProject = await projectsContract.projects(1);
+			assert.equal(createdProject['name'], name);
+			assert.equal(createdProject['symbol'], symbol);
+			assert.equal(createdProject['description'], description);
+			assert.equal(createdProject['fund'].toNumber(), 0);
+			assert.equal(createdProject['liquidity'].toNumber(), 0);
+			assert.equal(createdProject['target'].toNumber(), target);
+			assert.equal(createdProject['minInvest'].toNumber(), minInvest);
+			assert.equal(createdProject['status'].toNumber(), 0);
+			assert.equal(createdProject['authorAddress'], authorAddress);
 			assert.equal(
-				createdProject['10'],
+				createdProject['tokenAddress'],
 				'0x0000000000000000000000000000000000000000',
 			);
 		});

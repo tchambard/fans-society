@@ -12,7 +12,6 @@ import { ERC20Contract } from "./ERC20";
 import { IERC20MetadataContract } from "./IERC20Metadata";
 import { IERC20Contract } from "./IERC20";
 import { FansSocietyContract } from "./FansSociety";
-import { MainContract } from "./Main";
 import { ITokensPoolFactoryContract } from "./ITokensPoolFactory";
 import { TokensPoolContract } from "./TokensPool";
 import { TokensPoolFactoryContract } from "./TokensPoolFactory";
@@ -37,7 +36,6 @@ declare global {
       require(name: "IERC20Metadata"): IERC20MetadataContract;
       require(name: "IERC20"): IERC20Contract;
       require(name: "FansSociety"): FansSocietyContract;
-      require(name: "Main"): MainContract;
       require(name: "ITokensPoolFactory"): ITokensPoolFactoryContract;
       require(name: "TokensPool"): TokensPoolContract;
       require(name: "TokensPoolFactory"): TokensPoolFactoryContract;
@@ -75,7 +73,6 @@ export {
 } from "./IERC20Metadata";
 export { IERC20Contract, IERC20Instance } from "./IERC20";
 export { FansSocietyContract, FansSocietyInstance } from "./FansSociety";
-export { MainContract, MainInstance } from "./Main";
 export {
   ITokensPoolFactoryContract,
   ITokensPoolFactoryInstance,

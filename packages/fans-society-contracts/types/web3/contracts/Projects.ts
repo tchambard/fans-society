@@ -43,26 +43,14 @@ export type OwnershipTransferred = ContractEventLog<{
   0: string;
   1: string;
 }>;
-export type ProjectCancelled = ContractEventLog<{
-  id: string;
-  0: string;
-}>;
-export type ProjectCompleted = ContractEventLog<{
-  id: string;
-  fund: string;
-  liquidity: string;
-  0: string;
-  1: string;
-  2: string;
-}>;
 export type ProjectCreated = ContractEventLog<{
   id: string;
   name: string;
+  symbol: string;
   description: string;
   target: string;
-  startsAt: string;
-  endsAt: string;
-  author: string;
+  minInvest: string;
+  authorAddress: string;
   0: string;
   1: string;
   2: string;
@@ -71,15 +59,11 @@ export type ProjectCreated = ContractEventLog<{
   5: string;
   6: string;
 }>;
-export type TokenCreated = ContractEventLog<{
+export type ProjectStatusChanged = ContractEventLog<{
   id: string;
-  tokenAddress: string;
-  name: string;
-  symbol: string;
+  status: string;
   0: string;
   1: string;
-  2: string;
-  3: string;
 }>;
 export type Withdrawed = ContractEventLog<{
   id: string;
@@ -98,7 +82,7 @@ export interface Projects extends BaseContract {
   ): Projects;
   clone(): Projects;
   methods: {
-    cancelProject(_id: number | string | BN): NonPayableTransactionObject<void>;
+    abortProject(_id: number | string | BN): NonPayableTransactionObject<void>;
 
     claimProjectTokens(
       _id: number | string | BN
@@ -119,26 +103,22 @@ export interface Projects extends BaseContract {
       _symbol: string,
       _description: string,
       _target: number | string | BN,
-      _startsAt: number | string | BN,
-      _endsAt: number | string | BN
+      _minInvest: number | string | BN
     ): NonPayableTransactionObject<void>;
 
-    createProjectToken(
-      _id: number | string | BN
-    ): NonPayableTransactionObject<void>;
+    launchProject(_id: number | string | BN): NonPayableTransactionObject<void>;
 
     owner(): NonPayableTransactionObject<string>;
 
     projects(arg0: number | string | BN): NonPayableTransactionObject<{
       name: string;
-      description: string;
       symbol: string;
-      target: string;
+      description: string;
       fund: string;
       liquidity: string;
-      startsAt: string;
-      endsAt: string;
-      completed: boolean;
+      target: string;
+      minInvest: string;
+      status: string;
       authorAddress: string;
       tokenAddress: string;
       0: string;
@@ -149,9 +129,8 @@ export interface Projects extends BaseContract {
       5: string;
       6: string;
       7: string;
-      8: boolean;
+      8: string;
       9: string;
-      10: string;
     }>;
 
     renounceOwnership(): NonPayableTransactionObject<void>;
@@ -175,28 +154,16 @@ export interface Projects extends BaseContract {
       cb?: Callback<OwnershipTransferred>
     ): EventEmitter;
 
-    ProjectCancelled(cb?: Callback<ProjectCancelled>): EventEmitter;
-    ProjectCancelled(
-      options?: EventOptions,
-      cb?: Callback<ProjectCancelled>
-    ): EventEmitter;
-
-    ProjectCompleted(cb?: Callback<ProjectCompleted>): EventEmitter;
-    ProjectCompleted(
-      options?: EventOptions,
-      cb?: Callback<ProjectCompleted>
-    ): EventEmitter;
-
     ProjectCreated(cb?: Callback<ProjectCreated>): EventEmitter;
     ProjectCreated(
       options?: EventOptions,
       cb?: Callback<ProjectCreated>
     ): EventEmitter;
 
-    TokenCreated(cb?: Callback<TokenCreated>): EventEmitter;
-    TokenCreated(
+    ProjectStatusChanged(cb?: Callback<ProjectStatusChanged>): EventEmitter;
+    ProjectStatusChanged(
       options?: EventOptions,
-      cb?: Callback<TokenCreated>
+      cb?: Callback<ProjectStatusChanged>
     ): EventEmitter;
 
     Withdrawed(cb?: Callback<Withdrawed>): EventEmitter;
@@ -222,20 +189,6 @@ export interface Projects extends BaseContract {
     cb: Callback<OwnershipTransferred>
   ): void;
 
-  once(event: "ProjectCancelled", cb: Callback<ProjectCancelled>): void;
-  once(
-    event: "ProjectCancelled",
-    options: EventOptions,
-    cb: Callback<ProjectCancelled>
-  ): void;
-
-  once(event: "ProjectCompleted", cb: Callback<ProjectCompleted>): void;
-  once(
-    event: "ProjectCompleted",
-    options: EventOptions,
-    cb: Callback<ProjectCompleted>
-  ): void;
-
   once(event: "ProjectCreated", cb: Callback<ProjectCreated>): void;
   once(
     event: "ProjectCreated",
@@ -243,11 +196,11 @@ export interface Projects extends BaseContract {
     cb: Callback<ProjectCreated>
   ): void;
 
-  once(event: "TokenCreated", cb: Callback<TokenCreated>): void;
+  once(event: "ProjectStatusChanged", cb: Callback<ProjectStatusChanged>): void;
   once(
-    event: "TokenCreated",
+    event: "ProjectStatusChanged",
     options: EventOptions,
-    cb: Callback<TokenCreated>
+    cb: Callback<ProjectStatusChanged>
   ): void;
 
   once(event: "Withdrawed", cb: Callback<Withdrawed>): void;

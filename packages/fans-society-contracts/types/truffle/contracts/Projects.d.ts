@@ -48,57 +48,33 @@ export interface OwnershipTransferred {
   };
 }
 
-export interface ProjectCancelled {
-  name: "ProjectCancelled";
-  args: {
-    id: BN;
-    0: BN;
-  };
-}
-
-export interface ProjectCompleted {
-  name: "ProjectCompleted";
-  args: {
-    id: BN;
-    fund: BN;
-    liquidity: BN;
-    0: BN;
-    1: BN;
-    2: BN;
-  };
-}
-
 export interface ProjectCreated {
   name: "ProjectCreated";
   args: {
     id: BN;
     name: string;
+    symbol: string;
     description: string;
     target: BN;
-    startsAt: BN;
-    endsAt: BN;
-    author: string;
+    minInvest: BN;
+    authorAddress: string;
     0: BN;
     1: string;
     2: string;
-    3: BN;
+    3: string;
     4: BN;
     5: BN;
     6: string;
   };
 }
 
-export interface TokenCreated {
-  name: "TokenCreated";
+export interface ProjectStatusChanged {
+  name: "ProjectStatusChanged";
   args: {
     id: BN;
-    tokenAddress: string;
-    name: string;
-    symbol: string;
+    status: BN;
     0: BN;
-    1: string;
-    2: string;
-    3: string;
+    1: BN;
   };
 }
 
@@ -118,14 +94,12 @@ type AllEvents =
   | Claimed
   | Committed
   | OwnershipTransferred
-  | ProjectCancelled
-  | ProjectCompleted
   | ProjectCreated
-  | TokenCreated
+  | ProjectStatusChanged
   | Withdrawed;
 
 export interface ProjectsInstance extends Truffle.ContractInstance {
-  cancelProject: {
+  abortProject: {
     (
       _id: number | BN | string,
       txDetails?: Truffle.TransactionDetails
@@ -197,8 +171,7 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
       _symbol: string,
       _description: string,
       _target: number | BN | string,
-      _startsAt: number | BN | string,
-      _endsAt: number | BN | string,
+      _minInvest: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<Truffle.TransactionResponse<AllEvents>>;
     call(
@@ -207,8 +180,7 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
       _symbol: string,
       _description: string,
       _target: number | BN | string,
-      _startsAt: number | BN | string,
-      _endsAt: number | BN | string,
+      _minInvest: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<void>;
     sendTransaction(
@@ -217,8 +189,7 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
       _symbol: string,
       _description: string,
       _target: number | BN | string,
-      _startsAt: number | BN | string,
-      _endsAt: number | BN | string,
+      _minInvest: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<string>;
     estimateGas(
@@ -227,13 +198,12 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
       _symbol: string,
       _description: string,
       _target: number | BN | string,
-      _startsAt: number | BN | string,
-      _endsAt: number | BN | string,
+      _minInvest: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<number>;
   };
 
-  createProjectToken: {
+  launchProject: {
     (
       _id: number | BN | string,
       txDetails?: Truffle.TransactionDetails
@@ -266,9 +236,8 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
     5: BN;
     6: BN;
     7: BN;
-    8: boolean;
+    8: string;
     9: string;
-    10: string;
   }>;
 
   renounceOwnership: {
@@ -318,7 +287,7 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
   };
 
   methods: {
-    cancelProject: {
+    abortProject: {
       (
         _id: number | BN | string,
         txDetails?: Truffle.TransactionDetails
@@ -390,8 +359,7 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
         _symbol: string,
         _description: string,
         _target: number | BN | string,
-        _startsAt: number | BN | string,
-        _endsAt: number | BN | string,
+        _minInvest: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<Truffle.TransactionResponse<AllEvents>>;
       call(
@@ -400,8 +368,7 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
         _symbol: string,
         _description: string,
         _target: number | BN | string,
-        _startsAt: number | BN | string,
-        _endsAt: number | BN | string,
+        _minInvest: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<void>;
       sendTransaction(
@@ -410,8 +377,7 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
         _symbol: string,
         _description: string,
         _target: number | BN | string,
-        _startsAt: number | BN | string,
-        _endsAt: number | BN | string,
+        _minInvest: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<string>;
       estimateGas(
@@ -420,13 +386,12 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
         _symbol: string,
         _description: string,
         _target: number | BN | string,
-        _startsAt: number | BN | string,
-        _endsAt: number | BN | string,
+        _minInvest: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<number>;
     };
 
-    createProjectToken: {
+    launchProject: {
       (
         _id: number | BN | string,
         txDetails?: Truffle.TransactionDetails
@@ -459,9 +424,8 @@ export interface ProjectsInstance extends Truffle.ContractInstance {
       5: BN;
       6: BN;
       7: BN;
-      8: boolean;
+      8: string;
       9: string;
-      10: string;
     }>;
 
     renounceOwnership: {

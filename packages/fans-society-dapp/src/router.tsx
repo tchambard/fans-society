@@ -17,8 +17,13 @@ const Loader = (Component) => (props) =>
 
 const Home = Loader(lazy(() => import('src/content/home/components/Home')));
 
-const ProjectHome = Loader(
-	lazy(() => import('src/content/project/components/ProjectHome')),
+const ProjectList = Loader(
+	lazy(
+		() => import('src/content/projects/components/list/ProjectListContainer'),
+	),
+);
+const Project = Loader(
+	lazy(() => import('src/content/projects/components/detail/ProjectContainer')),
 );
 
 const TokenHome = Loader(
@@ -36,6 +41,8 @@ export class Routes {
 	public static HOME = `/home`;
 
 	public static PROJECT_LIST = `/projects`;
+	public static PROJECT_DETAIL = `${Routes.PROJECT_LIST}/:projectId`;
+
 	public static TOKEN_LIST = `/tokens`;
 	public static DASHBOARD = `/dashboard`;
 }
@@ -81,11 +88,11 @@ export const routes: RouteObject[] = [
 		children: [
 			{
 				path: Routes.PROJECT_LIST,
-				element: (
-					<ContainerWrapper>
-						<ProjectHome />
-					</ContainerWrapper>
-				),
+				element: <ProjectList />,
+			},
+			{
+				path: Routes.PROJECT_DETAIL,
+				element: <Project />,
 			},
 		],
 	},
@@ -95,11 +102,7 @@ export const routes: RouteObject[] = [
 		children: [
 			{
 				path: Routes.TOKEN_LIST,
-				element: (
-					<ContainerWrapper>
-						<TokenHome />
-					</ContainerWrapper>
-				),
+				element: <TokenHome />,
 			},
 		],
 	},
@@ -109,11 +112,7 @@ export const routes: RouteObject[] = [
 		children: [
 			{
 				path: Routes.DASHBOARD,
-				element: (
-					<ContainerWrapper>
-						<DashboardHome />
-					</ContainerWrapper>
-				),
+				element: <DashboardHome />,
 			},
 		],
 	},

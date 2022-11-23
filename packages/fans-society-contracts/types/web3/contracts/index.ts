@@ -3,8 +3,8 @@
 /* eslint-disable */
 import type * as pools from "./pools";
 export type { pools };
-import type * as testHelpers from "./test-helpers";
-export type { testHelpers };
+import type * as test from "./test";
+export type { test };
 import type * as tokens from "./tokens";
 export type { tokens };
 export type { FansSociety } from "./FansSociety";

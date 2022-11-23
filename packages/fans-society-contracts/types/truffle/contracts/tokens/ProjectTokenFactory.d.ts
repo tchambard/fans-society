@@ -22,7 +22,19 @@ export interface OwnershipTransferred {
   };
 }
 
-type AllEvents = OwnershipTransferred;
+export interface TokenCreated {
+  name: "TokenCreated";
+  args: {
+    token: string;
+    name: string;
+    symbol: string;
+    0: string;
+    1: string;
+    2: string;
+  };
+}
+
+type AllEvents = OwnershipTransferred | TokenCreated;
 
 export interface ProjectTokenFactoryInstance extends Truffle.ContractInstance {
   createToken: {
