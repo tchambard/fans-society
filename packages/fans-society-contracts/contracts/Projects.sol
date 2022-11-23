@@ -21,10 +21,10 @@ contract Projects is Ownable {
 		string name;
 		string symbol;
 		string description;
-		uint256 fund;
-		uint256 liquidity;
-		uint32 target;
-		uint16 minInvest;
+		uint fund;
+		uint target;
+		uint minInvest;
+		uint maxInvest;
 		ProjectStatus status;
 		address authorAddress;
 		address tokenAddress;
@@ -35,52 +35,53 @@ contract Projects is Ownable {
 	address internal tokenFactoryAddress;
 	address internal poolFactoryAddress;
 
-	uint256 private constant FSOCIETY_SUPPLY = 27;
-	uint256 private constant AUTHOR_SUPPLY = 27;
-	uint256 private constant LIQUIDITY_SUPPLY = 30;
-	uint256 private constant INVESTORS_SUPPLY = 35;
+	uint private constant FSOCIETY_SUPPLY = 27;
+	uint private constant AUTHOR_SUPPLY = 27;
+	uint private constant LIQUIDITY_SUPPLY = 30;
+	uint private constant INVESTORS_SUPPLY = 35;
 
-	uint256 private constant MAX_DURATION = 604800; // 1 week
+	uint private constant MAX_DURATION = 604800; // 1 week
 
-	uint256 private constant PRECISION = 2;
+	uint private constant PRECISION = 2;
 
 
-	uint256 public count;
+	uint public count;
 
-	mapping(uint256 => Project) public projects;
+	mapping(uint => Project) public projects;
 
-	mapping(uint256 => mapping(address => uint256)) public commitments;
+	mapping(uint => mapping(address => uint)) public commitments;
 
 	event ProjectCreated(
-		uint256 id,
+		uint id,
 		string name,
 		string symbol,
 		string description,
-		uint32 target,
-		uint16 minInvest,
+		uint target,
+		uint minInvest,
+		uint maxInvest,
 		address indexed authorAddress
 	);
 
-	event Committed(uint256 indexed id, address indexed caller, uint256 amount);
+	event Committed(uint indexed id, address indexed caller, uint amount);
 
-	event Withdrawed(uint256 indexed id, address indexed caller, uint256 amount);
+	event Withdrawed(uint indexed id, address indexed caller, uint amount);
 
-	event Claimed(uint256 indexed id, address indexed caller, uint256 amount);
+	event Claimed(uint indexed id, address indexed caller, uint amount);
 
-	event ProjectStatusChanged(uint256 indexed id, ProjectStatus status);
+	event ProjectStatusChanged(uint indexed id, ProjectStatus status);
 
-	modifier onlyAuthor(uint256 _id) {
+	modifier onlyAuthor(uint _id) {
 		require(msg.sender == projects[_id].authorAddress, 'Not author');
 		_;
 	}
 
-	modifier statusIs(uint256 _id, ProjectStatus _status) {
+	modifier statusIs(uint _id, ProjectStatus _status) {
 		require(projects[_id].status == _status, 'Bad project status');
 		_;
 	}
 
-	modifier isCommited(uint256 _id) {
-		require(commitments[_id][msg.sender] >= 0, 'No commitment');
+	modifier isCommited(uint _id) {
+		require(commitments[_id][msg.sender] > 0, 'No commitment');
 		_;
 	}
 
@@ -99,8 +100,9 @@ contract Projects is Ownable {
 		string calldata _name,
 		string calldata _symbol,
 		string calldata _description,
-		uint32 _target,
-		uint16 _minInvest
+		uint _target,
+		uint _minInvest,
+		uint _maxInvest
 	) external onlyOwner {
 
 		count++;
@@ -110,9 +112,9 @@ contract Projects is Ownable {
 			symbol: _symbol,
 			description: _description,
 			fund: 0,
-			liquidity: 0,
 			target: _target,
 			minInvest: _minInvest,
+			maxInvest: _maxInvest,
 			status: ProjectStatus.Opened,
 			authorAddress: _authorAddress,
 			tokenAddress: address(0)
@@ -125,24 +127,23 @@ contract Projects is Ownable {
 			_description,
 			_target,
 			_minInvest,
+			_maxInvest,
 			_authorAddress
 		);
 	}
 
-	function abortProject(uint256 _id) external onlyOwner statusIs(_id, ProjectStatus.Opened) {
+	function abortProject(uint _id) external onlyOwner statusIs(_id, ProjectStatus.Opened) {
 		projects[_id].status = ProjectStatus.Aborted;
 		emit ProjectStatusChanged(_id, ProjectStatus.Aborted);
 	}
 
-	function commitOnProject(uint256 _id) external payable statusIs(_id, ProjectStatus.Opened) {
-		require(msg.value >= 0.01 ether, 'min 0.01 ether');
+	function commitOnProject(uint _id) external payable statusIs(_id, ProjectStatus.Opened) {
+		Project storage project = projects[_id];
+		require(msg.value + commitments[_id][msg.sender] >= project.minInvest, 'Not enough');
+		require(msg.value + commitments[_id][msg.sender] <= project.maxInvest, 'Too much');
 
-		Project memory project = projects[_id];
 
-		(uint value, uint liquidity) = computeValueAndLiquidity(msg.value);
-
-		project.fund += value;
-		project.liquidity += liquidity;
+		project.fund += msg.value;
 
 		commitments[_id][msg.sender] += msg.value;
 		emit Committed(_id, msg.sender, msg.value);
@@ -153,12 +154,10 @@ contract Projects is Ownable {
 		}
 	}
 
-	function withdrawOnProject(uint256 _id) external statusIs(_id, ProjectStatus.Opened) isCommited(_id) {
-		uint256 commitment = commitments[_id][msg.sender];
+	function withdrawOnProject(uint _id) external statusIs(_id, ProjectStatus.Opened) isCommited(_id) {
+		uint commitment = commitments[_id][msg.sender];
 
-		(uint value, uint liquidity) = computeValueAndLiquidity(commitment);
-		projects[_id].fund -= value;
-		projects[_id].liquidity -= liquidity;
+		projects[_id].fund -= commitment;
 
 		commitments[_id][msg.sender] = 0;
 
@@ -168,7 +167,7 @@ contract Projects is Ownable {
 		emit Withdrawed(_id, msg.sender, commitment);
 	}
 
-	function launchProject(uint256 _id) external onlyAuthor(_id) statusIs(_id, ProjectStatus.Completed) {
+	function launchProject(uint _id) external onlyAuthor(_id) statusIs(_id, ProjectStatus.Completed) {
 		Project memory project = projects[_id];
 
 		address tokenAddress = IProjectTokenFactory(tokenFactoryAddress).createToken(
@@ -188,24 +187,18 @@ contract Projects is Ownable {
 
 		// TODO: add pool liquidity here 
 
+		projects[_id].status = ProjectStatus.Launched;
 		emit ProjectStatusChanged(_id, ProjectStatus.Launched);
 	}
 
-	function claimProjectTokens(uint256 _id) external statusIs(_id, ProjectStatus.Completed) isCommited(_id) {
-		uint256 commitment = commitments[_id][msg.sender];
+	function claimProjectTokens(uint _id) external statusIs(_id, ProjectStatus.Completed) isCommited(_id) {
+		uint commitment = commitments[_id][msg.sender];
 
-		(uint value, ) = computeValueAndLiquidity(commitment);
-
-		uint256 tokenAmount = (INVESTORS_SUPPLY / projects[_id].fund) * value;
+		uint tokenAmount = (INVESTORS_SUPPLY / projects[_id].fund) * commitment;
 		
 		IProjectTokenFactory(tokenFactoryAddress)
 			.tokens(projects[_id].tokenAddress)
 			.transfer(msg.sender, tokenAmount);
 	}
 
-	function computeValueAndLiquidity(uint256 _value) private pure returns (uint256 amount, uint256 liquidity) {
-		uint256 _liquidity = (_value ** PRECISION) / 20; // 5%
-		uint256 _amount = (_value ** PRECISION) - liquidity;
-		return (_amount, _liquidity);
-	}
 }

@@ -3,7 +3,7 @@
   "chainId": "1337",
   "contracts": {
     "FansSociety": {
-      "address": "0x40a42Baf86Fc821f972Ad2aC878729063CeEF403",
+      "address": "0x071586BA1b380B00B793Cc336fe01106B0BFbE6D",
       "abi": [
         {
           "inputs": [
@@ -124,15 +124,21 @@
             },
             {
               "indexed": false,
-              "internalType": "uint32",
+              "internalType": "uint256",
               "name": "target",
-              "type": "uint32"
+              "type": "uint256"
             },
             {
               "indexed": false,
-              "internalType": "uint16",
+              "internalType": "uint256",
+              "name": "maxInvest",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
               "name": "minInvest",
-              "type": "uint16"
+              "type": "uint256"
             },
             {
               "indexed": true,
@@ -287,14 +293,19 @@
               "type": "string"
             },
             {
-              "internalType": "uint32",
+              "internalType": "uint256",
               "name": "_target",
-              "type": "uint32"
+              "type": "uint256"
             },
             {
-              "internalType": "uint16",
+              "internalType": "uint256",
               "name": "_minInvest",
-              "type": "uint16"
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_maxInvest",
+              "type": "uint256"
             }
           ],
           "name": "createProject",
@@ -345,12 +356,12 @@
             },
             {
               "internalType": "string",
-              "name": "description",
+              "name": "symbol",
               "type": "string"
             },
             {
               "internalType": "string",
-              "name": "symbol",
+              "name": "description",
               "type": "string"
             },
             {
@@ -364,14 +375,19 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint32",
+              "internalType": "uint256",
               "name": "target",
-              "type": "uint32"
+              "type": "uint256"
             },
             {
-              "internalType": "uint16",
+              "internalType": "uint256",
               "name": "minInvest",
-              "type": "uint16"
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "maxInvest",
+              "type": "uint256"
             },
             {
               "internalType": "enum Projects.ProjectStatus",

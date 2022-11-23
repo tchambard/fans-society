@@ -2,7 +2,7 @@ import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
 
-import ActionsMenu from 'src/components/ActionsMenu';
+import ActionsMenu, { IActionMenuItem } from 'src/components/ActionsMenu';
 import { IProjectDetailCapabilities } from '../../actions';
 import ProjectAbortDialog from './ProjectAbortDialog';
 
@@ -10,16 +10,6 @@ interface IProps {
 	currentView: 'list' | 'detail';
 	projectId: string;
 	capabilities: IProjectDetailCapabilities;
-}
-
-export interface IActionMenuItem {
-	title: string;
-	url: string;
-	color: string;
-	icon: any;
-	hidden?: boolean;
-	description?: string;
-	onClick?: () => void;
 }
 
 export default ({ projectId, capabilities, currentView }: IProps) => {

@@ -16,6 +16,21 @@ export interface ICreateProjectParams {
 	description: string;
 	target: string;
 	minInvest: string;
+	maxInvest: string;
+}
+
+export interface ICommitOnProjectParams {
+	projectId: string;
+	amount: string;
+}
+
+export interface IWithdrawOnProjectParams {
+	projectId: string;
+}
+
+export interface IClaimOnProjectParams {
+	projectId: string;
+	amount: number;
 }
 
 export interface IProjectListCapabilities {
@@ -37,9 +52,9 @@ export interface IProjectListItem {
 	id: string;
 	name: string;
 	description: string;
-	symbol: string;
 	target: number;
 	minInvest: number;
+	maxInvest: number;
 	authorAddress: string;
 	status: ProjectStatus;
 	$capabilities: IProjectDetailCapabilities;
@@ -52,6 +67,8 @@ export interface IProjectDetail {
 	symbol: string;
 	target: number;
 	minInvest: number;
+	maxInvest: number;
+	fund: number;
 	authorAddress: string;
 	status: ProjectStatus;
 	$capabilities: IProjectDetailCapabilities;
@@ -60,6 +77,24 @@ export interface IProjectDetail {
 export interface IProjectStatusChangedEvent {
 	id: string;
 	status: ProjectStatus;
+}
+
+export interface IProjectCommitment {
+	id: string;
+	address: string;
+	amount: number;
+}
+
+export interface IProjectWithdraw {
+	id: string;
+	address: string;
+	amount: number;
+}
+
+export interface IProjectClaim {
+	id: string;
+	address: string;
+	amount: number;
 }
 
 export const LOAD_PROJECTS_CONTRACT_INFO = createAsyncAction(
@@ -95,6 +130,36 @@ export const GET_PROJECT = createAsyncAction(
 	'GET_PROJECT_SUCCESS',
 	'GET_PROJECT_FAILURE',
 )<string, IProjectDetail, string>();
+
+export const COMMIT_ON_PROJECT = createAsyncAction(
+	'COMMIT_ON_PROJECT_REQUEST',
+	'COMMIT_ON_PROJECT_SUCCESS',
+	'COMMIT_ON_PROJECT_FAILURE',
+)<ICommitOnProjectParams, void, string>();
+
+export const COMMITED = createAction('COMMITED', (action) => {
+	return (commitment: IProjectCommitment) => action(commitment);
+});
+
+export const WITHDRAW_ON_PROJECT = createAsyncAction(
+	'WITHDRAW_ON_PROJECT_REQUEST',
+	'WITHDRAW_ON_PROJECT_SUCCESS',
+	'WITHDRAW_ON_PROJECT_FAILURE',
+)<IWithdrawOnProjectParams, void, string>();
+
+export const WITHDRAWED = createAction('WITHDRAWED', (action) => {
+	return (commitment: IProjectWithdraw) => action(commitment);
+});
+
+export const CLAIM_ON_PROJECT = createAsyncAction(
+	'CLAIM_ON_PROJECT_REQUEST',
+	'CLAIM_ON_PROJECT_SUCCESS',
+	'CLAIM_ON_PROJECT_FAILURE',
+)<ICommitOnProjectParams, void, string>();
+
+export const CLAIMED = createAction('CLAIMED', (action) => {
+	return (commitment: IProjectClaim) => action(commitment);
+});
 
 export const PROJECT_STATUS_CHANGED = createAction(
 	'PROJECTS_STATUS_CHANGED',

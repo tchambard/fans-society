@@ -1,21 +1,24 @@
-import { Container, Grid, Paper, styled } from '@mui/material';
 import { useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from 'state-types';
 
 import { useParams } from 'react-router';
-import PageTitleWrapper from 'src/components/PageTitleWrapper';
-import SuspenseLoader from 'src/components/SuspenseLoader';
-import { GET_PROJECT, PROJECT_STATUS_CHANGED } from '../../actions';
-import { listenProjectStatusChanged } from '../../listeners';
+import {
+	CLAIMED,
+	COMMITED,
+	GET_PROJECT,
+	PROJECT_STATUS_CHANGED,
+	WITHDRAWED,
+} from '../../actions';
+import {
+	listenClaimed,
+	listenCommitted,
+	listenProjectStatusChanged,
+	listenWithdrawed,
+} from '../../listeners';
 import ProjectContainerWrapper from '../ProjectContainerWrapper';
-import ProjectHeader from './ProjectHeader';
-
-const Item = styled(Paper)(({ theme }) => ({
-	color: theme.palette.text.secondary,
-}));
+import ProjectDetail from './ProjectDetail';
 
 export default () => {
 	const { projectId } = useParams();
@@ -27,50 +30,44 @@ export default () => {
 	);
 
 	useEffect(() => {
-		let destroyListener;
+		let destroyListeners: (() => void)[];
 		if (contract.info?.contract) {
-			if (currentProject.item == null || currentProject.item.id !== projectId) {
+			if (
+				currentProject.loading == false &&
+				currentProject.item?.id !== projectId
+			) {
 				dispatch(GET_PROJECT.request(projectId));
 			} else {
 				if (currentProject.item != null) {
-					destroyListener = listenProjectStatusChanged(
-						contract.info,
-						(data) => dispatch(PROJECT_STATUS_CHANGED(data)),
-						projectId,
-					);
+					destroyListeners = [
+						listenProjectStatusChanged(
+							contract.info,
+							(data) => dispatch(PROJECT_STATUS_CHANGED(data)),
+							projectId,
+						),
+						listenCommitted(contract.info, (data) => {
+							console.log('commited');
+							dispatch(COMMITED(data));
+							dispatch(GET_PROJECT.request(projectId));
+						}),
+						listenWithdrawed(contract.info, (data) => {
+							dispatch(WITHDRAWED(data));
+							dispatch(GET_PROJECT.request(projectId));
+						}),
+						listenClaimed(contract.info, (data) => {
+							dispatch(CLAIMED(data));
+							dispatch(GET_PROJECT.request(projectId));
+						}),
+					];
 				}
 			}
 		}
-		return () => destroyListener?.();
+		return () => destroyListeners?.forEach((listener) => listener());
 	}, [contract.info, currentProject.item?.id]);
-
-	if (!currentProject.item || currentProject.loading) {
-		return <SuspenseLoader />;
-	}
 
 	return (
 		<ProjectContainerWrapper>
-			<Helmet>
-				<title>
-					{currentProject.item.name} - {currentProject.item.description}
-				</title>
-			</Helmet>
-			<PageTitleWrapper>
-				<ProjectHeader />
-			</PageTitleWrapper>
-			<Container maxWidth={'xl'}>
-				<Grid
-					container
-					direction={'row'}
-					justifyContent={'center'}
-					alignItems={'stretch'}
-					spacing={3}
-				>
-					<Grid item xs={12}>
-						<Item>test</Item>
-					</Grid>
-				</Grid>
-			</Container>
+			<ProjectDetail />
 		</ProjectContainerWrapper>
 	);
 };

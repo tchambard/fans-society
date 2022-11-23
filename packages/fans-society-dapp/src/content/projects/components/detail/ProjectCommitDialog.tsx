@@ -14,86 +14,46 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from 'state-types';
 
-import { CREATE_PROJECT, ICreateProjectParams } from '../../actions';
+import { COMMIT_ON_PROJECT, ICommitOnProjectParams } from '../../actions';
 
-interface IProjectCreateDialogProps {
+interface IProjectCommitDialogProps {
 	dialogVisible: boolean;
 	setDialogVisible: React.Dispatch<React.SetStateAction<boolean>>;
+	projectId: string;
 }
 
 export default ({
 	dialogVisible,
 	setDialogVisible,
-}: IProjectCreateDialogProps) => {
+	projectId,
+}: IProjectCommitDialogProps) => {
 	const dispatch = useDispatch();
 
 	const { txPending } = useSelector((state: RootState) => state.projects);
-	const [formData, setFormData] = useState<Partial<ICreateProjectParams>>({});
+	const [formData, setFormData] = useState<Partial<ICommitOnProjectParams>>({});
 
 	return (
 		<Dialog
 			disableEscapeKeyDown
 			maxWidth={'sm'}
-			aria-labelledby={'new-project-title'}
+			aria-labelledby={'commit-project-title'}
 			open={dialogVisible}
 		>
-			<DialogTitle id={'new-project-title'}>{'Create new project'}</DialogTitle>
+			<DialogTitle id={'commit-project-title'}>{'Commit on project'}</DialogTitle>
 			<DialogContent dividers>
 				<FormContainer
 					defaultValues={formData}
-					onSuccess={(data: ICreateProjectParams) => {
+					onSuccess={(data: ICommitOnProjectParams) => {
 						setFormData(data);
-						dispatch(CREATE_PROJECT.request(data));
+						dispatch(COMMIT_ON_PROJECT.request({ ...data, projectId }));
 						setDialogVisible(false);
 					}}
 				>
 					<Stack direction={'column'}>
 						<TextFieldElement
-							type={'text'}
-							name={'authorAddress'}
-							label={'Productor address'}
-							required={true}
-						/>
-						<br />
-						<TextFieldElement
-							type={'text'}
-							name={'name'}
-							label={'Name'}
-							required={true}
-						/>
-						<br />
-						<TextFieldElement
-							type={'text'}
-							name={'symbol'}
-							label={'Symbol'}
-							required={true}
-						/>
-						<br />
-						<TextFieldElement
-							type={'text'}
-							name={'description'}
-							label={'Description'}
-							required={true}
-						/>
-						<br />
-						<TextFieldElement
 							type={'number'}
-							name={'target'}
-							label={'Amount goal'}
-							required={true}
-						/>
-						<br />
-						<TextFieldElement
-							type={'number'}
-							name={'minInvest'}
-							label={'Minimum invest amount'}
-							required={true}
-						/>
-						<br />
-						<TextFieldElement
-							type={'number'}
-							name={'maxInvest'}
-							label={'Minimum invest amount'}
+							name={'amount'}
+							label={'Amount'}
 							required={true}
 						/>
 						<br />

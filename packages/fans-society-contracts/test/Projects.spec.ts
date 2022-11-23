@@ -23,6 +23,7 @@ contract('Projects', (accounts) => {
 			const symbol = 'TGF';
 			const target = 10000;
 			const minInvest = 10;
+			const maxInvest = 100;
 
 			const receipt = await projectsContract.createProject(
 				authorAddress,
@@ -31,6 +32,7 @@ contract('Projects', (accounts) => {
 				description,
 				BN(target),
 				BN(minInvest),
+				BN(maxInvest),
 				{ from: administrator },
 			);
 
@@ -41,6 +43,7 @@ contract('Projects', (accounts) => {
 				description,
 				target: BN(target),
 				minInvest: BN(minInvest),
+				maxInvest: BN(maxInvest),
 				authorAddress,
 			});
 
@@ -49,9 +52,9 @@ contract('Projects', (accounts) => {
 			assert.equal(createdProject['symbol'], symbol);
 			assert.equal(createdProject['description'], description);
 			assert.equal(createdProject['fund'].toNumber(), 0);
-			assert.equal(createdProject['liquidity'].toNumber(), 0);
 			assert.equal(createdProject['target'].toNumber(), target);
 			assert.equal(createdProject['minInvest'].toNumber(), minInvest);
+			assert.equal(createdProject['maxInvest'].toNumber(), maxInvest);
 			assert.equal(createdProject['status'].toNumber(), 0);
 			assert.equal(createdProject['authorAddress'], authorAddress);
 			assert.equal(
