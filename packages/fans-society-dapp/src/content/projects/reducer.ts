@@ -244,20 +244,20 @@ export default createReducer(initialState)
 			state: IProjectsState,
 			action: ActionType<typeof PROJECT_STATUS_CHANGED>,
 		): IProjectsState => {
-			const currentProject =
-				action.payload.id === state.currentProject.item?.id
-					? {
-							...state.currentProject,
-							item: {
-								...state.currentProject.item,
-								$capabilities: {
-									$canAbort:
-										state.contract.info.isOwner &&
-										action.payload.status < ProjectStatus.Launched,
-								},
-							},
-					  }
-					: state.currentProject;
+			let currentProject = state.currentProject;
+			if (action.payload.id === state.currentProject.item?.id) {
+				currentProject = {
+					...state.currentProject,
+					item: {
+						...state.currentProject.item,
+						$capabilities: {
+							$canAbort:
+								state.contract.info.isOwner &&
+								action.payload.status < ProjectStatus.Launched,
+						},
+					},
+				};
+			}
 
 			return {
 				...state,
