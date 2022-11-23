@@ -58,6 +58,7 @@ export interface ProjectCreated {
     description: string;
     target: BN;
     minInvest: BN;
+    maxInvest: BN;
     authorAddress: string;
     0: BN;
     1: string;
@@ -65,7 +66,8 @@ export interface ProjectCreated {
     3: string;
     4: BN;
     5: BN;
-    6: string;
+    6: BN;
+    7: string;
   };
 }
 
@@ -173,6 +175,7 @@ export interface FansSocietyInstance extends Truffle.ContractInstance {
       _description: string,
       _target: number | BN | string,
       _minInvest: number | BN | string,
+      _maxInvest: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<Truffle.TransactionResponse<AllEvents>>;
     call(
@@ -182,6 +185,7 @@ export interface FansSocietyInstance extends Truffle.ContractInstance {
       _description: string,
       _target: number | BN | string,
       _minInvest: number | BN | string,
+      _maxInvest: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<void>;
     sendTransaction(
@@ -191,6 +195,7 @@ export interface FansSocietyInstance extends Truffle.ContractInstance {
       _description: string,
       _target: number | BN | string,
       _minInvest: number | BN | string,
+      _maxInvest: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<string>;
     estimateGas(
@@ -200,6 +205,7 @@ export interface FansSocietyInstance extends Truffle.ContractInstance {
       _description: string,
       _target: number | BN | string,
       _minInvest: number | BN | string,
+      _maxInvest: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<number>;
   };
@@ -361,6 +367,7 @@ export interface FansSocietyInstance extends Truffle.ContractInstance {
         _description: string,
         _target: number | BN | string,
         _minInvest: number | BN | string,
+        _maxInvest: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<Truffle.TransactionResponse<AllEvents>>;
       call(
@@ -370,6 +377,7 @@ export interface FansSocietyInstance extends Truffle.ContractInstance {
         _description: string,
         _target: number | BN | string,
         _minInvest: number | BN | string,
+        _maxInvest: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<void>;
       sendTransaction(
@@ -379,6 +387,7 @@ export interface FansSocietyInstance extends Truffle.ContractInstance {
         _description: string,
         _target: number | BN | string,
         _minInvest: number | BN | string,
+        _maxInvest: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<string>;
       estimateGas(
@@ -388,6 +397,7 @@ export interface FansSocietyInstance extends Truffle.ContractInstance {
         _description: string,
         _target: number | BN | string,
         _minInvest: number | BN | string,
+        _maxInvest: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<number>;
     };

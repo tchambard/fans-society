@@ -5,6 +5,8 @@ import { SET_CURRENT_ACCOUNT } from 'src/eth-network/actions';
 
 import {
 	CLEAR_PROJECTS_TX_ERROR,
+	COMMITED,
+	COMMIT_ON_PROJECT,
 	CREATE_PROJECT,
 	GET_PROJECT,
 	IProjectDetail,
@@ -16,6 +18,7 @@ import {
 	ProjectStatus,
 	PROJECT_ADDED,
 	PROJECT_STATUS_CHANGED,
+	WITHDRAW_ON_PROJECT,
 } from './actions';
 
 export interface IProjectsState {
@@ -158,7 +161,11 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[CREATE_PROJECT.request],
+		[
+			CREATE_PROJECT.request,
+			COMMIT_ON_PROJECT.request,
+			WITHDRAW_ON_PROJECT.request,
+		],
 		(state: IProjectsState): IProjectsState => {
 			return {
 				...state,
@@ -168,7 +175,11 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[CREATE_PROJECT.failure],
+		[
+			CREATE_PROJECT.failure,
+			COMMIT_ON_PROJECT.failure,
+			WITHDRAW_ON_PROJECT.failure,
+		],
 		(
 			state: IProjectsState,
 			action: ActionType<typeof CREATE_PROJECT.failure>,
@@ -182,7 +193,11 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[CREATE_PROJECT.success],
+		[
+			CREATE_PROJECT.success,
+			COMMIT_ON_PROJECT.success,
+			WITHDRAW_ON_PROJECT.success,
+		],
 		(state: IProjectsState): IProjectsState => {
 			return {
 				...state,

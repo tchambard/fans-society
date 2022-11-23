@@ -2,10 +2,12 @@ import { Fragment, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as _ from 'lodash';
 import {
+	Button,
 	IconButton,
 	ListItemIcon,
 	Menu,
 	MenuItem,
+	Stack,
 	Tooltip,
 	useMediaQuery,
 	useTheme,
@@ -15,7 +17,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 export interface IActionMenuItem {
 	title: string;
 	url: string;
-	color: string;
+	color:
+		| 'inherit'
+		| 'primary'
+		| 'secondary'
+		| 'success'
+		| 'error'
+		| 'info'
+		| 'warning';
 	icon: any;
 	hidden?: boolean;
 	description?: string;
@@ -24,9 +33,10 @@ export interface IActionMenuItem {
 
 interface IProps {
 	items: IActionMenuItem[];
+	mode?: 'icon' | 'button';
 }
 
-export default ({ items }: IProps) => {
+export default ({ items, mode }: IProps) => {
 	const theme = useTheme();
 	const upSm = useMediaQuery(theme.breakpoints.up('sm'));
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -37,35 +47,56 @@ export default ({ items }: IProps) => {
 	const handleClose = () => {
 		setAnchorEl(null);
 	};
+
 	return (
 		<>
 			{upSm ? (
-				_.map(items, (item) => {
-					if (!item.hidden) {
-						return (
-							<Tooltip
-								key={item.title}
-								placement={'bottom'}
-								title={item.description || item.title}
-							>
-								<Link to={item.url} onClick={item.onClick}>
-									<IconButton
-										sx={{
-											'&:hover': {
-												background: theme.colors[item.color].lighter,
-											},
-											color: theme.palette[item.color].main,
-										}}
-										color={'inherit'}
-										size={'small'}
-									>
-										{item.icon}
-									</IconButton>
-								</Link>
-							</Tooltip>
-						);
-					}
-				})
+				<Stack direction="row" spacing={2}>
+					{_.map(items, (item) => {
+						if (!item.hidden) {
+							return (
+								<Tooltip
+									key={item.title}
+									placement={'bottom'}
+									title={item.description || item.title}
+								>
+									<Link to={item.url} onClick={item.onClick}>
+										{mode === 'button' ? (
+											<Button
+												sx={{
+													'&:hover': {
+														color: theme.colors[item.color].contrastText,
+														background: theme.colors[item.color].light,
+													},
+													color: theme.palette[item.color].contrastText,
+													background: theme.palette[item.color].light,
+												}}
+												variant={'contained'}
+												color={'inherit'}
+												startIcon={item.icon}
+											>
+												{item.title}
+											</Button>
+										) : (
+											<IconButton
+												sx={{
+													'&:hover': {
+														background: theme.colors[item.color].lighter,
+													},
+													color: theme.palette[item.color].main,
+												}}
+												color={'inherit'}
+												size={'small'}
+											>
+												{item.icon}
+											</IconButton>
+										)}
+									</Link>
+								</Tooltip>
+							);
+						}
+					})}
+				</Stack>
 			) : (
 				<Fragment>
 					<IconButton

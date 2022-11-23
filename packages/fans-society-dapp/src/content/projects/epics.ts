@@ -9,6 +9,7 @@ import { findRpcMessage } from 'src/eth-network/helpers';
 import loggerService from 'src/services/logger-service';
 import {
 	ABORT_PROJECT,
+	COMMIT_ON_PROJECT,
 	CREATE_PROJECT,
 	GET_PROJECT,
 	IProjectDetail,
@@ -16,6 +17,7 @@ import {
 	LIST_PROJECTS,
 	LOAD_PROJECTS_CONTRACT_INFO,
 	ProjectStatus,
+	WITHDRAW_ON_PROJECT,
 } from './actions';
 import { getProjectsContract } from './contract';
 
@@ -40,7 +42,7 @@ export const loadProjectsContractInfo: Epic<
 					account,
 				});
 			} catch (e) {
-				loggerService.log(e.stack);
+				loggerService.log(e.message);
 				return LOAD_PROJECTS_CONTRACT_INFO.failure(findRpcMessage(e));
 			}
 		}),
@@ -73,9 +75,9 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 						id: v.id,
 						name: v.name,
 						description: v.description,
-						symbol: v.symbol,
-						target: +v.target,
-						minInvest: +v.minInvest,
+						target: +web3.utils.fromWei(v.target, 'ether'),
+						minInvest: +web3.utils.fromWei(v.minInvest, 'ether'),
+						maxInvest: +web3.utils.fromWei(v.maxInvest, 'ether'),
 						authorAddress: v.authorAddress,
 						status: projectStatuses[v.id] || ProjectStatus.Opened,
 						$capabilities: {
@@ -87,7 +89,7 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 				logger.table(projects);
 				return LIST_PROJECTS.success(projects);
 			} catch (e) {
-				loggerService.log(e.stack);
+				loggerService.log(e.message);
 				return LIST_PROJECTS.failure(findRpcMessage(e));
 			}
 		}),
@@ -107,16 +109,31 @@ export const createProject: Epic<
 				const account = state$.value.ethNetwork.account;
 				const contract = state$.value.projects.contract.info.contract;
 
-				const { authorAddress, name, symbol, description, target, minInvest } =
-					action.payload;
+				const {
+					authorAddress,
+					name,
+					symbol,
+					description,
+					target,
+					minInvest,
+					maxInvest,
+				} = action.payload;
 
 				await contract.methods
-					.createProject(authorAddress, name, symbol, description, target, minInvest)
+					.createProject(
+						authorAddress,
+						name,
+						symbol,
+						description,
+						web3.utils.toWei(target, 'ether'),
+						web3.utils.toWei(minInvest, 'ether'),
+						web3.utils.toWei(maxInvest, 'ether'),
+					)
 					.send({ from: account });
 
 				return CREATE_PROJECT.success();
 			} catch (e) {
-				loggerService.log(e.stack);
+				loggerService.log(e.message);
 				return CREATE_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
@@ -141,7 +158,7 @@ export const abortProject: Epic<RootAction, RootAction, RootState, Services> = (
 
 				return ABORT_PROJECT.success();
 			} catch (e) {
-				loggerService.log(e.stack);
+				loggerService.log(e.message);
 				return ABORT_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
@@ -168,9 +185,11 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 					name: data.name,
 					description: data.description,
 					symbol: data.symbol,
-					target: +data.target,
-					minInvest: +data.minInvest,
+					target: +web3.utils.fromWei(data.target, 'ether'),
+					minInvest: +web3.utils.fromWei(data.minInvest, 'ether'),
+					maxInvest: +web3.utils.fromWei(data.maxInvest, 'ether'),
 					authorAddress: data.authorAddress,
+					fund: +web3.utils.fromWei(data.fund, 'ether'),
 					status: +data.status,
 					$capabilities: {
 						$canAbort: state$.value.projects.contract.info.isOwner,
@@ -179,8 +198,62 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 				logger.log('=== Project found ===\n', JSON.stringify(project, null, 2));
 				return GET_PROJECT.success(project);
 			} catch (e) {
-				loggerService.log(e.stack);
+				loggerService.log(e.message);
 				return GET_PROJECT.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const commitOnProject: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3 }) => {
+	return action$.pipe(
+		filter(isActionOf(COMMIT_ON_PROJECT.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				const contract = state$.value.projects.contract.info.contract;
+
+				const { projectId, amount } = action.payload;
+
+				await contract.methods
+					.commitOnProject(projectId)
+					.send({ from: account, value: web3.utils.toWei(amount, 'ether') });
+
+				return COMMIT_ON_PROJECT.success();
+			} catch (e) {
+				loggerService.log(e.message);
+				return COMMIT_ON_PROJECT.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const withdrawOnProject: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3 }) => {
+	return action$.pipe(
+		filter(isActionOf(WITHDRAW_ON_PROJECT.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				const contract = state$.value.projects.contract.info.contract;
+
+				const { projectId } = action.payload;
+
+				await contract.methods.withdrawOnProject(projectId).send({ from: account });
+
+				return WITHDRAW_ON_PROJECT.success();
+			} catch (e) {
+				loggerService.log(e.message);
+				return WITHDRAW_ON_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
 	);
