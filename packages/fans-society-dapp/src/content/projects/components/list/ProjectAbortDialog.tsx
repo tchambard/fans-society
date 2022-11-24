@@ -33,6 +33,7 @@ export default ({
 			maxWidth={'sm'}
 			aria-labelledby={'delete-project-title'}
 			open={dialogVisible}
+			fullWidth={true}
 		>
 			<DialogTitle id={'delete-project-title'}>
 				{'Are you sure to abort this project ?'}

@@ -80,6 +80,11 @@ contract Projects is Ownable {
 		_;
 	}
 
+	modifier statusLessThan(uint _id, ProjectStatus _status) {
+		require(projects[_id].status < _status, 'Bad project status');
+		_;
+	}
+
 	modifier isCommited(uint _id) {
 		require(commitments[_id][msg.sender] > 0, 'No commitment');
 		_;
@@ -154,7 +159,7 @@ contract Projects is Ownable {
 		}
 	}
 
-	function withdrawOnProject(uint _id) external statusIs(_id, ProjectStatus.Opened) isCommited(_id) {
+	function withdrawOnProject(uint _id) external statusLessThan(_id, ProjectStatus.Completed) isCommited(_id) {
 		uint commitment = commitments[_id][msg.sender];
 
 		projects[_id].fund -= commitment;

@@ -4,6 +4,7 @@ import {
 	Card,
 	CardMedia,
 	Container,
+	Divider,
 	Grid,
 	IconButton,
 	LinearProgress,
@@ -11,8 +12,8 @@ import {
 	Typography,
 	useTheme,
 } from '@mui/material';
-import { Link } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
+import { Link } from 'react-router-dom';
 
 import ArrowBackTwoToneIcon from '@mui/icons-material/ArrowBackTwoTone';
 
@@ -21,9 +22,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from 'state-types';
 
 import SuspenseLoader from 'src/components/SuspenseLoader';
-import Text from 'src/components/Text';
-import ProjectActions from './ProjectActions';
 import { Routes } from 'src/router';
+import ProjectActions from './ProjectActions';
 
 const AvatarWrapper = styled(Card)(
 	({ theme }) => `
@@ -75,7 +75,9 @@ const LinearProgressWrapper = styled(LinearProgress)(
 export default ({}) => {
 	const theme = useTheme();
 
-	const { currentProject } = useSelector((state: RootState) => state.projects);
+	const { currentProject, commitments } = useSelector(
+		(state: RootState) => state.projects,
+	);
 
 	if (!currentProject.item || currentProject.loading) {
 		return <SuspenseLoader />;
@@ -134,40 +136,45 @@ export default ({}) => {
 						</AvatarWrapper>
 
 						<Box py={2} pl={2} mb={3}>
-							<div
-								style={{
-									padding: '20px',
-									display: 'flex',
-									flexDirection: 'column',
-									alignItems: 'left',
-								}}
-							>
+							<Box>
 								<div style={{ color: theme.palette.text.secondary }}>
 									Minimum invest amount
 								</div>
-								<div style={{ fontSize: '1.5em' }}>{currentProject.item.minInvest}</div>
-
+								<div style={{ fontSize: '1.5em' }}>
+									{currentProject.item.minInvest} ETH
+								</div>
+							</Box>
+							<Box>
 								<div style={{ color: theme.palette.text.secondary }}>
 									Maximum invest amount
 								</div>
-								<div style={{ fontSize: '1.5em' }}>{currentProject.item.maxInvest}</div>
+								<div style={{ fontSize: '1.5em' }}>
+									{currentProject.item.maxInvest} ETH
+								</div>
+							</Box>
+							<Box>
+								<Typography variant={'subtitle2'} gutterBottom>
+									Funds received:{'  '}
+									<span style={{ color: '#bc3aab' }}>
+										<b>{currentProject.item.fund}</b>
+									</span>{' '}
+									ETH
+									<b> / {currentProject.item.target} ETH</b>
+								</Typography>
+								<LinearProgressWrapper
+									value={(currentProject.item.fund / currentProject.item.target) * 100}
+									color={'primary'}
+									variant={'determinate'}
+								/>
+							</Box>
 
-								<Box>
-									<Typography variant={'subtitle2'} gutterBottom>
-										Funds received:{'  '}
-										<span style={{ color: '#bc3aab' }}>
-											<b>{currentProject.item.fund}</b>
-										</span>{' '}
-										ETH
-										<b> / {currentProject.item.target} ETH</b>
-									</Typography>
-									<LinearProgressWrapper
-										value={(currentProject.item.fund / currentProject.item.target) * 100}
-										color={'primary'}
-										variant={'determinate'}
-									/>
-								</Box>
-							</div>
+							<Box>
+								<Divider variant="middle" />
+								<div style={{ color: theme.palette.text.secondary }}>My share</div>
+								<div style={{ fontSize: '1.5em' }}>
+									{commitments.items[currentProject.item.id] || 0} ETH
+								</div>
+							</Box>
 						</Box>
 					</Grid>
 				</Grid>

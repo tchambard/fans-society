@@ -3,7 +3,7 @@
   "chainId": "1337",
   "contracts": {
     "FansSociety": {
-      "address": "0x071586BA1b380B00B793Cc336fe01106B0BFbE6D",
+      "address": "0xFE5f411481565fbF70D8D33D992C78196E014b90",
       "abi": [
         {
           "inputs": [
@@ -131,13 +131,13 @@
             {
               "indexed": false,
               "internalType": "uint256",
-              "name": "maxInvest",
+              "name": "minInvest",
               "type": "uint256"
             },
             {
               "indexed": false,
               "internalType": "uint256",
-              "name": "minInvest",
+              "name": "maxInvest",
               "type": "uint256"
             },
             {
@@ -367,11 +367,6 @@
             {
               "internalType": "uint256",
               "name": "fund",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "liquidity",
               "type": "uint256"
             },
             {
