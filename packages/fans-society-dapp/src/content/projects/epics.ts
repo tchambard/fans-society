@@ -2,7 +2,10 @@ import { Epic } from 'redux-observable';
 import { filter, mergeMap } from 'rxjs/operators';
 import { isActionOf } from 'typesafe-actions';
 
-import { ProjectCreated } from 'fans-society-contracts/types/web3/contracts/FansSociety';
+import {
+	Committed,
+	ProjectCreated,
+} from 'fans-society-contracts/types/web3/contracts/FansSociety';
 import { RootAction, RootState, Services } from 'state-types';
 
 import { findRpcMessage } from 'src/eth-network/helpers';
@@ -12,8 +15,10 @@ import {
 	COMMIT_ON_PROJECT,
 	CREATE_PROJECT,
 	GET_PROJECT,
+	IProjectCommitment,
 	IProjectDetail,
 	IProjectListItem,
+	LIST_MY_PROJECT_COMMITMENTS,
 	LIST_PROJECTS,
 	LOAD_PROJECTS_CONTRACT_INFO,
 	ProjectStatus,
@@ -254,6 +259,46 @@ export const withdrawOnProject: Epic<
 			} catch (e) {
 				loggerService.log(e.message);
 				return WITHDRAW_ON_PROJECT.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const listMyProjectCommitments: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3, logger }) => {
+	return action$.pipe(
+		filter(isActionOf(LIST_MY_PROJECT_COMMITMENTS.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				if (!account) {
+					return LIST_MY_PROJECT_COMMITMENTS.success({});
+				}
+				const contract = state$.value.projects.contract.info.contract;
+
+				const commitments: { [id: string]: number } = (
+					await contract.getPastEvents('Committed', {
+						fromBlock: 0,
+						filter: {
+							projectId: action.payload.projectId,
+							caller: account,
+						},
+					})
+				).reduce((acc, event) => {
+					const { returnValues: v } = event as unknown as Committed;
+					acc[v.id] = (acc[v.id] || 0) + +web3.utils.fromWei(v.amount, 'ether');
+					return acc;
+				}, {} as { [id: string]: number });
+				logger.log('=== commitments ===');
+				logger.table(commitments);
+				return LIST_MY_PROJECT_COMMITMENTS.success(commitments);
+			} catch (e) {
+				loggerService.log(e.message);
+				return LIST_MY_PROJECT_COMMITMENTS.failure(findRpcMessage(e));
 			}
 		}),
 	);

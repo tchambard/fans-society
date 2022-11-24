@@ -1,11 +1,10 @@
-import * as _ from 'lodash';
 import { ActionType, createReducer } from 'typesafe-actions';
 
 import { SET_CURRENT_ACCOUNT } from 'src/eth-network/actions';
 
 import {
+	ADD_PROJECT_COMMITMENT,
 	CLEAR_PROJECTS_TX_ERROR,
-	COMMITED,
 	COMMIT_ON_PROJECT,
 	CREATE_PROJECT,
 	GET_PROJECT,
@@ -13,11 +12,13 @@ import {
 	IProjectListCapabilities,
 	IProjectListItem,
 	IProjectsContractInfo,
+	LIST_MY_PROJECT_COMMITMENTS,
 	LIST_PROJECTS,
 	LOAD_PROJECTS_CONTRACT_INFO,
 	ProjectStatus,
 	PROJECT_ADDED,
 	PROJECT_STATUS_CHANGED,
+	REMOVE_PROJECT_COMMITMENT,
 	WITHDRAW_ON_PROJECT,
 } from './actions';
 
@@ -28,6 +29,10 @@ export interface IProjectsState {
 		$capabilities: IProjectListCapabilities;
 		loading: boolean;
 	};
+	commitments: {
+		items: { [id: string]: number };
+		loading: boolean;
+	};
 	currentProject: { item?: IProjectDetail; loading: boolean };
 	txPending: boolean;
 	error?: string;
@@ -36,6 +41,7 @@ export interface IProjectsState {
 const initialState: IProjectsState = {
 	contract: { loading: false },
 	projects: { items: {}, $capabilities: {}, loading: false },
+	commitments: { items: {}, loading: false },
 	currentProject: { loading: false },
 	txPending: false,
 };
@@ -127,6 +133,7 @@ export default createReducer(initialState)
 			return {
 				...state,
 				projects: {
+					...state.projects,
 					items:
 						action.payload.reduce((acc, p) => {
 							acc[p.id] = p;
@@ -248,6 +255,98 @@ export default createReducer(initialState)
 				currentProject: {
 					item: action.payload,
 					loading: false,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_MY_PROJECT_COMMITMENTS.request],
+		(state: IProjectsState): IProjectsState => {
+			return {
+				...state,
+				commitments: {
+					items: {},
+					loading: true,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_MY_PROJECT_COMMITMENTS.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof LIST_MY_PROJECT_COMMITMENTS.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				commitments: {
+					...state.commitments,
+					loading: false,
+				},
+				error: action.payload,
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_MY_PROJECT_COMMITMENTS.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof LIST_MY_PROJECT_COMMITMENTS.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				commitments: {
+					...state.commitments,
+					items: {
+						...state.commitments.items,
+						...action.payload,
+					},
+					loading: false,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[ADD_PROJECT_COMMITMENT],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof ADD_PROJECT_COMMITMENT>,
+		): IProjectsState => {
+			return {
+				...state,
+				commitments: {
+					...state.commitments,
+					items: {
+						...state.commitments.items,
+						[action.payload.id]:
+							(state.commitments.items[action.payload.id] || 0) +
+							action.payload.amount,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[REMOVE_PROJECT_COMMITMENT],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof REMOVE_PROJECT_COMMITMENT>,
+		): IProjectsState => {
+			return {
+				...state,
+				commitments: {
+					...state.commitments,
+					items: {
+						...state.commitments.items,
+						[action.payload.id]:
+							(state.commitments.items[action.payload.id] || 0) -
+							action.payload.amount,
+					},
 				},
 			};
 		},

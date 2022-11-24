@@ -81,8 +81,8 @@ export interface IProjectStatusChangedEvent {
 
 export interface IProjectCommitment {
 	id: string;
-	address: string;
 	amount: number;
+	address?: string;
 }
 
 export interface IProjectWithdraw {
@@ -95,6 +95,10 @@ export interface IProjectClaim {
 	id: string;
 	address: string;
 	amount: number;
+}
+
+export interface IListMyProjectCommitmentsParams {
+	projectId?: string;
 }
 
 export const LOAD_PROJECTS_CONTRACT_INFO = createAsyncAction(
@@ -131,6 +135,12 @@ export const GET_PROJECT = createAsyncAction(
 	'GET_PROJECT_FAILURE',
 )<string, IProjectDetail, string>();
 
+export const LIST_MY_PROJECT_COMMITMENTS = createAsyncAction(
+	'LIST_MY_PROJECT_COMMITMENTS_REQUEST',
+	'LIST_MY_PROJECT_COMMITMENTS_SUCCESS',
+	'LIST_MY_PROJECT_COMMITMENTS_FAILURE',
+)<IListMyProjectCommitmentsParams, { [id: string]: number }, string>();
+
 export const COMMIT_ON_PROJECT = createAsyncAction(
 	'COMMIT_ON_PROJECT_REQUEST',
 	'COMMIT_ON_PROJECT_SUCCESS',
@@ -148,7 +158,7 @@ export const WITHDRAW_ON_PROJECT = createAsyncAction(
 )<IWithdrawOnProjectParams, void, string>();
 
 export const WITHDRAWED = createAction('WITHDRAWED', (action) => {
-	return (commitment: IProjectWithdraw) => action(commitment);
+	return (withdraw: IProjectWithdraw) => action(withdraw);
 });
 
 export const CLAIM_ON_PROJECT = createAsyncAction(
@@ -158,8 +168,22 @@ export const CLAIM_ON_PROJECT = createAsyncAction(
 )<ICommitOnProjectParams, void, string>();
 
 export const CLAIMED = createAction('CLAIMED', (action) => {
-	return (commitment: IProjectClaim) => action(commitment);
+	return (claim: IProjectClaim) => action(claim);
 });
+
+export const ADD_PROJECT_COMMITMENT = createAction(
+	'ADD_PROJECT_COMMITMENT',
+	(action) => {
+		return (commitment: IProjectCommitment) => action(commitment);
+	},
+);
+
+export const REMOVE_PROJECT_COMMITMENT = createAction(
+	'REMOVE_PROJECT_COMMITMENT',
+	(action) => {
+		return (withdraw: IProjectWithdraw) => action(withdraw);
+	},
+);
 
 export const PROJECT_STATUS_CHANGED = createAction(
 	'PROJECTS_STATUS_CHANGED',

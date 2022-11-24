@@ -33,6 +33,7 @@ export default ({
 			maxWidth={'sm'}
 			aria-labelledby={'withdraw-project-title'}
 			open={dialogVisible}
+			fullWidth={true}
 		>
 			<DialogTitle id={'withdraw-project-title'}>
 				{'Are you sure to withdraw on this project ?'}

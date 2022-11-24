@@ -36,6 +36,7 @@ export default ({
 			maxWidth={'sm'}
 			aria-labelledby={'new-project-title'}
 			open={dialogVisible}
+			fullWidth={true}
 		>
 			<DialogTitle id={'new-project-title'}>{'Create new project'}</DialogTitle>
 			<DialogContent dividers>
@@ -81,6 +82,7 @@ export default ({
 							name={'target'}
 							label={'Amount goal'}
 							required={true}
+							placeholder={'ETH value'}
 						/>
 						<br />
 						<TextFieldElement
@@ -88,6 +90,7 @@ export default ({
 							name={'minInvest'}
 							label={'Minimum invest amount'}
 							required={true}
+							placeholder={'ETH value'}
 						/>
 						<br />
 						<TextFieldElement
@@ -95,6 +98,7 @@ export default ({
 							name={'maxInvest'}
 							label={'Minimum invest amount'}
 							required={true}
+							placeholder={'ETH value'}
 						/>
 						<br />
 						<LoadingButton

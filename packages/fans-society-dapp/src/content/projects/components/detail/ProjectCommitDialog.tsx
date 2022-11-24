@@ -38,6 +38,7 @@ export default ({
 			maxWidth={'sm'}
 			aria-labelledby={'commit-project-title'}
 			open={dialogVisible}
+			fullWidth={true}
 		>
 			<DialogTitle id={'commit-project-title'}>{'Commit on project'}</DialogTitle>
 			<DialogContent dividers>

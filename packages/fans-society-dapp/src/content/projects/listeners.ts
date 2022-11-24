@@ -36,8 +36,8 @@ export const listenProjectCreated = (
 	contractInfo: IProjectsContractInfo,
 	onData: (data: IProjectListItem) => void,
 ): (() => void) => {
+	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: ProjectCreated) => {
-		const web3 = ClientFactory.web3();
 		onData({
 			id: returnValues.id,
 			name: returnValues.name,
@@ -62,11 +62,12 @@ export const listenCommitted = (
 	contractInfo: IProjectsContractInfo,
 	onData: (data: IProjectCommitment) => void,
 ): (() => void) => {
+	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: Committed) => {
 		onData({
 			id: returnValues.id,
 			address: returnValues.caller,
-			amount: +returnValues.amount,
+			amount: +web3.utils.fromWei(returnValues.amount, 'ether'),
 		});
 	};
 	const emitter = contractInfo.contract.events
@@ -79,11 +80,12 @@ export const listenWithdrawed = (
 	contractInfo: IProjectsContractInfo,
 	onData: (data: IProjectWithdraw) => void,
 ): (() => void) => {
+	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: Withdrawed) => {
 		onData({
 			id: returnValues.id,
 			address: returnValues.caller,
-			amount: +returnValues.amount,
+			amount: +web3.utils.fromWei(returnValues.amount, 'ether'),
 		});
 	};
 	const emitter = contractInfo.contract.events
@@ -96,11 +98,12 @@ export const listenClaimed = (
 	contractInfo: IProjectsContractInfo,
 	onData: (data: IProjectClaim) => void,
 ): (() => void) => {
+	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: Claimed) => {
 		onData({
 			id: returnValues.id,
 			address: returnValues.caller,
-			amount: +returnValues.amount,
+			amount: +web3.utils.fromWei(returnValues.amount, 'ether'),
 		});
 	};
 	const emitter = contractInfo.contract.events
