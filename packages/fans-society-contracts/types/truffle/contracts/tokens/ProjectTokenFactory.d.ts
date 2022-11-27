@@ -12,16 +12,6 @@ export interface ProjectTokenFactoryContract
   ): Promise<ProjectTokenFactoryInstance>;
 }
 
-export interface OwnershipTransferred {
-  name: "OwnershipTransferred";
-  args: {
-    previousOwner: string;
-    newOwner: string;
-    0: string;
-    1: string;
-  };
-}
-
 export interface TokenCreated {
   name: "TokenCreated";
   args: {
@@ -34,7 +24,7 @@ export interface TokenCreated {
   };
 }
 
-type AllEvents = OwnershipTransferred | TokenCreated;
+type AllEvents = TokenCreated;
 
 export interface ProjectTokenFactoryInstance extends Truffle.ContractInstance {
   createToken: {
@@ -88,35 +78,6 @@ export interface ProjectTokenFactoryInstance extends Truffle.ContractInstance {
     ): Promise<number>;
   };
 
-  owner(txDetails?: Truffle.TransactionDetails): Promise<string>;
-
-  renounceOwnership: {
-    (txDetails?: Truffle.TransactionDetails): Promise<
-      Truffle.TransactionResponse<AllEvents>
-    >;
-    call(txDetails?: Truffle.TransactionDetails): Promise<void>;
-    sendTransaction(txDetails?: Truffle.TransactionDetails): Promise<string>;
-    estimateGas(txDetails?: Truffle.TransactionDetails): Promise<number>;
-  };
-
-  transferOwnership: {
-    (newOwner: string, txDetails?: Truffle.TransactionDetails): Promise<
-      Truffle.TransactionResponse<AllEvents>
-    >;
-    call(
-      newOwner: string,
-      txDetails?: Truffle.TransactionDetails
-    ): Promise<void>;
-    sendTransaction(
-      newOwner: string,
-      txDetails?: Truffle.TransactionDetails
-    ): Promise<string>;
-    estimateGas(
-      newOwner: string,
-      txDetails?: Truffle.TransactionDetails
-    ): Promise<number>;
-  };
-
   methods: {
     createToken: {
       (
@@ -165,35 +126,6 @@ export interface ProjectTokenFactoryInstance extends Truffle.ContractInstance {
         _authorPoolShare: number | BN | string,
         _amm: string,
         _author: string,
-        txDetails?: Truffle.TransactionDetails
-      ): Promise<number>;
-    };
-
-    owner(txDetails?: Truffle.TransactionDetails): Promise<string>;
-
-    renounceOwnership: {
-      (txDetails?: Truffle.TransactionDetails): Promise<
-        Truffle.TransactionResponse<AllEvents>
-      >;
-      call(txDetails?: Truffle.TransactionDetails): Promise<void>;
-      sendTransaction(txDetails?: Truffle.TransactionDetails): Promise<string>;
-      estimateGas(txDetails?: Truffle.TransactionDetails): Promise<number>;
-    };
-
-    transferOwnership: {
-      (newOwner: string, txDetails?: Truffle.TransactionDetails): Promise<
-        Truffle.TransactionResponse<AllEvents>
-      >;
-      call(
-        newOwner: string,
-        txDetails?: Truffle.TransactionDetails
-      ): Promise<void>;
-      sendTransaction(
-        newOwner: string,
-        txDetails?: Truffle.TransactionDetails
-      ): Promise<string>;
-      estimateGas(
-        newOwner: string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<number>;
     };

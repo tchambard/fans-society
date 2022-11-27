@@ -27,6 +27,10 @@ contract ProjectTokenERC20 is
 		address _amm,
 		address _author
 	) public virtual initializer {
+		require(
+			_totalSupply >= _ammGlobalShare + _authorGlobalShare,
+			'total supply too small'
+		);
 		owner = _amm;
 		maxTotalSupply = _totalSupply;
 
@@ -79,6 +83,11 @@ contract ProjectTokenERC20 is
 		address _amm,
 		address _author
 	) internal onlyInitializing {
+		require(_ammGlobalShare >= _ammPoolShare, 'AMM pool share too large');
+		require(
+			_authorGlobalShare >= _authorPoolShare,
+			'Author pool share too large'
+		);
 		_mint(_amm, _ammGlobalShare);
 		_mint(_author, _authorGlobalShare);
 		_approve(_amm, owner, _ammPoolShare);
@@ -86,7 +95,7 @@ contract ProjectTokenERC20 is
 	}
 
 	function mint(address account, uint256 amount) external {
-		require(msg.sender == owner, 'only owner');
+		require(msg.sender == owner, 'Caller is not AMM');
 		uint totalSupply = totalSupply();
 		require((totalSupply + amount) <= maxTotalSupply, 'maxTotalSupply limit');
 		_mint(account, amount);

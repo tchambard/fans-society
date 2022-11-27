@@ -2,7 +2,18 @@ import * as _ from 'lodash';
 import { assert } from 'chai';
 import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
 
-import { deployProjectsInstances } from './TestHelpers';
+import {
+	AMM_SUPPLY,
+	AMM_TOKENS_POOL_SHARES,
+	AUTHOR_SUPPLY,
+	AUTHOR_TOKENS_POOL_SHARES,
+	deployProjectsInstances,
+	getPoolsCreatedFromPastEvents,
+	getTokensCreatedFromPastEvents,
+	getTokenTransfersFromPastEvents,
+	INVESTORS_SUPPLY,
+	MULTIPLIER,
+} from './TestHelpers';
 import { AllEvents, AMMInstance } from '../types/truffle/contracts/AMM';
 import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/ProjectTokenFactory';
 import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
@@ -21,23 +32,7 @@ enum ProjectStatus {
 
 const address0 = '0x0000000000000000000000000000000000000000';
 
-const MULTIPLIER = 100;
-
-const AMM_SUPPLY = 15;
-const INVESTORS_SUPPLY = 15;
-const AUTHOR_SUPPLY = 70;
-
-const AMM_TOKENS_TEAM_SHARES = 20;
-const AMM_TOKENS_POOL_SHARES = 80;
-const AUTHOR_TOKENS_POOL_SHARES = 80;
-
-const AMM_FUNDS = 15;
-const AUTHOR_FUNDS = 85;
-const AMM_FUNDS_FSOCIETY_SHARES = 20;
-const AMM_FUNDS_POOL_SHARES = 80;
-const AUTHOR_FUNDS_POOL_SHARES = 30;
-
-contract.only('Projects', (accounts) => {
+contract('Projects', (accounts) => {
 	const administrator = accounts[0];
 	const fsociety = accounts[1];
 	const authorAddress = accounts[2];
@@ -46,38 +41,6 @@ contract.only('Projects', (accounts) => {
 	let amm: AMMInstance;
 	let projectTokenFactory: ProjectTokenFactoryInstance;
 	let tokensPoolFactory: TokensPoolFactoryInstance;
-
-	async function getTokensCreatedFromPastEvents() {
-		return (
-			await projectTokenFactory.getPastEvents('TokenCreated', { fromBlock: 0 })
-		).map(({ returnValues }) => ({
-			token: returnValues.token,
-			name: returnValues.name,
-			symbol: returnValues.symbol,
-		}));
-	}
-
-	async function getPoolsCreatedFromPastEvents() {
-		return (
-			await tokensPoolFactory.getPastEvents('PoolCreated', { fromBlock: 0 })
-		).map(({ returnValues }) => ({
-			pool: returnValues.pool,
-			token1: returnValues.token1,
-			token2: returnValues.token2,
-		}));
-	}
-
-	async function getTokenTransfersFromPastEvents(
-		erc20Instance: ProjectTokenERC20Instance,
-	) {
-		return (await erc20Instance.getPastEvents('Transfer', { fromBlock: 0 })).map(
-			({ returnValues }) => ({
-				from: returnValues.from,
-				to: returnValues.to,
-				value: +returnValues.value,
-			}),
-		);
-	}
 
 	beforeEach(async () => {
 		const contracts = await deployProjectsInstances(administrator, fsociety);
@@ -219,28 +182,40 @@ contract.only('Projects', (accounts) => {
 				assert.equal(event?.returnValues.status, ProjectStatus.Completed);
 			});
 
-			it('> launchProject should succeed when funds are completed', async () => {
-				const receipt = await amm.launchProject(projectId, { from: administrator });
+			describe('> launchProject', () => {
+				let launchProjectReceipt: Truffle.TransactionResponse<AllEvents>;
 
-				await expectEvent(receipt, 'ProjectStatusChanged', {
-					id: BN(1),
-					status: BN(ProjectStatus.Launched),
+				beforeEach(async () => {
+					launchProjectReceipt = await amm.launchProject(projectId, {
+						from: administrator,
+					});
 				});
 
-				const lastTokenCreated = _.last(await getTokensCreatedFromPastEvents());
+				it('> should change project status', async () => {
+					await expectEvent(launchProjectReceipt, 'ProjectStatusChanged', {
+						id: BN(1),
+						status: BN(ProjectStatus.Launched),
+					});
+				});
 
-				assert.equal(lastTokenCreated?.name, name);
-				assert.equal(lastTokenCreated?.symbol, symbol);
+				it('> should create token with expected supply and max supply', async () => {
+					const lastTokenCreated = _.last(
+						await getTokensCreatedFromPastEvents(projectTokenFactory),
+					);
 
-				const erc20Instance = await ProjectTokenERC20.at(lastTokenCreated?.token);
-				assert.equal(
-					(await erc20Instance.totalSupply()).toNumber(),
-					expectedAuthorSupply + expectedAmmSupply,
-				);
-				assert.equal(
-					(await erc20Instance.maxTotalSupply()).toNumber(),
-					totalSupply * 10_000,
-				);
+					assert.equal(lastTokenCreated?.name, name);
+					assert.equal(lastTokenCreated?.symbol, symbol);
+
+					const erc20Instance = await ProjectTokenERC20.at(lastTokenCreated?.token);
+					assert.equal(
+						(await erc20Instance.totalSupply()).toNumber(),
+						expectedAuthorSupply + expectedAmmSupply,
+					);
+					assert.equal(
+						(await erc20Instance.maxTotalSupply()).toNumber(),
+						totalSupply * 10_000,
+					);
+				});
 			});
 
 			describe('> project is launched', () => {
@@ -252,9 +227,13 @@ contract.only('Projects', (accounts) => {
 					launchProjectReceipt = await amm.launchProject(projectId, {
 						from: administrator,
 					});
-					const tokenCreated = _.last(await getTokensCreatedFromPastEvents());
+					const tokenCreated = _.last(
+						await getTokensCreatedFromPastEvents(projectTokenFactory),
+					);
 					erc20Instance = await ProjectTokenERC20.at(tokenCreated?.token);
-					const poolCreated = _.last(await getPoolsCreatedFromPastEvents());
+					const poolCreated = _.last(
+						await getPoolsCreatedFromPastEvents(tokensPoolFactory),
+					);
 					poolInstance = await TokensPool.at(poolCreated?.pool);
 				});
 
