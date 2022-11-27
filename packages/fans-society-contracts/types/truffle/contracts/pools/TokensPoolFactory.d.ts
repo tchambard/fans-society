@@ -23,10 +23,12 @@ export interface OwnershipTransferred {
 export interface PoolCreated {
   name: "PoolCreated";
   args: {
-    poolAddress: string;
-    _hash: string;
+    pool: string;
+    token1: string;
+    token2: string;
     0: string;
     1: string;
+    2: string;
   };
 }
 
@@ -43,7 +45,7 @@ export interface TokensPoolFactoryInstance extends Truffle.ContractInstance {
       _token1: string,
       _token2: string,
       txDetails?: Truffle.TransactionDetails
-    ): Promise<{ 0: string; 1: string }>;
+    ): Promise<string>;
     sendTransaction(
       _token1: string,
       _token2: string,
@@ -56,12 +58,7 @@ export interface TokensPoolFactoryInstance extends Truffle.ContractInstance {
     ): Promise<number>;
   };
 
-  getPoolByHash(
-    _hash: string,
-    txDetails?: Truffle.TransactionDetails
-  ): Promise<string>;
-
-  getPoolByTokensPair(
+  getPool(
     _token1: string,
     _token2: string,
     txDetails?: Truffle.TransactionDetails
@@ -112,7 +109,7 @@ export interface TokensPoolFactoryInstance extends Truffle.ContractInstance {
         _token1: string,
         _token2: string,
         txDetails?: Truffle.TransactionDetails
-      ): Promise<{ 0: string; 1: string }>;
+      ): Promise<string>;
       sendTransaction(
         _token1: string,
         _token2: string,
@@ -125,12 +122,7 @@ export interface TokensPoolFactoryInstance extends Truffle.ContractInstance {
       ): Promise<number>;
     };
 
-    getPoolByHash(
-      _hash: string,
-      txDetails?: Truffle.TransactionDetails
-    ): Promise<string>;
-
-    getPoolByTokensPair(
+    getPool(
       _token1: string,
       _token2: string,
       txDetails?: Truffle.TransactionDetails

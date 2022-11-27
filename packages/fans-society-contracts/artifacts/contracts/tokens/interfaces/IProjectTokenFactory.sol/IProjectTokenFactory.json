@@ -16,54 +16,45 @@
           "type": "string"
         },
         {
-          "internalType": "address",
-          "name": "_fsocietyAddress",
-          "type": "address"
+          "internalType": "uint40",
+          "name": "_totalSupply",
+          "type": "uint40"
         },
         {
-          "internalType": "uint256",
-          "name": "_fsocietySupply",
-          "type": "uint256"
+          "internalType": "uint40",
+          "name": "_ammGlobalShare",
+          "type": "uint40"
+        },
+        {
+          "internalType": "uint40",
+          "name": "_ammPoolShare",
+          "type": "uint40"
+        },
+        {
+          "internalType": "uint40",
+          "name": "_authorGlobalShare",
+          "type": "uint40"
+        },
+        {
+          "internalType": "uint40",
+          "name": "_authorPoolShare",
+          "type": "uint40"
+        },
+        {
+          "internalType": "address",
+          "name": "_amm",
+          "type": "address"
         },
         {
           "internalType": "address",
           "name": "_author",
           "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_authorSupply",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_otherSupply",
-          "type": "uint256"
         }
       ],
       "name": "createToken",
       "outputs": [
         {
           "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        }
-      ],
-      "name": "tokens",
-      "outputs": [
-        {
-          "internalType": "contract IERC20MetadataUpgradeable",
           "name": "",
           "type": "address"
         }

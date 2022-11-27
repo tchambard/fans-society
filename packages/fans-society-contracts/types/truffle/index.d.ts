@@ -9,14 +9,18 @@ import { IERC20UpgradeableContract } from "./IERC20Upgradeable";
 import { ContextUpgradeableContract } from "./ContextUpgradeable";
 import { OwnableContract } from "./Ownable";
 import { ERC20Contract } from "./ERC20";
+import { IERC20PermitContract } from "./IERC20Permit";
+import { ERC20WrapperContract } from "./ERC20Wrapper";
 import { IERC20MetadataContract } from "./IERC20Metadata";
 import { IERC20Contract } from "./IERC20";
-import { FansSocietyContract } from "./FansSociety";
+import { AMMContract } from "./AMM";
+import { WETHTokenContract } from "./WETHToken";
+import { IWETHContract } from "./IWETH";
 import { ITokensPoolFactoryContract } from "./ITokensPoolFactory";
 import { TokensPoolContract } from "./TokensPool";
 import { TokensPoolFactoryContract } from "./TokensPoolFactory";
 import { ProjectsContract } from "./Projects";
-import { WETHTokenContract } from "./WETHToken";
+import { IProjectTokenERC20Contract } from "./IProjectTokenERC20";
 import { IProjectTokenFactoryContract } from "./IProjectTokenFactory";
 import { ProjectTokenERC20Contract } from "./ProjectTokenERC20";
 import { ProjectTokenFactoryContract } from "./ProjectTokenFactory";
@@ -33,14 +37,18 @@ declare global {
       require(name: "ContextUpgradeable"): ContextUpgradeableContract;
       require(name: "Ownable"): OwnableContract;
       require(name: "ERC20"): ERC20Contract;
+      require(name: "IERC20Permit"): IERC20PermitContract;
+      require(name: "ERC20Wrapper"): ERC20WrapperContract;
       require(name: "IERC20Metadata"): IERC20MetadataContract;
       require(name: "IERC20"): IERC20Contract;
-      require(name: "FansSociety"): FansSocietyContract;
+      require(name: "AMM"): AMMContract;
+      require(name: "WETHToken"): WETHTokenContract;
+      require(name: "IWETH"): IWETHContract;
       require(name: "ITokensPoolFactory"): ITokensPoolFactoryContract;
       require(name: "TokensPool"): TokensPoolContract;
       require(name: "TokensPoolFactory"): TokensPoolFactoryContract;
       require(name: "Projects"): ProjectsContract;
-      require(name: "WETHToken"): WETHTokenContract;
+      require(name: "IProjectTokenERC20"): IProjectTokenERC20Contract;
       require(name: "IProjectTokenFactory"): IProjectTokenFactoryContract;
       require(name: "ProjectTokenERC20"): ProjectTokenERC20Contract;
       require(name: "ProjectTokenFactory"): ProjectTokenFactoryContract;
@@ -67,12 +75,16 @@ export {
 } from "./ContextUpgradeable";
 export { OwnableContract, OwnableInstance } from "./Ownable";
 export { ERC20Contract, ERC20Instance } from "./ERC20";
+export { IERC20PermitContract, IERC20PermitInstance } from "./IERC20Permit";
+export { ERC20WrapperContract, ERC20WrapperInstance } from "./ERC20Wrapper";
 export {
   IERC20MetadataContract,
   IERC20MetadataInstance,
 } from "./IERC20Metadata";
 export { IERC20Contract, IERC20Instance } from "./IERC20";
-export { FansSocietyContract, FansSocietyInstance } from "./FansSociety";
+export { AMMContract, AMMInstance } from "./AMM";
+export { WETHTokenContract, WETHTokenInstance } from "./WETHToken";
+export { IWETHContract, IWETHInstance } from "./IWETH";
 export {
   ITokensPoolFactoryContract,
   ITokensPoolFactoryInstance,
@@ -83,7 +95,10 @@ export {
   TokensPoolFactoryInstance,
 } from "./TokensPoolFactory";
 export { ProjectsContract, ProjectsInstance } from "./Projects";
-export { WETHTokenContract, WETHTokenInstance } from "./WETHToken";
+export {
+  IProjectTokenERC20Contract,
+  IProjectTokenERC20Instance,
+} from "./IProjectTokenERC20";
 export {
   IProjectTokenFactoryContract,
   IProjectTokenFactoryInstance,

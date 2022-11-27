@@ -19,59 +19,49 @@ export interface IProjectTokenFactoryInstance extends Truffle.ContractInstance {
     (
       _name: string,
       _symbol: string,
-      _fsocietyAddress: string,
-      _fsocietySupply: number | BN | string,
+      _totalSupply: number | BN | string,
+      _ammGlobalShare: number | BN | string,
+      _ammPoolShare: number | BN | string,
+      _authorGlobalShare: number | BN | string,
+      _authorPoolShare: number | BN | string,
+      _amm: string,
       _author: string,
-      _authorSupply: number | BN | string,
-      _otherSupply: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<Truffle.TransactionResponse<AllEvents>>;
     call(
       _name: string,
       _symbol: string,
-      _fsocietyAddress: string,
-      _fsocietySupply: number | BN | string,
+      _totalSupply: number | BN | string,
+      _ammGlobalShare: number | BN | string,
+      _ammPoolShare: number | BN | string,
+      _authorGlobalShare: number | BN | string,
+      _authorPoolShare: number | BN | string,
+      _amm: string,
       _author: string,
-      _authorSupply: number | BN | string,
-      _otherSupply: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<string>;
     sendTransaction(
       _name: string,
       _symbol: string,
-      _fsocietyAddress: string,
-      _fsocietySupply: number | BN | string,
+      _totalSupply: number | BN | string,
+      _ammGlobalShare: number | BN | string,
+      _ammPoolShare: number | BN | string,
+      _authorGlobalShare: number | BN | string,
+      _authorPoolShare: number | BN | string,
+      _amm: string,
       _author: string,
-      _authorSupply: number | BN | string,
-      _otherSupply: number | BN | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<string>;
     estimateGas(
       _name: string,
       _symbol: string,
-      _fsocietyAddress: string,
-      _fsocietySupply: number | BN | string,
+      _totalSupply: number | BN | string,
+      _ammGlobalShare: number | BN | string,
+      _ammPoolShare: number | BN | string,
+      _authorGlobalShare: number | BN | string,
+      _authorPoolShare: number | BN | string,
+      _amm: string,
       _author: string,
-      _authorSupply: number | BN | string,
-      _otherSupply: number | BN | string,
-      txDetails?: Truffle.TransactionDetails
-    ): Promise<number>;
-  };
-
-  tokens: {
-    (tokenAddress: string, txDetails?: Truffle.TransactionDetails): Promise<
-      Truffle.TransactionResponse<AllEvents>
-    >;
-    call(
-      tokenAddress: string,
-      txDetails?: Truffle.TransactionDetails
-    ): Promise<string>;
-    sendTransaction(
-      tokenAddress: string,
-      txDetails?: Truffle.TransactionDetails
-    ): Promise<string>;
-    estimateGas(
-      tokenAddress: string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<number>;
   };
@@ -81,59 +71,49 @@ export interface IProjectTokenFactoryInstance extends Truffle.ContractInstance {
       (
         _name: string,
         _symbol: string,
-        _fsocietyAddress: string,
-        _fsocietySupply: number | BN | string,
+        _totalSupply: number | BN | string,
+        _ammGlobalShare: number | BN | string,
+        _ammPoolShare: number | BN | string,
+        _authorGlobalShare: number | BN | string,
+        _authorPoolShare: number | BN | string,
+        _amm: string,
         _author: string,
-        _authorSupply: number | BN | string,
-        _otherSupply: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<Truffle.TransactionResponse<AllEvents>>;
       call(
         _name: string,
         _symbol: string,
-        _fsocietyAddress: string,
-        _fsocietySupply: number | BN | string,
+        _totalSupply: number | BN | string,
+        _ammGlobalShare: number | BN | string,
+        _ammPoolShare: number | BN | string,
+        _authorGlobalShare: number | BN | string,
+        _authorPoolShare: number | BN | string,
+        _amm: string,
         _author: string,
-        _authorSupply: number | BN | string,
-        _otherSupply: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<string>;
       sendTransaction(
         _name: string,
         _symbol: string,
-        _fsocietyAddress: string,
-        _fsocietySupply: number | BN | string,
+        _totalSupply: number | BN | string,
+        _ammGlobalShare: number | BN | string,
+        _ammPoolShare: number | BN | string,
+        _authorGlobalShare: number | BN | string,
+        _authorPoolShare: number | BN | string,
+        _amm: string,
         _author: string,
-        _authorSupply: number | BN | string,
-        _otherSupply: number | BN | string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<string>;
       estimateGas(
         _name: string,
         _symbol: string,
-        _fsocietyAddress: string,
-        _fsocietySupply: number | BN | string,
+        _totalSupply: number | BN | string,
+        _ammGlobalShare: number | BN | string,
+        _ammPoolShare: number | BN | string,
+        _authorGlobalShare: number | BN | string,
+        _authorPoolShare: number | BN | string,
+        _amm: string,
         _author: string,
-        _authorSupply: number | BN | string,
-        _otherSupply: number | BN | string,
-        txDetails?: Truffle.TransactionDetails
-      ): Promise<number>;
-    };
-
-    tokens: {
-      (tokenAddress: string, txDetails?: Truffle.TransactionDetails): Promise<
-        Truffle.TransactionResponse<AllEvents>
-      >;
-      call(
-        tokenAddress: string,
-        txDetails?: Truffle.TransactionDetails
-      ): Promise<string>;
-      sendTransaction(
-        tokenAddress: string,
-        txDetails?: Truffle.TransactionDetails
-      ): Promise<string>;
-      estimateGas(
-        tokenAddress: string,
         txDetails?: Truffle.TransactionDetails
       ): Promise<number>;
     };

@@ -49,8 +49,9 @@ export type ProjectCreated = ContractEventLog<{
   symbol: string;
   description: string;
   target: string;
-  maxInvest: string;
   minInvest: string;
+  maxInvest: string;
+  totalSupply: string;
   authorAddress: string;
   0: string;
   1: string;
@@ -60,6 +61,7 @@ export type ProjectCreated = ContractEventLog<{
   5: string;
   6: string;
   7: string;
+  8: string;
 }>;
 export type ProjectStatusChanged = ContractEventLog<{
   id: string;
@@ -106,7 +108,8 @@ export interface FansSociety extends BaseContract {
       _description: string,
       _target: number | string | BN,
       _minInvest: number | string | BN,
-      _maxInvest: number | string | BN
+      _maxInvest: number | string | BN,
+      _totalSupply: number | string | BN
     ): NonPayableTransactionObject<void>;
 
     launchProject(_id: number | string | BN): NonPayableTransactionObject<void>;
@@ -118,10 +121,10 @@ export interface FansSociety extends BaseContract {
       symbol: string;
       description: string;
       fund: string;
-      liquidity: string;
       target: string;
       minInvest: string;
       maxInvest: string;
+      totalSupply: string;
       status: string;
       authorAddress: string;
       tokenAddress: string;

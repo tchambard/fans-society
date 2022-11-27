@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
 
 import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/ProjectTokenFactory';
-import { TokensPoolFactoryInstance } from '../types/truffle/contracts/pool/TokensPoolFactory';
+import { TokensPoolFactoryInstance } from '../types/truffle/contracts/pools/TokensPoolFactory';
 import {
 	deployProjectTokenFactoryInstance,
 	deployTokensPoolFactoryInstance,
@@ -26,7 +26,8 @@ const mapTokenCreatedEvent = ({ returnValues }): IToken => ({
 
 const mapPoolCreatedEvent = ({ returnValues }) => ({
 	poolAddress: returnValues.poolAddress,
-	hash: returnValues._hash,
+	token1: returnValues.token1,
+	token2: returnValues.token2,
 });
 
 contract('Pools', (accounts) => {
@@ -92,7 +93,17 @@ contract('Pools', (accounts) => {
 			).map(mapPoolCreatedEvent);
 
 			assert.lengthOf(events, 1);
-			assert.isDefined(events[0].hash);
+			assert.isDefined(events[0].poolAddress);
+		});
+
+		it('> should create a token pair pool', async () => {
+			const events = (
+				await tokensPoolFactory.getPastEvents('PoolCreated', {
+					fromBlock: 0,
+				})
+			).map(mapPoolCreatedEvent);
+
+			assert.lengthOf(events, 1);
 			assert.isDefined(events[0].poolAddress);
 		});
 	});

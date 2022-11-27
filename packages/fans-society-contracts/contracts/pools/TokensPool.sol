@@ -7,17 +7,16 @@ import { IERC20MetadataUpgradeable } from '@openzeppelin/contracts-upgradeable/t
 import { ITokensPool } from './interfaces/ITokensPool.sol';
 
 contract TokensPool is Initializable, ITokensPool {
+	address private token1;
+	address private token2;
+	uint private vault1;
+	uint private vault2;
 
-    IERC20MetadataUpgradeable private token1;
-    IERC20MetadataUpgradeable private token2;
-
-    function initialize(
-        address _token1,
-        address _token2
-    ) public virtual initializer {
-        token1 = IERC20MetadataUpgradeable(_token1);
-        token2 = IERC20MetadataUpgradeable(_token2);
-    }
-    
+	function initialize(
+		address _token1,
+		address _token2
+	) public virtual initializer {
+		token1 = _token1;
+		token2 = _token2;
+	}
 }
-

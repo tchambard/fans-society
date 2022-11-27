@@ -22,33 +22,9 @@
           "internalType": "address",
           "name": "poolAddress",
           "type": "address"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "poolHash",
-          "type": "bytes32"
         }
       ],
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "_hash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "getPoolByHash",
-      "outputs": [
-        {
-          "internalType": "contract ITokensPool",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -64,11 +40,11 @@
           "type": "address"
         }
       ],
-      "name": "getPoolByTokensPair",
+      "name": "getPool",
       "outputs": [
         {
-          "internalType": "contract ITokensPool",
-          "name": "",
+          "internalType": "address",
+          "name": "pool",
           "type": "address"
         }
       ],
