@@ -24,7 +24,7 @@ import {
 	ProjectStatus,
 	WITHDRAW_ON_PROJECT,
 } from './actions';
-import { getProjectsContract } from './contract';
+import { getAMMContract } from './contract';
 
 export const loadProjectsContractInfo: Epic<
 	RootAction,
@@ -38,7 +38,7 @@ export const loadProjectsContractInfo: Epic<
 			try {
 				const accounts = await web3.eth.requestAccounts();
 				const account = accounts[0];
-				const contract = await getProjectsContract(web3);
+				const contract = await getAMMContract(web3);
 				const owner = await contract.methods.owner().call();
 
 				return LOAD_PROJECTS_CONTRACT_INFO.success({

@@ -12,9 +12,11 @@ contract ProjectTokenERC20 is
 	ERC20Upgradeable,
 	IProjectTokenERC20
 {
-	uint public maxTotalSupply;
+	uint256 public maxTotalSupply;
 
 	address private owner;
+
+	mapping(address => bool) private claimed;
 
 	function initialize(
 		string memory _name,
@@ -94,10 +96,12 @@ contract ProjectTokenERC20 is
 		_approve(_author, owner, _authorPoolShare);
 	}
 
-	function mint(address account, uint256 amount) external {
+	function claim(address account, uint256 amount) external {
 		require(msg.sender == owner, 'Caller is not AMM');
-		uint totalSupply = totalSupply();
+		require(!claimed[account], 'already claimed');
+		uint256 totalSupply = totalSupply();
 		require((totalSupply + amount) <= maxTotalSupply, 'maxTotalSupply limit');
 		_mint(account, amount);
+		claimed[account] = true;
 	}
 }

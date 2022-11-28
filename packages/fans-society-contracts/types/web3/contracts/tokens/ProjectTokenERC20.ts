@@ -62,6 +62,11 @@ export interface ProjectTokenERC20 extends BaseContract {
 
     balanceOf(account: string): NonPayableTransactionObject<string>;
 
+    claim(
+      account: string,
+      amount: number | string | BN
+    ): NonPayableTransactionObject<void>;
+
     decimals(): NonPayableTransactionObject<string>;
 
     decreaseAllowance(
@@ -77,17 +82,16 @@ export interface ProjectTokenERC20 extends BaseContract {
     initialize(
       _name: string,
       _symbol: string,
-      _maxTotalSupply: number | string | BN,
-      _ammShare: number | string | BN,
-      _authorShare: number | string | BN,
+      _totalSupply: number | string | BN,
+      _ammGlobalShare: number | string | BN,
+      _ammPoolShare: number | string | BN,
+      _authorGlobalShare: number | string | BN,
+      _authorPoolShare: number | string | BN,
       _amm: string,
       _author: string
     ): NonPayableTransactionObject<void>;
 
-    mint(
-      account: string,
-      amount: number | string | BN
-    ): NonPayableTransactionObject<void>;
+    maxTotalSupply(): NonPayableTransactionObject<string>;
 
     name(): NonPayableTransactionObject<string>;
 

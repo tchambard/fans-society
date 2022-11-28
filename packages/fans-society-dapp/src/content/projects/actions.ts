@@ -4,7 +4,7 @@ import { contracts } from 'fans-society-contracts';
 import { String } from 'lodash';
 
 export interface IProjectsContractInfo {
-	contract: contracts.Projects;
+	contract: contracts.AMM;
 	isOwner: boolean;
 	account: string;
 }

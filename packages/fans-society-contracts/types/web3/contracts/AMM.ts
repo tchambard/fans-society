@@ -21,14 +21,6 @@ export interface EventOptions {
   topics?: string[];
 }
 
-export type Claimed = ContractEventLog<{
-  id: string;
-  caller: string;
-  amount: string;
-  0: string;
-  1: string;
-  2: string;
-}>;
 export type Committed = ContractEventLog<{
   id: string;
   caller: string;
@@ -69,6 +61,16 @@ export type ProjectStatusChanged = ContractEventLog<{
   0: string;
   1: string;
 }>;
+export type TokensClaimed = ContractEventLog<{
+  projectId: string;
+  token: string;
+  caller: string;
+  amount: string;
+  0: string;
+  1: string;
+  2: string;
+  3: string;
+}>;
 export type Withdrawed = ContractEventLog<{
   id: string;
   caller: string;
@@ -89,7 +91,7 @@ export interface AMM extends BaseContract {
     abortProject(_id: number | string | BN): NonPayableTransactionObject<void>;
 
     claimProjectTokens(
-      _id: number | string | BN
+      _projectId: number | string | BN
     ): NonPayableTransactionObject<void>;
 
     commitOnProject(_id: number | string | BN): PayableTransactionObject<void>;
@@ -152,9 +154,6 @@ export interface AMM extends BaseContract {
     ): NonPayableTransactionObject<void>;
   };
   events: {
-    Claimed(cb?: Callback<Claimed>): EventEmitter;
-    Claimed(options?: EventOptions, cb?: Callback<Claimed>): EventEmitter;
-
     Committed(cb?: Callback<Committed>): EventEmitter;
     Committed(options?: EventOptions, cb?: Callback<Committed>): EventEmitter;
 
@@ -176,14 +175,17 @@ export interface AMM extends BaseContract {
       cb?: Callback<ProjectStatusChanged>
     ): EventEmitter;
 
+    TokensClaimed(cb?: Callback<TokensClaimed>): EventEmitter;
+    TokensClaimed(
+      options?: EventOptions,
+      cb?: Callback<TokensClaimed>
+    ): EventEmitter;
+
     Withdrawed(cb?: Callback<Withdrawed>): EventEmitter;
     Withdrawed(options?: EventOptions, cb?: Callback<Withdrawed>): EventEmitter;
 
     allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter;
   };
-
-  once(event: "Claimed", cb: Callback<Claimed>): void;
-  once(event: "Claimed", options: EventOptions, cb: Callback<Claimed>): void;
 
   once(event: "Committed", cb: Callback<Committed>): void;
   once(
@@ -211,6 +213,13 @@ export interface AMM extends BaseContract {
     event: "ProjectStatusChanged",
     options: EventOptions,
     cb: Callback<ProjectStatusChanged>
+  ): void;
+
+  once(event: "TokensClaimed", cb: Callback<TokensClaimed>): void;
+  once(
+    event: "TokensClaimed",
+    options: EventOptions,
+    cb: Callback<TokensClaimed>
   ): void;
 
   once(event: "Withdrawed", cb: Callback<Withdrawed>): void;

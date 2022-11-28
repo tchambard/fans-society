@@ -28,7 +28,7 @@ export type OwnershipTransferred = ContractEventLog<{
   1: string;
 }>;
 export type PoolCreated = ContractEventLog<{
-  poolAddress: string;
+  pool: string;
   token1: string;
   token2: string;
   0: string;

@@ -21,14 +21,6 @@ export interface EventOptions {
   topics?: string[];
 }
 
-export type Claimed = ContractEventLog<{
-  id: string;
-  caller: string;
-  amount: string;
-  0: string;
-  1: string;
-  2: string;
-}>;
 export type Committed = ContractEventLog<{
   id: string;
   caller: string;
@@ -146,9 +138,6 @@ export interface Projects extends BaseContract {
     ): NonPayableTransactionObject<void>;
   };
   events: {
-    Claimed(cb?: Callback<Claimed>): EventEmitter;
-    Claimed(options?: EventOptions, cb?: Callback<Claimed>): EventEmitter;
-
     Committed(cb?: Callback<Committed>): EventEmitter;
     Committed(options?: EventOptions, cb?: Callback<Committed>): EventEmitter;
 
@@ -175,9 +164,6 @@ export interface Projects extends BaseContract {
 
     allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter;
   };
-
-  once(event: "Claimed", cb: Callback<Claimed>): void;
-  once(event: "Claimed", options: EventOptions, cb: Callback<Claimed>): void;
 
   once(event: "Committed", cb: Callback<Committed>): void;
   once(

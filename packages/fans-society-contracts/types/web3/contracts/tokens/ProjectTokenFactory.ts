@@ -21,12 +21,6 @@ export interface EventOptions {
   topics?: string[];
 }
 
-export type OwnershipTransferred = ContractEventLog<{
-  previousOwner: string;
-  newOwner: string;
-  0: string;
-  1: string;
-}>;
 export type TokenCreated = ContractEventLog<{
   token: string;
   name: string;
@@ -47,28 +41,16 @@ export interface ProjectTokenFactory extends BaseContract {
     createToken(
       _name: string,
       _symbol: string,
-      _totalShare: number | string | BN,
-      _ammShare: number | string | BN,
-      _authorShare: number | string | BN,
+      _totalSupply: number | string | BN,
+      _ammGlobalShare: number | string | BN,
+      _ammPoolShare: number | string | BN,
+      _authorGlobalShare: number | string | BN,
+      _authorPoolShare: number | string | BN,
       _amm: string,
       _author: string
     ): NonPayableTransactionObject<string>;
-
-    owner(): NonPayableTransactionObject<string>;
-
-    renounceOwnership(): NonPayableTransactionObject<void>;
-
-    tokens(arg0: string): NonPayableTransactionObject<string>;
-
-    transferOwnership(newOwner: string): NonPayableTransactionObject<void>;
   };
   events: {
-    OwnershipTransferred(cb?: Callback<OwnershipTransferred>): EventEmitter;
-    OwnershipTransferred(
-      options?: EventOptions,
-      cb?: Callback<OwnershipTransferred>
-    ): EventEmitter;
-
     TokenCreated(cb?: Callback<TokenCreated>): EventEmitter;
     TokenCreated(
       options?: EventOptions,
@@ -77,13 +59,6 @@ export interface ProjectTokenFactory extends BaseContract {
 
     allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter;
   };
-
-  once(event: "OwnershipTransferred", cb: Callback<OwnershipTransferred>): void;
-  once(
-    event: "OwnershipTransferred",
-    options: EventOptions,
-    cb: Callback<OwnershipTransferred>
-  ): void;
 
   once(event: "TokenCreated", cb: Callback<TokenCreated>): void;
   once(

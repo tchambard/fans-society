@@ -71,9 +71,7 @@ export interface IProjectTokenERC20Instance extends Truffle.ContractInstance {
     txDetails?: Truffle.TransactionDetails
   ): Promise<BN>;
 
-  decimals(txDetails?: Truffle.TransactionDetails): Promise<BN>;
-
-  mint: {
+  claim: {
     (
       account: string,
       amount: number | BN | string,
@@ -95,6 +93,8 @@ export interface IProjectTokenERC20Instance extends Truffle.ContractInstance {
       txDetails?: Truffle.TransactionDetails
     ): Promise<number>;
   };
+
+  decimals(txDetails?: Truffle.TransactionDetails): Promise<BN>;
 
   name(txDetails?: Truffle.TransactionDetails): Promise<string>;
 
@@ -187,9 +187,7 @@ export interface IProjectTokenERC20Instance extends Truffle.ContractInstance {
       txDetails?: Truffle.TransactionDetails
     ): Promise<BN>;
 
-    decimals(txDetails?: Truffle.TransactionDetails): Promise<BN>;
-
-    mint: {
+    claim: {
       (
         account: string,
         amount: number | BN | string,
@@ -211,6 +209,8 @@ export interface IProjectTokenERC20Instance extends Truffle.ContractInstance {
         txDetails?: Truffle.TransactionDetails
       ): Promise<number>;
     };
+
+    decimals(txDetails?: Truffle.TransactionDetails): Promise<BN>;
 
     name(txDetails?: Truffle.TransactionDetails): Promise<string>;
 
