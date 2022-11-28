@@ -107,7 +107,7 @@ export const listenClaimed = (
 		});
 	};
 	const emitter = contractInfo.contract.events
-		.Claimed()
+		.TokensClaimed()
 		.on('data', eventHandler);
 	return () => emitter.removeListener('data', eventHandler);
 };
