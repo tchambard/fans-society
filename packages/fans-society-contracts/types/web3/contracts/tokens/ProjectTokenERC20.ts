@@ -77,12 +77,16 @@ export interface ProjectTokenERC20 extends BaseContract {
     initialize(
       _name: string,
       _symbol: string,
-      _fsociety: string,
-      _fsocietySupply: number | string | BN,
-      _author: string,
-      _authorSupply: number | string | BN,
-      _other: string,
-      _otherSupply: number | string | BN
+      _maxTotalSupply: number | string | BN,
+      _ammShare: number | string | BN,
+      _authorShare: number | string | BN,
+      _amm: string,
+      _author: string
+    ): NonPayableTransactionObject<void>;
+
+    mint(
+      account: string,
+      amount: number | string | BN
     ): NonPayableTransactionObject<void>;
 
     name(): NonPayableTransactionObject<string>;

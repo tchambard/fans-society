@@ -101,6 +101,14 @@ export default ({
 							placeholder={'ETH value'}
 						/>
 						<br />
+						<TextFieldElement
+							type={'number'}
+							name={'totalSupply'}
+							label={'Tokens total supply'}
+							required={true}
+							placeholder={'Please enter a number of tokens'}
+						/>
+						<br />
 						<LoadingButton
 							loading={txPending}
 							loadingPosition={'end'}

@@ -4,10 +4,10 @@ pragma solidity 0.8.17;
 
 import { Initializable } from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import { ERC20Wrapper } from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol';
 import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 
-import { IProjectTokenFactory } from './tokens/interfaces/IProjectTokenFactory.sol';
-import { ITokensPoolFactory } from './pools/interfaces/ITokensPoolFactory.sol';
+import './common/Constants.sol';
 
 contract Projects is Ownable {
 	enum ProjectStatus {
@@ -21,29 +21,16 @@ contract Projects is Ownable {
 		string name;
 		string symbol;
 		string description;
+		uint id;
 		uint fund;
 		uint target;
 		uint minInvest;
 		uint maxInvest;
+		uint32 totalSupply;
 		ProjectStatus status;
 		address authorAddress;
 		address tokenAddress;
 	}
-
-	address internal wethTokenAddress;
-
-	address internal tokenFactoryAddress;
-	address internal poolFactoryAddress;
-
-	uint private constant FSOCIETY_SUPPLY = 27;
-	uint private constant AUTHOR_SUPPLY = 27;
-	uint private constant LIQUIDITY_SUPPLY = 30;
-	uint private constant INVESTORS_SUPPLY = 35;
-
-	uint private constant MAX_DURATION = 604800; // 1 week
-
-	uint private constant PRECISION = 2;
-
 
 	uint public count;
 
@@ -59,14 +46,13 @@ contract Projects is Ownable {
 		uint target,
 		uint minInvest,
 		uint maxInvest,
+		uint32 totalSupply,
 		address indexed authorAddress
 	);
 
 	event Committed(uint indexed id, address indexed caller, uint amount);
 
 	event Withdrawed(uint indexed id, address indexed caller, uint amount);
-
-	event Claimed(uint indexed id, address indexed caller, uint amount);
 
 	event ProjectStatusChanged(uint indexed id, ProjectStatus status);
 
@@ -90,16 +76,6 @@ contract Projects is Ownable {
 		_;
 	}
 
-	constructor(
-		address _wethTokenAddress,
-		address _tokenFactoryAddress, 
-		address _poolFactoryAddress
-	) {
-		wethTokenAddress = _wethTokenAddress;
-		tokenFactoryAddress = _tokenFactoryAddress;
-		poolFactoryAddress = _poolFactoryAddress;
-	}
-
 	function createProject(
 		address _authorAddress,
 		string calldata _name,
@@ -107,12 +83,13 @@ contract Projects is Ownable {
 		string calldata _description,
 		uint _target,
 		uint _minInvest,
-		uint _maxInvest
+		uint _maxInvest,
+		uint32 _totalSupply
 	) external onlyOwner {
-
 		count++;
 
 		projects[count] = Project({
+			id: count,
 			name: _name,
 			symbol: _symbol,
 			description: _description,
@@ -120,6 +97,7 @@ contract Projects is Ownable {
 			target: _target,
 			minInvest: _minInvest,
 			maxInvest: _maxInvest,
+			totalSupply: _totalSupply,
 			status: ProjectStatus.Opened,
 			authorAddress: _authorAddress,
 			tokenAddress: address(0)
@@ -133,20 +111,30 @@ contract Projects is Ownable {
 			_target,
 			_minInvest,
 			_maxInvest,
+			_totalSupply,
 			_authorAddress
 		);
 	}
 
-	function abortProject(uint _id) external onlyOwner statusIs(_id, ProjectStatus.Opened) {
+	function abortProject(
+		uint _id
+	) external onlyOwner statusIs(_id, ProjectStatus.Opened) {
 		projects[_id].status = ProjectStatus.Aborted;
 		emit ProjectStatusChanged(_id, ProjectStatus.Aborted);
 	}
 
-	function commitOnProject(uint _id) external payable statusIs(_id, ProjectStatus.Opened) {
+	function commitOnProject(
+		uint _id
+	) external payable statusIs(_id, ProjectStatus.Opened) {
 		Project storage project = projects[_id];
-		require(msg.value + commitments[_id][msg.sender] >= project.minInvest, 'Not enough');
-		require(msg.value + commitments[_id][msg.sender] <= project.maxInvest, 'Too much');
-
+		require(
+			msg.value + commitments[_id][msg.sender] >= project.minInvest,
+			'Not enough'
+		);
+		require(
+			msg.value + commitments[_id][msg.sender] <= project.maxInvest,
+			'Too much'
+		);
 
 		project.fund += msg.value;
 
@@ -159,7 +147,9 @@ contract Projects is Ownable {
 		}
 	}
 
-	function withdrawOnProject(uint _id) external statusLessThan(_id, ProjectStatus.Completed) isCommited(_id) {
+	function withdrawOnProject(
+		uint _id
+	) external statusLessThan(_id, ProjectStatus.Completed) isCommited(_id) {
 		uint commitment = commitments[_id][msg.sender];
 
 		projects[_id].fund -= commitment;
@@ -171,39 +161,4 @@ contract Projects is Ownable {
 
 		emit Withdrawed(_id, msg.sender, commitment);
 	}
-
-	function launchProject(uint _id) external onlyAuthor(_id) statusIs(_id, ProjectStatus.Completed) {
-		Project memory project = projects[_id];
-
-		address tokenAddress = IProjectTokenFactory(tokenFactoryAddress).createToken(
-			project.name,
-			project.symbol,
-			address(this),
-			FSOCIETY_SUPPLY,
-			project.authorAddress,
-			AUTHOR_SUPPLY,
-			INVESTORS_SUPPLY
-		);
-
-		(address poolAddress, ) = ITokensPoolFactory(poolFactoryAddress).createPool(
-			tokenAddress,
-			wethTokenAddress
-		);
-
-		// TODO: add pool liquidity here 
-
-		projects[_id].status = ProjectStatus.Launched;
-		emit ProjectStatusChanged(_id, ProjectStatus.Launched);
-	}
-
-	function claimProjectTokens(uint _id) external statusIs(_id, ProjectStatus.Completed) isCommited(_id) {
-		uint commitment = commitments[_id][msg.sender];
-
-		uint tokenAmount = (INVESTORS_SUPPLY / projects[_id].fund) * commitment;
-		
-		IProjectTokenFactory(tokenFactoryAddress)
-			.tokens(projects[_id].tokenAddress)
-			.transfer(msg.sender, tokenAmount);
-	}
-
 }

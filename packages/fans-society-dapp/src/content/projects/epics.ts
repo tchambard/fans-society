@@ -122,6 +122,7 @@ export const createProject: Epic<
 					target,
 					minInvest,
 					maxInvest,
+					totalSupply,
 				} = action.payload;
 
 				await contract.methods
@@ -133,6 +134,7 @@ export const createProject: Epic<
 						web3.utils.toWei(target, 'ether'),
 						web3.utils.toWei(minInvest, 'ether'),
 						web3.utils.toWei(maxInvest, 'ether'),
+						totalSupply,
 					)
 					.send({ from: account });
 

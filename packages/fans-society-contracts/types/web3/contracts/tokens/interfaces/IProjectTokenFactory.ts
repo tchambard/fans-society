@@ -32,11 +32,11 @@ export interface IProjectTokenFactory extends BaseContract {
     createToken(
       _name: string,
       _symbol: string,
-      _fsocietyAddress: string,
-      _fsocietySupply: number | string | BN,
-      _author: string,
-      _authorSupply: number | string | BN,
-      _otherSupply: number | string | BN
+      _totalSupply: number | string | BN,
+      _ammShare: number | string | BN,
+      _authorShare: number | string | BN,
+      _amm: string,
+      _author: string
     ): NonPayableTransactionObject<string>;
 
     tokens(tokenAddress: string): NonPayableTransactionObject<string>;

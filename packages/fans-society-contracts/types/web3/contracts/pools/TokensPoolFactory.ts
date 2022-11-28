@@ -29,9 +29,11 @@ export type OwnershipTransferred = ContractEventLog<{
 }>;
 export type PoolCreated = ContractEventLog<{
   poolAddress: string;
-  _hash: string;
+  token1: string;
+  token2: string;
   0: string;
   1: string;
+  2: string;
 }>;
 
 export interface TokensPoolFactory extends BaseContract {
@@ -45,18 +47,9 @@ export interface TokensPoolFactory extends BaseContract {
     createPool(
       _token1: string,
       _token2: string
-    ): NonPayableTransactionObject<{
-      poolAddress: string;
-      poolHash: string;
-      0: string;
-      1: string;
-    }>;
-
-    getPoolByHash(
-      _hash: string | number[]
     ): NonPayableTransactionObject<string>;
 
-    getPoolByTokensPair(
+    getPool(
       _token1: string,
       _token2: string
     ): NonPayableTransactionObject<string>;

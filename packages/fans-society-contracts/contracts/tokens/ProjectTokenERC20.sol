@@ -4,52 +4,100 @@ pragma solidity 0.8.17;
 import { ERC20Upgradeable } from '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol';
 import { Initializable } from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 
-contract ProjectTokenERC20 is Initializable, ERC20Upgradeable {
-    function initialize(
-        string memory _name, 
-        string memory _symbol, 
-        address _fsociety,
-        uint256 _fsocietySupply,
-        address _author,
-        uint256 _authorSupply, 
-        address _other,
-        uint256 _otherSupply
-    ) public virtual initializer {
-        __ProjectTokenERC20_init(_name, _symbol, _fsociety, _fsocietySupply, _author, _authorSupply, _other, _otherSupply);
-    }
-    
-    /**
-     * @dev Mint supplies
-     * - `fsocietySupply` amount of token and transfers them to `fsociety` contract.
-     * - `authorSupply` amount of token and transfers them to `author`.
-     * - `otherSupply` amount of token and transfers them to `otherContract`.
-     *
-     * See {ERC20-constructor}.
-     */
-    function __ProjectTokenERC20_init(
-        string memory _name, 
-        string memory _symbol, 
-        address _fsociety,
-        uint256 _fsocietySupply,
-        address _author,
-        uint256 _authorSupply, 
-        address _other,
-        uint256 _otherSupply
-    ) internal onlyInitializing {
-        __ERC20_init_unchained(_name, _symbol);
-        __ProjectTokenERC20_init_unchained(_fsociety, _fsocietySupply, _author, _authorSupply, _other, _otherSupply);
-    }
+import { IProjectTokenERC20 } from './interfaces/IProjectTokenERC20.sol';
+import 'hardhat/console.sol';
 
-    function __ProjectTokenERC20_init_unchained(
-        address _fsociety,
-        uint256 _fsocietySupply,
-        address _author,
-        uint256 _authorSupply, 
-        address _other,
-        uint256 _otherSupply
-    ) internal onlyInitializing {
-        _mint(_fsociety, _fsocietySupply);
-        _mint(_author, _authorSupply);
-        _mint(_other, _otherSupply);
-    }
+contract ProjectTokenERC20 is
+	Initializable,
+	ERC20Upgradeable,
+	IProjectTokenERC20
+{
+	uint public maxTotalSupply;
+
+	address private owner;
+
+	function initialize(
+		string memory _name,
+		string memory _symbol,
+		uint40 _totalSupply,
+		uint40 _ammGlobalShare,
+		uint40 _ammPoolShare,
+		uint40 _authorGlobalShare,
+		uint40 _authorPoolShare,
+		address _amm,
+		address _author
+	) public virtual initializer {
+		require(
+			_totalSupply >= _ammGlobalShare + _authorGlobalShare,
+			'total supply too small'
+		);
+		owner = _amm;
+		maxTotalSupply = _totalSupply;
+
+		__ProjectTokenERC20_init(
+			_name,
+			_symbol,
+			_ammGlobalShare,
+			_ammPoolShare,
+			_authorGlobalShare,
+			_authorPoolShare,
+			_amm,
+			_author
+		);
+	}
+
+	/**
+	 * @dev Mint supplies
+	 * - `ammShare` amount of token and transfers them to `amm` contract.
+	 * - `authorShare` amount of token and transfers them to `author`.
+	 * - `projectShare` amount of token and transfers them to `projectContract`.
+	 *
+	 * See {ERC20-constructor}.
+	 */
+	function __ProjectTokenERC20_init(
+		string memory _name,
+		string memory _symbol,
+		uint40 _ammGlobalShare,
+		uint40 _ammPoolShare,
+		uint40 _authorGlobalShare,
+		uint40 _authorPoolShare,
+		address _amm,
+		address _author
+	) internal onlyInitializing {
+		__ERC20_init_unchained(_name, _symbol);
+		__ProjectTokenERC20_init_unchained(
+			_ammGlobalShare,
+			_ammPoolShare,
+			_authorGlobalShare,
+			_authorPoolShare,
+			_amm,
+			_author
+		);
+	}
+
+	function __ProjectTokenERC20_init_unchained(
+		uint40 _ammGlobalShare,
+		uint40 _ammPoolShare,
+		uint40 _authorGlobalShare,
+		uint40 _authorPoolShare,
+		address _amm,
+		address _author
+	) internal onlyInitializing {
+		require(_ammGlobalShare >= _ammPoolShare, 'AMM pool share too large');
+		require(
+			_authorGlobalShare >= _authorPoolShare,
+			'Author pool share too large'
+		);
+		_mint(_amm, _ammGlobalShare);
+		_mint(_author, _authorGlobalShare);
+		_approve(_amm, owner, _ammPoolShare);
+		_approve(_author, owner, _authorPoolShare);
+	}
+
+	function mint(address account, uint256 amount) external {
+		require(msg.sender == owner, 'Caller is not AMM');
+		uint totalSupply = totalSupply();
+		require((totalSupply + amount) <= maxTotalSupply, 'maxTotalSupply limit');
+		_mint(account, amount);
+	}
 }

@@ -17,6 +17,7 @@ export interface ICreateProjectParams {
 	target: string;
 	minInvest: string;
 	maxInvest: string;
+	totalSupply: string;
 }
 
 export interface ICommitOnProjectParams {

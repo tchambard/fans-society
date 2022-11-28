@@ -2,43 +2,36 @@ import { assert } from 'chai';
 import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
 
 import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/ProjectTokenFactory';
-import { TokensPoolFactoryInstance } from '../types/truffle/contracts/pool/TokensPoolFactory';
+import { TokensPoolFactoryInstance } from '../types/truffle/contracts/pools/TokensPoolFactory';
 import {
 	deployProjectTokenFactoryInstance,
 	deployTokensPoolFactoryInstance,
+	getPoolsCreatedFromPastEvents,
+	getTokensCreatedFromPastEvents,
+	IToken,
 } from './TestHelpers';
-
-interface IToken {
-	token: string;
-	name: string;
-	symbol: string;
-}
-
-const FSOCIETY_SUPPLY = 900000000; // 9%
-const AUTHOR_SUPPLY = 100000000; // 1%
-const CROWD_SUPPLY = 9000000000; // 90%
-
-const mapTokenCreatedEvent = ({ returnValues }): IToken => ({
-	token: returnValues.token,
-	name: returnValues.name,
-	symbol: returnValues.symbol,
-});
-
-const mapPoolCreatedEvent = ({ returnValues }) => ({
-	poolAddress: returnValues.poolAddress,
-	hash: returnValues._hash,
-});
 
 contract('Pools', (accounts) => {
 	const administrator = accounts[0];
-	const fsociety = accounts[1];
-	const author1 = accounts[2];
-	const author2 = accounts[3];
+	const author1 = accounts[1];
+	const author2 = accounts[2];
 
 	let projectTokenFactory: ProjectTokenFactoryInstance;
 	let tokensPoolFactory: TokensPoolFactoryInstance;
 
 	let tokens: IToken[];
+
+	const t1_totalSupply = 1_000_000;
+	const t1_ammGlobalShare = 10_000;
+	const t1_ammPoolShare = 9_000;
+	const t1_authorGlobalShare = 800_000;
+	const t1_authorPoolShare = 700_000;
+
+	const t2_totalSupply = 1_000_000;
+	const t2_ammGlobalShare = 10_000;
+	const t2_ammPoolShare = 9_000;
+	const t2_authorGlobalShare = 800_000;
+	const t2_authorPoolShare = 700_000;
 
 	beforeEach(async () => {
 		projectTokenFactory = await deployProjectTokenFactoryInstance(administrator);
@@ -47,11 +40,13 @@ contract('Pools', (accounts) => {
 		await projectTokenFactory.createToken(
 			'token1',
 			'TKN1',
-			fsociety,
-			FSOCIETY_SUPPLY,
+			t1_totalSupply,
+			t1_ammGlobalShare,
+			t1_ammPoolShare,
+			t1_authorGlobalShare,
+			t1_authorPoolShare,
+			administrator,
 			author1,
-			AUTHOR_SUPPLY,
-			CROWD_SUPPLY,
 			{
 				from: administrator,
 			},
@@ -60,21 +55,19 @@ contract('Pools', (accounts) => {
 		await projectTokenFactory.createToken(
 			'token2',
 			'TKN2',
-			fsociety,
-			FSOCIETY_SUPPLY,
+			t2_totalSupply,
+			t2_ammGlobalShare,
+			t2_ammPoolShare,
+			t2_authorGlobalShare,
+			t2_authorPoolShare,
+			administrator,
 			author2,
-			AUTHOR_SUPPLY,
-			CROWD_SUPPLY,
 			{
 				from: administrator,
 			},
 		);
 
-		tokens = (
-			await projectTokenFactory.getPastEvents('TokenCreated', {
-				fromBlock: 0,
-			})
-		).map(mapTokenCreatedEvent);
+		tokens = await getTokensCreatedFromPastEvents(projectTokenFactory);
 	});
 
 	describe('> createPool', () => {
@@ -85,15 +78,10 @@ contract('Pools', (accounts) => {
 		});
 
 		it('> should create a token pair pool', async () => {
-			const events = (
-				await tokensPoolFactory.getPastEvents('PoolCreated', {
-					fromBlock: 0,
-				})
-			).map(mapPoolCreatedEvent);
+			const events = await getPoolsCreatedFromPastEvents(tokensPoolFactory);
 
 			assert.lengthOf(events, 1);
-			assert.isDefined(events[0].hash);
-			assert.isDefined(events[0].poolAddress);
+			assert.isDefined(events[0].pool);
 		});
 	});
 });

@@ -8,12 +8,10 @@ interface ITokensPoolFactory {
     function createPool(
         address _token1,
         address _token2
-    ) external returns (address poolAddress, bytes32 poolHash);
-
-    function getPoolByTokensPair(address _token1, address _token2) external view returns (ITokensPool);
-
-    function getPoolByHash(bytes32 _hash) external view returns (ITokensPool);
+    ) external returns (address poolAddress);
 
     function getTokenPools(address _token) external view returns (address[] memory);
+
+    function getPool(address _token1, address _token2) external view returns (address pool);
 
 }

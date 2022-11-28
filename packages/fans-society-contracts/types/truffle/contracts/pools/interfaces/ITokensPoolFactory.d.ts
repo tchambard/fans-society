@@ -23,7 +23,7 @@ export interface ITokensPoolFactoryInstance extends Truffle.ContractInstance {
       _token1: string,
       _token2: string,
       txDetails?: Truffle.TransactionDetails
-    ): Promise<{ 0: string; 1: string }>;
+    ): Promise<string>;
     sendTransaction(
       _token1: string,
       _token2: string,
@@ -36,12 +36,7 @@ export interface ITokensPoolFactoryInstance extends Truffle.ContractInstance {
     ): Promise<number>;
   };
 
-  getPoolByHash(
-    _hash: string,
-    txDetails?: Truffle.TransactionDetails
-  ): Promise<string>;
-
-  getPoolByTokensPair(
+  getPool(
     _token1: string,
     _token2: string,
     txDetails?: Truffle.TransactionDetails
@@ -63,7 +58,7 @@ export interface ITokensPoolFactoryInstance extends Truffle.ContractInstance {
         _token1: string,
         _token2: string,
         txDetails?: Truffle.TransactionDetails
-      ): Promise<{ 0: string; 1: string }>;
+      ): Promise<string>;
       sendTransaction(
         _token1: string,
         _token2: string,
@@ -76,12 +71,7 @@ export interface ITokensPoolFactoryInstance extends Truffle.ContractInstance {
       ): Promise<number>;
     };
 
-    getPoolByHash(
-      _hash: string,
-      txDetails?: Truffle.TransactionDetails
-    ): Promise<string>;
-
-    getPoolByTokensPair(
+    getPool(
       _token1: string,
       _token2: string,
       txDetails?: Truffle.TransactionDetails
