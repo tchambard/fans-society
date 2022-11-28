@@ -162,12 +162,10 @@ contract('Tokens', (accounts) => {
 			erc20Instance = await ProjectTokenERC20.at(lastTokenCreated?.token);
 		});
 
-		describe('> mint', () => {
+		describe('> claim', () => {
 			it('> should fail when called out of amm contract', async () => {
 				await expectRevert(
-					erc20Instance.mint(account3, 10, {
-						from: account3,
-					}),
+					erc20Instance.claim(account3, 10, { from: account3 }),
 					'Caller is not AMM',
 				);
 			});
@@ -175,7 +173,7 @@ contract('Tokens', (accounts) => {
 			it('> should fail if total supply is lower than distributed shared', async () => {
 				const availableSupply = totalSupply - (ammGlobalShare + authorGlobalShare);
 				await expectRevert(
-					erc20Instance.mint(account3, availableSupply + 1, {
+					erc20Instance.claim(account3, availableSupply + 1, {
 						from: administrator,
 					}),
 					'maxTotalSupply limit',
@@ -184,10 +182,18 @@ contract('Tokens', (accounts) => {
 
 			it('> should mint new tokens', async () => {
 				assert.equal((await erc20Instance.balanceOf(account3)).toNumber(), 0);
-				await erc20Instance.mint(account3, 1000, {
-					from: administrator,
-				});
+				await erc20Instance.claim(account3, 1000, { from: administrator });
 				assert.equal((await erc20Instance.balanceOf(account3)).toNumber(), 1000);
+			});
+
+			it('> should fail when claim is already done for same account', async () => {
+				await erc20Instance.claim(account3, 1000, { from: administrator });
+				await expectRevert(
+					erc20Instance.claim(account3, 1000 + 1, {
+						from: administrator,
+					}),
+					'already claimed',
+				);
 			});
 		});
 	});

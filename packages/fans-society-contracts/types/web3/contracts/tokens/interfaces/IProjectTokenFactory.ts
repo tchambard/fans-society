@@ -33,13 +33,13 @@ export interface IProjectTokenFactory extends BaseContract {
       _name: string,
       _symbol: string,
       _totalSupply: number | string | BN,
-      _ammShare: number | string | BN,
-      _authorShare: number | string | BN,
+      _ammGlobalShare: number | string | BN,
+      _ammPoolShare: number | string | BN,
+      _authorGlobalShare: number | string | BN,
+      _authorPoolShare: number | string | BN,
       _amm: string,
       _author: string
     ): NonPayableTransactionObject<string>;
-
-    tokens(tokenAddress: string): NonPayableTransactionObject<string>;
   };
   events: {
     allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter;

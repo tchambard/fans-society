@@ -22,10 +22,10 @@ contract AMM is Projects {
 	address internal poolFactory;
 
 	event TokensClaimed(
-		uint indexed projectId,
+		uint256 indexed projectId,
 		address indexed token,
 		address indexed caller,
-		uint amount
+		uint256 amount
 	);
 
 	constructor(
@@ -40,9 +40,10 @@ contract AMM is Projects {
 		poolFactory = _poolFactoryAddress;
 	}
 
-	function launchProject(
-		uint _id
-	) external statusIs(_id, ProjectStatus.Completed) {
+	function launchProject(uint256 _id)
+		external
+		statusIs(_id, ProjectStatus.Completed)
+	{
 		Project memory project = projects[_id];
 
 		uint40 totalSupply = uint40(MULTIPLIER) * project.totalSupply;
@@ -99,21 +100,19 @@ contract AMM is Projects {
 		emit ProjectStatusChanged(_id, ProjectStatus.Launched);
 	}
 
-	function claimProjectTokens(
-		uint _projectId
-	)
+	function claimProjectTokens(uint256 _projectId)
 		external
 		statusIs(_projectId, ProjectStatus.Launched)
 		isCommited(_projectId)
 	{
 		Project memory project = projects[_projectId];
 
-		uint commitment = commitments[_projectId][msg.sender];
+		uint256 commitment = commitments[_projectId][msg.sender];
 
-		uint tokenAmount = (INVESTORS_SUPPLY * project.totalSupply * commitment) /
+		uint256 tokenAmount = (INVESTORS_SUPPLY * project.totalSupply * commitment) /
 			project.fund;
 
-		IProjectTokenERC20(project.tokenAddress).mint(msg.sender, tokenAmount);
+		IProjectTokenERC20(project.tokenAddress).claim(msg.sender, tokenAmount);
 
 		emit TokensClaimed(_projectId, project.tokenAddress, msg.sender, tokenAmount);
 	}

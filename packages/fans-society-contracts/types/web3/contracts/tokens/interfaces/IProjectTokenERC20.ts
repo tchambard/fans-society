@@ -58,12 +58,12 @@ export interface IProjectTokenERC20 extends BaseContract {
 
     balanceOf(account: string): NonPayableTransactionObject<string>;
 
-    decimals(): NonPayableTransactionObject<string>;
-
-    mint(
+    claim(
       account: string,
       amount: number | string | BN
     ): NonPayableTransactionObject<void>;
+
+    decimals(): NonPayableTransactionObject<string>;
 
     name(): NonPayableTransactionObject<string>;
 
