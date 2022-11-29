@@ -12,10 +12,8 @@ const imports: IDynamicContractImportDefinitions = {
 	// mumbai: () => import('fans-society-contracts/deployments/mumbai.json'),
 };
 
-export async function getAMMContract(
-	web3: Web3,
-): Promise<contracts.AMM> {
-	const contractInfo = await getContractInfo(web3, imports, 'FansSociety');
+export async function getAMMContract(web3: Web3): Promise<contracts.AMM> {
+	const contractInfo = await getContractInfo(web3, imports, 'AMM');
 	return new web3.eth.Contract(
 		contractInfo.abi,
 		contractInfo.address,

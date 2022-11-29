@@ -30,20 +30,18 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		},
 	);
 
-	const { address: tokensPoolFactoryAddress } = await deploy(
-		'TokensPoolFactory',
-		{
-			from: deployer,
-			log: true,
-			autoMine: true,
-		},
-	);
+	const { address: tokensPoolFactoryAddress } = await deploy('PoolFactory', {
+		from: deployer,
+		log: true,
+		autoMine: true,
+	});
 
-	await deploy('FansSociety', {
+	await deploy('AMM', {
 		from: deployer,
 		log: true,
 		autoMine: true,
 		args: [
+			'0xa0Ee7A142d267C1f36714E4a8F75612F20a79720',
 			wethTokenAddress,
 			projectTokenFactoryAddress,
 			tokensPoolFactoryAddress,
@@ -51,4 +49,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	});
 };
 export default func;
-func.tags = ['Voting'];
+func.tags = ['AMM'];

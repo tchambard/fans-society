@@ -2,6 +2,7 @@
   "name": "fans-society",
   "version": "1.0.0",
   "scripts": {
+    "ganache-start": "ganache -i 1337 -m \"test test test test test test test test test test test junk\"",
     "hardhat-start": "hardhat node",
     "lint:all": "yarn workspaces foreach -p run lint",
     "clean:all": "yarn workspaces foreach -p run clean",
@@ -52,6 +53,7 @@
     "@yarnpkg/core": "^2.4.0",
     "chai": "^4.2.0",
     "ethers": "^5.4.7",
+    "ganache": "^7.5.0",
     "hardhat": "^2.12.0",
     "hardhat-deploy": "^0.11.18",
     "hardhat-gas-reporter": "^1.0.8",
