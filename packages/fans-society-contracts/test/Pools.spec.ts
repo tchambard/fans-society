@@ -2,10 +2,10 @@ import { assert } from 'chai';
 import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
 
 import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/ProjectTokenFactory';
-import { TokensPoolFactoryInstance } from '../types/truffle/contracts/pools/TokensPoolFactory';
+import { PoolFactoryInstance } from '../types/truffle/contracts/pools/PoolFactory';
 import {
 	deployProjectTokenFactoryInstance,
-	deployTokensPoolFactoryInstance,
+	deployPoolFactoryInstance,
 	getPoolsCreatedFromPastEvents,
 	getTokensCreatedFromPastEvents,
 	IToken,
@@ -17,7 +17,7 @@ contract('Pools', (accounts) => {
 	const author2 = accounts[2];
 
 	let projectTokenFactory: ProjectTokenFactoryInstance;
-	let tokensPoolFactory: TokensPoolFactoryInstance;
+	let PoolFactory: PoolFactoryInstance;
 
 	let tokens: IToken[];
 
@@ -35,7 +35,7 @@ contract('Pools', (accounts) => {
 
 	beforeEach(async () => {
 		projectTokenFactory = await deployProjectTokenFactoryInstance(administrator);
-		tokensPoolFactory = await deployTokensPoolFactoryInstance(administrator);
+		PoolFactory = await deployPoolFactoryInstance(administrator);
 
 		await projectTokenFactory.createToken(
 			'token1',
@@ -72,13 +72,13 @@ contract('Pools', (accounts) => {
 
 	describe('> createPool', () => {
 		beforeEach(async () => {
-			await tokensPoolFactory.createPool(tokens[0].token, tokens[1].token, {
+			await PoolFactory.createPool(tokens[0].token, tokens[1].token, {
 				from: administrator,
 			});
 		});
 
 		it('> should create a token pair pool', async () => {
-			const events = await getPoolsCreatedFromPastEvents(tokensPoolFactory);
+			const events = await getPoolsCreatedFromPastEvents(PoolFactory);
 
 			assert.lengthOf(events, 1);
 			assert.isDefined(events[0].pool);

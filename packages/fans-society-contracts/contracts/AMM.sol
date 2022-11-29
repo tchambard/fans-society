@@ -8,7 +8,7 @@ import { SafeERC20 } from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 
 import { IWETH } from './interfaces/IWETH.sol';
 import { IProjectTokenFactory } from './tokens/interfaces/IProjectTokenFactory.sol';
-import { ITokensPoolFactory } from './pools/interfaces/ITokensPoolFactory.sol';
+import { IPoolFactory } from './pools/interfaces/IPoolFactory.sol';
 import { IProjectTokenERC20 } from './tokens/interfaces/IProjectTokenERC20.sol';
 import './common/Constants.sol';
 
@@ -40,10 +40,9 @@ contract AMM is Projects {
 		poolFactory = _poolFactoryAddress;
 	}
 
-	function launchProject(uint256 _id)
-		external
-		statusIs(_id, ProjectStatus.Completed)
-	{
+	function launchProject(
+		uint256 _id
+	) external statusIs(_id, ProjectStatus.Completed) {
 		Project memory project = projects[_id];
 
 		uint40 totalSupply = uint40(MULTIPLIER) * project.totalSupply;
@@ -70,7 +69,7 @@ contract AMM is Projects {
 			project.authorAddress
 		);
 
-		address pool = ITokensPoolFactory(poolFactory).createPool(
+		address pool = IPoolFactory(poolFactory).createPool(
 			projects[_id].tokenAddress,
 			weth
 		);
@@ -100,7 +99,9 @@ contract AMM is Projects {
 		emit ProjectStatusChanged(_id, ProjectStatus.Launched);
 	}
 
-	function claimProjectTokens(uint256 _projectId)
+	function claimProjectTokens(
+		uint256 _projectId
+	)
 		external
 		statusIs(_projectId, ProjectStatus.Launched)
 		isCommited(_projectId)

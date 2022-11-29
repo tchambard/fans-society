@@ -3,5 +3,6 @@
 /* eslint-disable */
 import type * as interfaces from "./interfaces";
 export type { interfaces };
-export type { TokensPool } from "./TokensPool";
-export type { TokensPoolFactory } from "./TokensPoolFactory";
+export type { LPTokenERC20 } from "./LPTokenERC20";
+export type { Pool } from "./Pool";
+export type { PoolFactory } from "./PoolFactory";

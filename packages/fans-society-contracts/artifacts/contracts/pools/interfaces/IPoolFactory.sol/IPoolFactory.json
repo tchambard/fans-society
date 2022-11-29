@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "ITokensPoolFactory",
-  "sourceName": "contracts/pools/interfaces/ITokensPoolFactory.sol",
+  "contractName": "IPoolFactory",
+  "sourceName": "contracts/pools/interfaces/IPoolFactory.sol",
   "abi": [
     {
       "inputs": [

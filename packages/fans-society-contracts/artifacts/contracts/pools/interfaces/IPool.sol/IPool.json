@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "ITokensPool",
-  "sourceName": "contracts/pools/interfaces/ITokensPool.sol",
+  "contractName": "IPool",
+  "sourceName": "contracts/pools/interfaces/IPool.sol",
   "abi": [],
   "bytecode": "0x",
   "deployedBytecode": "0x",

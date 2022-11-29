@@ -1,11 +1,11 @@
 import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/ProjectTokenFactory';
-import { TokensPoolFactoryInstance } from '../types/truffle/contracts/pools/TokensPoolFactory';
+import { PoolFactoryInstance } from '../types/truffle/contracts/pools/PoolFactory';
 import { AMMInstance } from '../types/truffle/contracts/AMM';
 import { WETHTokenInstance } from '../types/truffle/contracts/common/WETHToken';
 import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
 
 const ProjectTokenFactory = artifacts.require('ProjectTokenFactory');
-const TokensPoolFactory = artifacts.require('TokensPoolFactory');
+const PoolFactory = artifacts.require('PoolFactory');
 const WETHTokenFactory = artifacts.require('WETHToken');
 const AMM = artifacts.require('AMM');
 
@@ -49,14 +49,14 @@ export async function deployProjectsInstances(
 ): Promise<{
 	wethToken: WETHTokenInstance;
 	projectTokenFactory: ProjectTokenFactoryInstance;
-	tokensPoolFactory: TokensPoolFactoryInstance;
+	PoolFactory: PoolFactoryInstance;
 	amm: AMMInstance;
 }> {
 	const wethToken = await deployWethInstance(contractOwnerAddress);
 	const projectTokenFactory = await deployProjectTokenFactoryInstance(
 		contractOwnerAddress,
 	);
-	const tokensPoolFactory = await deployTokensPoolFactoryInstance(
+	const PoolFactory = await deployPoolFactoryInstance(
 		contractOwnerAddress,
 	);
 
@@ -64,7 +64,7 @@ export async function deployProjectsInstances(
 		fansSocietyAddress,
 		wethToken.address,
 		projectTokenFactory.address,
-		tokensPoolFactory.address,
+		PoolFactory.address,
 		{
 			from: contractOwnerAddress,
 		},
@@ -73,7 +73,7 @@ export async function deployProjectsInstances(
 	return {
 		wethToken,
 		projectTokenFactory,
-		tokensPoolFactory,
+		PoolFactory,
 		amm,
 	};
 }
@@ -93,10 +93,10 @@ export async function deployProjectTokenFactoryInstance(
 	});
 }
 
-export async function deployTokensPoolFactoryInstance(
+export async function deployPoolFactoryInstance(
 	contractOwnerAddress: string,
-): Promise<TokensPoolFactoryInstance> {
-	return TokensPoolFactory.new({
+): Promise<PoolFactoryInstance> {
+	return PoolFactory.new({
 		from: contractOwnerAddress,
 	});
 }
@@ -114,10 +114,10 @@ export async function getTokensCreatedFromPastEvents(
 }
 
 export async function getPoolsCreatedFromPastEvents(
-	tokensPoolFactory: TokensPoolFactoryInstance,
+	PoolFactory: PoolFactoryInstance,
 ): Promise<IPool[]> {
 	return (
-		await tokensPoolFactory.getPastEvents('PoolCreated', { fromBlock: 0 })
+		await PoolFactory.getPastEvents('PoolCreated', { fromBlock: 0 })
 	).map(({ returnValues }) => ({
 		pool: returnValues.pool,
 		token1: returnValues.token1,

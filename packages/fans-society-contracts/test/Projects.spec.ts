@@ -17,11 +17,11 @@ import {
 import { AllEvents, AMMInstance } from '../types/truffle/contracts/AMM';
 import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/ProjectTokenFactory';
 import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
-import { TokensPoolFactoryInstance } from '../types/truffle/contracts/pools/TokensPoolFactory';
-import { TokensPoolInstance } from '../types/truffle/contracts/pools/TokensPool';
+import { PoolFactoryInstance } from '../types/truffle/contracts/pools/PoolFactory';
+import { PoolInstance } from '../types/truffle/contracts/pools/Pool';
 
 const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
-const TokensPool = artifacts.require('TokensPool');
+const Pool = artifacts.require('Pool');
 
 enum ProjectStatus {
 	Opened,
@@ -40,13 +40,13 @@ contract('Projects', (accounts) => {
 
 	let amm: AMMInstance;
 	let projectTokenFactory: ProjectTokenFactoryInstance;
-	let tokensPoolFactory: TokensPoolFactoryInstance;
+	let PoolFactory: PoolFactoryInstance;
 
 	beforeEach(async () => {
 		const contracts = await deployProjectsInstances(administrator, fsociety);
 		amm = contracts.amm;
 		projectTokenFactory = contracts.projectTokenFactory;
-		tokensPoolFactory = contracts.tokensPoolFactory;
+		PoolFactory = contracts.PoolFactory;
 	});
 
 	const name = 'The god father';
@@ -221,7 +221,7 @@ contract('Projects', (accounts) => {
 			describe('> project is launched', () => {
 				let launchProjectReceipt: Truffle.TransactionResponse<AllEvents>;
 				let erc20Instance: ProjectTokenERC20Instance;
-				let poolInstance: TokensPoolInstance;
+				let poolInstance: PoolInstance;
 
 				beforeEach(async () => {
 					launchProjectReceipt = await amm.launchProject(projectId, {
@@ -232,9 +232,9 @@ contract('Projects', (accounts) => {
 					);
 					erc20Instance = await ProjectTokenERC20.at(tokenCreated?.token);
 					const poolCreated = _.last(
-						await getPoolsCreatedFromPastEvents(tokensPoolFactory),
+						await getPoolsCreatedFromPastEvents(PoolFactory),
 					);
-					poolInstance = await TokensPool.at(poolCreated?.pool);
+					poolInstance = await Pool.at(poolCreated?.pool);
 				});
 
 				it('> should create new token with dispatched supply', async () => {

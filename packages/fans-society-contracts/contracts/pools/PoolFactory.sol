@@ -5,12 +5,12 @@ import { Address } from '@openzeppelin/contracts/utils/Address.sol';
 import { Clones } from '@openzeppelin/contracts/proxy/Clones.sol';
 import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 
-import { ITokensPoolFactory } from './interfaces/ITokensPoolFactory.sol';
-import { TokensPool } from './TokensPool.sol';
-import { ITokensPool } from './interfaces/ITokensPool.sol';
-import { TokensPoolHelpers } from './TokensPoolHelpers.sol';
+import { IPoolFactory } from './interfaces/IPoolFactory.sol';
+import { Pool } from './Pool.sol';
+import { PoolHelpers } from './PoolHelpers.sol';
+import { IPool } from './interfaces/IPool.sol';
 
-contract TokensPoolFactory is ITokensPoolFactory, Ownable {
+contract PoolFactory is IPoolFactory, Ownable {
 	address private immutable implementation;
 
 	/**
@@ -21,22 +21,24 @@ contract TokensPoolFactory is ITokensPoolFactory, Ownable {
 	event PoolCreated(address pool, address token1, address token2);
 
 	constructor() {
-		implementation = address(new TokensPool());
+		implementation = address(new Pool());
 	}
 
 	function createPool(
 		address _token1,
 		address _token2
 	) public returns (address poolAddress) {
-		(address token1, address token2, bytes32 salt) = TokensPoolHelpers
-			.computePoolSalt(_token1, _token2);
+		(address token1, address token2, bytes32 salt) = PoolHelpers.computePoolSalt(
+			_token1,
+			_token2
+		);
 		require(
 			Address.isContract(_token1) && Address.isContract(_token2),
 			'not contract'
 		);
 
 		poolAddress = Clones.cloneDeterministic(implementation, salt);
-		TokensPool(poolAddress).initialize(token1, token2);
+		Pool(poolAddress).initialize(token1, token2);
 
 		tokenPools[token1].push(poolAddress);
 		tokenPools[token2].push(poolAddress);
@@ -56,7 +58,7 @@ contract TokensPoolFactory is ITokensPoolFactory, Ownable {
 		address _token1,
 		address _token2
 	) external view returns (address pool) {
-		(, , bytes32 salt) = TokensPoolHelpers.computePoolSalt(_token1, _token2);
+		(, , bytes32 salt) = PoolHelpers.computePoolSalt(_token1, _token2);
 		return Clones.predictDeterministicAddress(implementation, salt);
 	}
 }

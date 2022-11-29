@@ -16,7 +16,11 @@ import { IERC20Contract } from "./IERC20";
 import { AMMContract } from "./AMM";
 import { WETHTokenContract } from "./WETHToken";
 import { IWETHContract } from "./IWETH";
+import { IPoolFactoryContract } from "./IPoolFactory";
 import { ITokensPoolFactoryContract } from "./ITokensPoolFactory";
+import { LPTokenERC20Contract } from "./LPTokenERC20";
+import { PoolContract } from "./Pool";
+import { PoolFactoryContract } from "./PoolFactory";
 import { TokensPoolContract } from "./TokensPool";
 import { TokensPoolFactoryContract } from "./TokensPoolFactory";
 import { ProjectsContract } from "./Projects";
@@ -44,7 +48,11 @@ declare global {
       require(name: "AMM"): AMMContract;
       require(name: "WETHToken"): WETHTokenContract;
       require(name: "IWETH"): IWETHContract;
+      require(name: "IPoolFactory"): IPoolFactoryContract;
       require(name: "ITokensPoolFactory"): ITokensPoolFactoryContract;
+      require(name: "LPTokenERC20"): LPTokenERC20Contract;
+      require(name: "Pool"): PoolContract;
+      require(name: "PoolFactory"): PoolFactoryContract;
       require(name: "TokensPool"): TokensPoolContract;
       require(name: "TokensPoolFactory"): TokensPoolFactoryContract;
       require(name: "Projects"): ProjectsContract;
@@ -85,10 +93,14 @@ export { IERC20Contract, IERC20Instance } from "./IERC20";
 export { AMMContract, AMMInstance } from "./AMM";
 export { WETHTokenContract, WETHTokenInstance } from "./WETHToken";
 export { IWETHContract, IWETHInstance } from "./IWETH";
+export { IPoolFactoryContract, IPoolFactoryInstance } from "./IPoolFactory";
 export {
   ITokensPoolFactoryContract,
   ITokensPoolFactoryInstance,
 } from "./ITokensPoolFactory";
+export { LPTokenERC20Contract, LPTokenERC20Instance } from "./LPTokenERC20";
+export { PoolContract, PoolInstance } from "./Pool";
+export { PoolFactoryContract, PoolFactoryInstance } from "./PoolFactory";
 export { TokensPoolContract, TokensPoolInstance } from "./TokensPool";
 export {
   TokensPoolFactoryContract,
