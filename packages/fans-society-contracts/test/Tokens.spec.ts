@@ -22,7 +22,6 @@ contract('Tokens', (accounts) => {
 	const ammGlobalShare = 10_000;
 	const ammPoolShare = 9_000;
 	const authorGlobalShare = 800_000;
-	const authorPoolShare = 700_000;
 
 	beforeEach(async () => {
 		projectTokenFactory = await deployProjectTokenFactoryInstance(administrator);
@@ -39,7 +38,6 @@ contract('Tokens', (accounts) => {
 						ammGlobalShare,
 						ammPoolShare,
 						authorGlobalShare,
-						authorPoolShare,
 						administrator,
 						author,
 						{
@@ -59,7 +57,6 @@ contract('Tokens', (accounts) => {
 						ammGlobalShare,
 						ammPoolShare,
 						authorGlobalShare,
-						authorPoolShare,
 						administrator,
 						author,
 						{ from: administrator },
@@ -77,30 +74,11 @@ contract('Tokens', (accounts) => {
 						100,
 						ammPoolShare,
 						authorGlobalShare,
-						authorPoolShare,
 						administrator,
 						author,
 						{ from: administrator },
 					),
 					'AMM pool share too large',
-				);
-			});
-
-			it('> should fail with author pool share larger than author global share', async () => {
-				await expectRevert(
-					projectTokenFactory.createToken(
-						'Test',
-						'TEST',
-						totalSupply,
-						ammGlobalShare,
-						ammPoolShare,
-						100,
-						authorPoolShare,
-						administrator,
-						author,
-						{ from: administrator },
-					),
-					'Author pool share too large',
 				);
 			});
 
@@ -115,7 +93,6 @@ contract('Tokens', (accounts) => {
 					ammGlobalShare,
 					ammPoolShare,
 					authorGlobalShare,
-					authorPoolShare,
 					administrator,
 					author,
 					{ from: administrator },
@@ -152,7 +129,6 @@ contract('Tokens', (accounts) => {
 				ammGlobalShare,
 				ammPoolShare,
 				authorGlobalShare,
-				authorPoolShare,
 				administrator,
 				author,
 				{ from: administrator },

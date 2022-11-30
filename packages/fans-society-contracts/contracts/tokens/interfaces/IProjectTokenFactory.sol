@@ -11,7 +11,6 @@ interface IProjectTokenFactory {
 		uint40 _ammGlobalShare,
 		uint40 _ammPoolShare,
 		uint40 _authorGlobalShare,
-		uint40 _authorPoolShare,
 		address _amm,
 		address _author
 	) external returns (address);

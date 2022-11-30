@@ -25,7 +25,6 @@ contract ProjectTokenERC20 is
 		uint40 _ammGlobalShare,
 		uint40 _ammPoolShare,
 		uint40 _authorGlobalShare,
-		uint40 _authorPoolShare,
 		address _amm,
 		address _author
 	) public virtual initializer {
@@ -42,7 +41,6 @@ contract ProjectTokenERC20 is
 			_ammGlobalShare,
 			_ammPoolShare,
 			_authorGlobalShare,
-			_authorPoolShare,
 			_amm,
 			_author
 		);
@@ -62,7 +60,6 @@ contract ProjectTokenERC20 is
 		uint40 _ammGlobalShare,
 		uint40 _ammPoolShare,
 		uint40 _authorGlobalShare,
-		uint40 _authorPoolShare,
 		address _amm,
 		address _author
 	) internal onlyInitializing {
@@ -71,7 +68,6 @@ contract ProjectTokenERC20 is
 			_ammGlobalShare,
 			_ammPoolShare,
 			_authorGlobalShare,
-			_authorPoolShare,
 			_amm,
 			_author
 		);
@@ -81,19 +77,13 @@ contract ProjectTokenERC20 is
 		uint40 _ammGlobalShare,
 		uint40 _ammPoolShare,
 		uint40 _authorGlobalShare,
-		uint40 _authorPoolShare,
 		address _amm,
 		address _author
 	) internal onlyInitializing {
 		require(_ammGlobalShare >= _ammPoolShare, 'AMM pool share too large');
-		require(
-			_authorGlobalShare >= _authorPoolShare,
-			'Author pool share too large'
-		);
 		_mint(_amm, _ammGlobalShare);
 		_mint(_author, _authorGlobalShare);
 		_approve(_amm, owner, _ammPoolShare);
-		_approve(_author, owner, _authorPoolShare);
 	}
 
 	function claim(address account, uint256 amount) external {

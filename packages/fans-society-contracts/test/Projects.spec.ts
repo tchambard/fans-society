@@ -242,9 +242,6 @@ contract('Projects', (accounts) => {
 					const expectedAmmToPoolTransferAmount =
 						(expectedAmmSupply * AMM_TOKENS_POOL_SHARES) / 100;
 
-					const expectedAuthorToPoolTransferAmount =
-						(expectedAuthorSupply * AUTHOR_TOKENS_POOL_SHARES) / 100;
-
 					assert.sameDeepOrderedMembers(transfers, [
 						// transfer from erc20 to amm
 						{
@@ -264,17 +261,11 @@ contract('Projects', (accounts) => {
 							to: poolInstance.address,
 							value: expectedAmmToPoolTransferAmount,
 						},
-						// transfer from author to pool
-						{
-							from: authorAddress,
-							to: poolInstance.address,
-							value: expectedAuthorToPoolTransferAmount,
-						},
 					]);
 
 					assert.equal(
 						(await erc20Instance.balanceOf(authorAddress)).toNumber(),
-						expectedAuthorSupply - expectedAuthorToPoolTransferAmount,
+						expectedAuthorSupply,
 						'Author balance assertion failed',
 					);
 

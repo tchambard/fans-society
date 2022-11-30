@@ -40,13 +40,11 @@ contract('Pools', (accounts) => {
 	const tX_ammGlobalShare = 10_000;
 	const tX_ammPoolShare = 9_000;
 	const tX_authorGlobalShare = 800_000;
-	const tX_authorPoolShare = 700_000;
 
 	const tY_totalSupply = 1_000_000;
 	const tY_ammGlobalShare = 10_000;
 	const tY_ammPoolShare = 9_000;
 	const tY_authorGlobalShare = 800_000;
-	const tY_authorPoolShare = 700_000;
 
 	let tokenX: ProjectTokenERC20Instance;
 	let tokenY: ProjectTokenERC20Instance;
@@ -63,7 +61,6 @@ contract('Pools', (accounts) => {
 			tX_ammGlobalShare,
 			tX_ammPoolShare,
 			tX_authorGlobalShare,
-			tX_authorPoolShare,
 			administrator,
 			author1,
 			{
@@ -78,7 +75,6 @@ contract('Pools', (accounts) => {
 			tY_ammGlobalShare,
 			tY_ammPoolShare,
 			tY_authorGlobalShare,
-			tY_authorPoolShare,
 			administrator,
 			author2,
 			{

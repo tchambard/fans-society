@@ -22,7 +22,6 @@ contract ProjectTokenFactory is IProjectTokenFactory {
 		uint40 _ammGlobalShare,
 		uint40 _ammPoolShare,
 		uint40 _authorGlobalShare,
-		uint40 _authorPoolShare,
 		address _amm,
 		address _author
 	) public returns (address) {
@@ -35,7 +34,6 @@ contract ProjectTokenFactory is IProjectTokenFactory {
 			_ammGlobalShare,
 			_ammPoolShare,
 			_authorGlobalShare,
-			_authorPoolShare,
 			_amm,
 			_author
 		);

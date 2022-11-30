@@ -23,12 +23,6 @@ uint8 constant AMM_TOKENS_TEAM_SHARES = 20;
 uint8 constant AMM_TOKENS_POOL_SHARES = 80;
 
 /**
- * @dev Author supply is partially added to liquidity pools
- */
-
-uint8 constant AUTHOR_TOKENS_POOL_SHARES = 80;
-
-/**
  * @dev Total ETH funds are dispatched between project author and the protocol (AMM)
  * FUNDS REPARTITION
  */

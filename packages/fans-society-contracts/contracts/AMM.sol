@@ -54,9 +54,6 @@ contract AMM is Projects {
 		uint40 ammTokensPoolShares = (uint40(AMM_TOKENS_POOL_SHARES) *
 			ammSupplyShares) / 100;
 
-		uint40 authorTokensPoolShares = (uint40(AUTHOR_TOKENS_POOL_SHARES) *
-			authorSupplyShares) / 100;
-
 		projects[_id].tokenAddress = IProjectTokenFactory(tokenFactory).createToken(
 			project.name,
 			project.symbol,
@@ -64,7 +61,6 @@ contract AMM is Projects {
 			ammSupplyShares,
 			ammTokensPoolShares,
 			authorSupplyShares,
-			authorTokensPoolShares,
 			address(this),
 			project.authorAddress
 		);
@@ -80,14 +76,6 @@ contract AMM is Projects {
 			address(this),
 			pool,
 			ammTokensPoolShares
-		);
-
-		// ===== Author transfer tokens to pool =====
-		SafeERC20.safeTransferFrom(
-			IERC20(projects[_id].tokenAddress),
-			project.authorAddress,
-			pool,
-			authorTokensPoolShares
 		);
 
 		//	// swap with weth
