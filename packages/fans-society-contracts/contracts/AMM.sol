@@ -45,24 +45,21 @@ contract AMM is Projects {
 	) external statusIs(_id, ProjectStatus.Completed) {
 		Project memory project = projects[_id];
 
-		uint40 totalSupply = uint40(MULTIPLIER) * project.totalSupply;
+		uint40 totalTokenSupply = uint40(MULTIPLIER) * project.totalSupply;
 
-		uint40 ammSupplyShares = uint40(AMM_SUPPLY) * totalSupply;
+		uint40 ammTokenSupplyShares = uint40(AMM_SUPPLY) * totalTokenSupply;
 
-		uint40 authorSupplyShares = uint40(AUTHOR_SUPPLY) * totalSupply;
+		uint40 authorTokenSupplyShares = uint40(AUTHOR_SUPPLY) * totalTokenSupply;
 
 		uint40 ammTokensPoolShares = (uint40(AMM_TOKENS_POOL_SHARES) *
-			ammSupplyShares) / 100;
+			ammTokenSupplyShares) / 100;
 
 		projects[_id].tokenAddress = IProjectTokenFactory(tokenFactory).createToken(
 			project.name,
 			project.symbol,
-			uint40(MULTIPLIER) * totalSupply,
-			ammSupplyShares,
-			ammTokensPoolShares,
-			authorSupplyShares,
 			address(this),
-			project.authorAddress
+			uint40(MULTIPLIER) * totalTokenSupply,
+			ammTokenSupplyShares + authorTokenSupplyShares
 		);
 
 		address pool = IPoolFactory(poolFactory).createPool(
@@ -70,9 +67,14 @@ contract AMM is Projects {
 			weth
 		);
 
+		// ===== AMM transfer tokens to author =====
+		IProjectTokenERC20(projects[_id].tokenAddress).safeTransferFrom(
+			address(this),
+			projects[_id].authorAddress,
+			authorTokenSupplyShares
+		);
 		// ===== AMM transfer tokens to pool =====
-		SafeERC20.safeTransferFrom(
-			IERC20(projects[_id].tokenAddress),
+		IProjectTokenERC20(projects[_id].tokenAddress).safeTransferFrom(
 			address(this),
 			pool,
 			ammTokensPoolShares

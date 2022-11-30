@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { assert } from 'chai';
-import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
+import { BN, expectEvent } from '@openzeppelin/test-helpers';
 
 import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/ProjectTokenFactory';
 import { PoolFactoryInstance } from '../types/truffle/contracts/pools/PoolFactory';
@@ -8,15 +8,13 @@ import {
 	deployProjectTokenFactoryInstance,
 	deployPoolFactoryInstance,
 	getPoolsCreatedFromPastEvents,
-	getTokensCreatedFromPastEvents,
 	IToken,
 	address0,
 	getTokenTransfersFromPastEvents,
-	deployWethInstance,
+	getLastSortedTokenAddressesFromPastEvents,
 } from './TestHelpers';
 import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
 import { PoolInstance } from '../types/truffle/contracts/pools/Pool';
-import { WETHTokenInstance } from '../types/truffle/contracts/common/WETHToken';
 
 const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
 const Pool = artifacts.require('Pool');
@@ -24,45 +22,33 @@ const Pool = artifacts.require('Pool');
 contract('Pools', (accounts) => {
 	const administrator = accounts[0];
 	const fsociety = accounts[1];
+	const user1 = accounts[2];
+	const user2 = accounts[3];
 
-	const author1 = accounts[2];
-	const author2 = accounts[3];
-	const user1 = accounts[4];
-	const user2 = accounts[5];
-
-	let wethToken: WETHTokenInstance;
 	let projectTokenFactory: ProjectTokenFactoryInstance;
 	let PoolFactory: PoolFactoryInstance;
 
 	let tokens: IToken[];
 
 	const tX_totalSupply = 1_000_000;
-	const tX_ammGlobalShare = 10_000;
-	const tX_ammPoolShare = 9_000;
-	const tX_authorGlobalShare = 800_000;
+	const tX_initialSupply = 800_000;
 
 	const tY_totalSupply = 1_000_000;
-	const tY_ammGlobalShare = 10_000;
-	const tY_ammPoolShare = 9_000;
-	const tY_authorGlobalShare = 800_000;
+	const tY_initialSupply = 800_000;
 
 	let tokenX: ProjectTokenERC20Instance;
 	let tokenY: ProjectTokenERC20Instance;
 
 	beforeEach(async () => {
-		wethToken = await deployWethInstance(administrator);
 		projectTokenFactory = await deployProjectTokenFactoryInstance(administrator);
 		PoolFactory = await deployPoolFactoryInstance(administrator, fsociety);
 
 		await projectTokenFactory.createToken(
 			'tokenY',
 			'TKN1',
-			tX_totalSupply,
-			tX_ammGlobalShare,
-			tX_ammPoolShare,
-			tX_authorGlobalShare,
 			administrator,
-			author1,
+			tX_totalSupply,
+			tX_initialSupply,
 			{
 				from: administrator,
 			},
@@ -71,20 +57,19 @@ contract('Pools', (accounts) => {
 		await projectTokenFactory.createToken(
 			'token2',
 			'TKN2',
-			tY_totalSupply,
-			tY_ammGlobalShare,
-			tY_ammPoolShare,
-			tY_authorGlobalShare,
 			administrator,
-			author2,
+			tY_totalSupply,
+			tY_initialSupply,
 			{
 				from: administrator,
 			},
 		);
 
-		tokens = await getTokensCreatedFromPastEvents(projectTokenFactory);
-		tokenX = await ProjectTokenERC20.at(tokens[0]?.token);
-		tokenY = await ProjectTokenERC20.at(tokens[1]?.token);
+		const [tokenXAddress, tokenYAddress] =
+			await getLastSortedTokenAddressesFromPastEvents(projectTokenFactory, 2);
+
+		tokenX = await ProjectTokenERC20.at(tokenXAddress);
+		tokenY = await ProjectTokenERC20.at(tokenYAddress);
 
 		await tokenX.transfer(user1, BN(5000));
 		await tokenY.transfer(user1, BN(5000));
@@ -97,14 +82,14 @@ contract('Pools', (accounts) => {
 		let poolInstance: PoolInstance;
 
 		beforeEach(async () => {
-			await PoolFactory.createPool(tokens[0].token, tokens[1].token, {
+			await PoolFactory.createPool(tokenX.address, tokenY.address, {
 				from: administrator,
 			});
-			const events = await getPoolsCreatedFromPastEvents(PoolFactory);
-
-			assert.lengthOf(events, 1);
-			assert.isDefined(events[0].pool);
-			poolInstance = await Pool.at(events[0].pool);
+			const poolCreatedEvent = _.last(
+				await getPoolsCreatedFromPastEvents(PoolFactory),
+			);
+			assert.isDefined(poolCreatedEvent?.pool);
+			poolInstance = await Pool.at(poolCreatedEvent!.pool);
 		});
 
 		describe('> liquidity is empty', () => {
@@ -160,7 +145,7 @@ contract('Pools', (accounts) => {
 			});
 		});
 
-		describe('> liquidity already provided', () => {
+		describe('> pool has some liquidity', () => {
 			const amountX = BN(3000);
 			const amountY = BN(3000);
 			const initialLiquidity = BN(3000); // sqrt(3000 * 3000)
@@ -248,8 +233,9 @@ contract('Pools', (accounts) => {
 			it('> swap with input on tokenX', async () => {
 				const amountIn = BN(100);
 				const expectedAmountOut = 95;
-
-				await tokenX.transfer(poolInstance.address, amountIn, { from: user2 });
+				await tokenX.transfer(poolInstance.address, amountIn, {
+					from: user2,
+				});
 
 				const receipt = await poolInstance.swap(tokenX.address, { from: user2 });
 

@@ -31,21 +31,21 @@ enum ProjectStatus {
 	Launched,
 }
 
-contract('Projects', (accounts) => {
+contract('AMM', (accounts) => {
 	const administrator = accounts[0];
 	const fsociety = accounts[1];
 	const authorAddress = accounts[2];
-	const fans = accounts.splice(3);
+	const fans = accounts.slice(3);
 
 	let amm: AMMInstance;
 	let projectTokenFactory: ProjectTokenFactoryInstance;
-	let PoolFactory: PoolFactoryInstance;
+	let poolFactory: PoolFactoryInstance;
 
 	beforeEach(async () => {
 		const contracts = await deployProjectsInstances(administrator, fsociety);
 		amm = contracts.amm;
 		projectTokenFactory = contracts.projectTokenFactory;
-		PoolFactory = contracts.PoolFactory;
+		poolFactory = contracts.PoolFactory;
 	});
 
 	const name = 'The god father';
@@ -231,12 +231,12 @@ contract('Projects', (accounts) => {
 					);
 					erc20Instance = await ProjectTokenERC20.at(tokenCreated?.token);
 					const poolCreated = _.last(
-						await getPoolsCreatedFromPastEvents(PoolFactory),
+						await getPoolsCreatedFromPastEvents(poolFactory),
 					);
 					poolInstance = await Pool.at(poolCreated?.pool);
 				});
 
-				it('> should create new token with dispatched supply', async () => {
+				it('> should have dispatched supply', async () => {
 					const transfers = await getTokenTransfersFromPastEvents(erc20Instance);
 
 					const expectedAmmToPoolTransferAmount =
@@ -247,11 +247,11 @@ contract('Projects', (accounts) => {
 						{
 							from: address0,
 							to: amm.address,
-							value: expectedAmmSupply,
+							value: expectedAmmSupply + expectedAuthorSupply,
 						},
 						// transfer from erc20 to author
 						{
-							from: address0,
+							from: amm.address,
 							to: authorAddress,
 							value: expectedAuthorSupply,
 						},
@@ -276,7 +276,7 @@ contract('Projects', (accounts) => {
 					);
 				});
 
-				it('> should allow a project participant to claim his token share', async () => {
+				it('> claimProjectTokens should allow a project participant to claim his token share', async () => {
 					const receipt = await amm.claimProjectTokens(projectId, { from: fans[0] });
 					const expectedAmount = (totalSupply * INVESTORS_SUPPLY) / nbFans; // 150_000
 

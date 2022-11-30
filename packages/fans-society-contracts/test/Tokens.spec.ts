@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
+import { expectRevert } from '@openzeppelin/test-helpers';
 
 import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/ProjectTokenFactory';
 import {
@@ -29,56 +29,17 @@ contract('Tokens', (accounts) => {
 
 	describe('> Project token factory', () => {
 		describe('> createToken', () => {
-			it('> should fail when called out of amm contract', async () => {
-				await expectRevert(
-					projectTokenFactory.createToken(
-						'Test',
-						'TEST',
-						totalSupply,
-						ammGlobalShare,
-						ammPoolShare,
-						authorGlobalShare,
-						administrator,
-						author,
-						{
-							from: author,
-						},
-					),
-					'Caller is not AMM',
-				);
-			});
-
 			it('> should fail with total supply lower than distributed shared', async () => {
 				await expectRevert(
 					projectTokenFactory.createToken(
 						'Test',
 						'TEST',
-						100,
-						ammGlobalShare,
-						ammPoolShare,
-						authorGlobalShare,
 						administrator,
-						author,
+						100,
+						ammGlobalShare + authorGlobalShare,
 						{ from: administrator },
 					),
 					'total supply too small',
-				);
-			});
-
-			it('> should fail with amm pool share larger than amm global share', async () => {
-				await expectRevert(
-					projectTokenFactory.createToken(
-						'Test',
-						'TEST',
-						totalSupply,
-						100,
-						ammPoolShare,
-						authorGlobalShare,
-						administrator,
-						author,
-						{ from: administrator },
-					),
-					'AMM pool share too large',
 				);
 			});
 
@@ -89,12 +50,9 @@ contract('Tokens', (accounts) => {
 				await projectTokenFactory.createToken(
 					name,
 					symbol,
-					totalSupply,
-					ammGlobalShare,
-					ammPoolShare,
-					authorGlobalShare,
 					administrator,
-					author,
+					totalSupply,
+					ammGlobalShare + authorGlobalShare,
 					{ from: administrator },
 				);
 
@@ -125,12 +83,9 @@ contract('Tokens', (accounts) => {
 			await projectTokenFactory.createToken(
 				'Test',
 				'TEST',
-				totalSupply,
-				ammGlobalShare,
-				ammPoolShare,
-				authorGlobalShare,
 				administrator,
-				author,
+				totalSupply,
+				ammGlobalShare + authorGlobalShare,
 				{ from: administrator },
 			);
 			const lastTokenCreated = _.last(

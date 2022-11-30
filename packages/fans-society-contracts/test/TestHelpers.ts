@@ -5,6 +5,7 @@ import { WETHTokenInstance } from '../types/truffle/contracts/common/WETHToken';
 import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
 
 const ProjectTokenFactory = artifacts.require('ProjectTokenFactory');
+const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
 const PoolFactory = artifacts.require('PoolFactory');
 const WETHTokenFactory = artifacts.require('WETHToken');
 const AMM = artifacts.require('AMM');
@@ -105,6 +106,10 @@ export async function deployPoolFactoryInstance(
 	});
 }
 
+export function sortTokens(tokenX: string, tokenY: string) {
+	return tokenX < tokenY ? -1 : 1;
+}
+
 export async function getTokensCreatedFromPastEvents(
 	projectTokenFactory: ProjectTokenFactoryInstance,
 ): Promise<IToken[]> {
@@ -139,4 +144,14 @@ export async function getTokenTransfersFromPastEvents(
 			value: +returnValues.value,
 		}),
 	);
+}
+
+export async function getLastSortedTokenAddressesFromPastEvents(
+	projectTokenFactory: ProjectTokenFactoryInstance,
+	count: number,
+): Promise<string[]> {
+	return (await getTokensCreatedFromPastEvents(projectTokenFactory))
+		.slice(-count)
+		.map((t) => t.token)
+		.sort(sortTokens);
 }
