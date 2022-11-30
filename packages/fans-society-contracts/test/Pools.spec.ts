@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { assert } from 'chai';
 import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
 
@@ -9,42 +10,59 @@ import {
 	getPoolsCreatedFromPastEvents,
 	getTokensCreatedFromPastEvents,
 	IToken,
+	address0,
+	getTokenTransfersFromPastEvents,
+	deployWethInstance,
 } from './TestHelpers';
+import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
+import { PoolInstance } from '../types/truffle/contracts/pools/Pool';
+import { WETHTokenInstance } from '../types/truffle/contracts/common/WETHToken';
+
+const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
+const Pool = artifacts.require('Pool');
 
 contract('Pools', (accounts) => {
 	const administrator = accounts[0];
-	const author1 = accounts[1];
-	const author2 = accounts[2];
+	const fsociety = accounts[1];
 
+	const author1 = accounts[2];
+	const author2 = accounts[3];
+	const user1 = accounts[4];
+
+	let wethToken: WETHTokenInstance;
 	let projectTokenFactory: ProjectTokenFactoryInstance;
 	let PoolFactory: PoolFactoryInstance;
 
 	let tokens: IToken[];
 
-	const t1_totalSupply = 1_000_000;
-	const t1_ammGlobalShare = 10_000;
-	const t1_ammPoolShare = 9_000;
-	const t1_authorGlobalShare = 800_000;
-	const t1_authorPoolShare = 700_000;
+	const tX_totalSupply = 1_000_000;
+	const tX_ammGlobalShare = 10_000;
+	const tX_ammPoolShare = 9_000;
+	const tX_authorGlobalShare = 800_000;
+	const tX_authorPoolShare = 700_000;
 
-	const t2_totalSupply = 1_000_000;
-	const t2_ammGlobalShare = 10_000;
-	const t2_ammPoolShare = 9_000;
-	const t2_authorGlobalShare = 800_000;
-	const t2_authorPoolShare = 700_000;
+	const tY_totalSupply = 1_000_000;
+	const tY_ammGlobalShare = 10_000;
+	const tY_ammPoolShare = 9_000;
+	const tY_authorGlobalShare = 800_000;
+	const tY_authorPoolShare = 700_000;
+
+	let tokenX: ProjectTokenERC20Instance;
+	let tokenY: ProjectTokenERC20Instance;
 
 	beforeEach(async () => {
+		wethToken = await deployWethInstance(administrator);
 		projectTokenFactory = await deployProjectTokenFactoryInstance(administrator);
-		PoolFactory = await deployPoolFactoryInstance(administrator);
+		PoolFactory = await deployPoolFactoryInstance(administrator, fsociety);
 
 		await projectTokenFactory.createToken(
-			'token1',
+			'tokenY',
 			'TKN1',
-			t1_totalSupply,
-			t1_ammGlobalShare,
-			t1_ammPoolShare,
-			t1_authorGlobalShare,
-			t1_authorPoolShare,
+			tX_totalSupply,
+			tX_ammGlobalShare,
+			tX_ammPoolShare,
+			tX_authorGlobalShare,
+			tX_authorPoolShare,
 			administrator,
 			author1,
 			{
@@ -55,11 +73,11 @@ contract('Pools', (accounts) => {
 		await projectTokenFactory.createToken(
 			'token2',
 			'TKN2',
-			t2_totalSupply,
-			t2_ammGlobalShare,
-			t2_ammPoolShare,
-			t2_authorGlobalShare,
-			t2_authorPoolShare,
+			tY_totalSupply,
+			tY_ammGlobalShare,
+			tY_ammPoolShare,
+			tY_authorGlobalShare,
+			tY_authorPoolShare,
 			administrator,
 			author2,
 			{
@@ -68,20 +86,164 @@ contract('Pools', (accounts) => {
 		);
 
 		tokens = await getTokensCreatedFromPastEvents(projectTokenFactory);
+		tokenX = await ProjectTokenERC20.at(tokens[0]?.token);
+		tokenY = await ProjectTokenERC20.at(tokens[1]?.token);
+
+		await tokenX.transfer(user1, BN(5000));
+		await tokenY.transfer(user1, BN(5000));
 	});
 
-	describe('> createPool', () => {
+	describe('> pool is created', () => {
+		let poolInstance: PoolInstance;
+
 		beforeEach(async () => {
 			await PoolFactory.createPool(tokens[0].token, tokens[1].token, {
 				from: administrator,
 			});
-		});
-
-		it('> should create a token pair pool', async () => {
 			const events = await getPoolsCreatedFromPastEvents(PoolFactory);
 
 			assert.lengthOf(events, 1);
 			assert.isDefined(events[0].pool);
+			poolInstance = await Pool.at(events[0].pool);
+		});
+
+		describe('> liquidity is empty', () => {
+			it('> mintLP', async () => {
+				const amountX = BN(1000);
+				const amountY = BN(4000);
+
+				// user1 transfers tokens to pool
+				await tokenX.transfer(poolInstance.address, amountX, { from: user1 });
+				await tokenY.transfer(poolInstance.address, amountY, { from: user1 });
+
+				// then ask for LP tokens
+				const receipt = await poolInstance.mintLP(user1, { from: user1 });
+
+				const expectedLiquidity = BN(2000);
+
+				await expectEvent(receipt, 'Transfer', {
+					from: address0,
+					to: user1,
+					value: expectedLiquidity,
+				});
+
+				await expectEvent(receipt, 'ReservesUpdated', {
+					reserveX: amountX,
+					reserveY: amountY,
+				});
+
+				await expectEvent(receipt, 'LPMinted', {
+					provider: user1,
+					amountX,
+					amountY,
+				});
+
+				assert.equal(
+					(await poolInstance.totalSupply()).toNumber(),
+					expectedLiquidity,
+				);
+				assert.equal(
+					(await poolInstance.balanceOf(user1)).toNumber(),
+					expectedLiquidity,
+				);
+				assert.equal(
+					(await tokenX.balanceOf(poolInstance.address)).toNumber(),
+					amountX,
+				);
+				assert.equal(
+					(await tokenY.balanceOf(poolInstance.address)).toNumber(),
+					amountY,
+				);
+				const reserves = await poolInstance.getReserves();
+				assert.equal(reserves[0].toNumber(), amountX);
+				assert.equal(reserves[1].toNumber(), amountY);
+			});
+		});
+
+		describe('> liquidity already provided', () => {
+			const amountX = BN(3000);
+			const amountY = BN(3000);
+			const initialLiquidity = BN(3000); // sqrt(3000 * 3000)
+
+			beforeEach(async () => {
+				await tokenX.transfer(poolInstance.address, amountX, { from: user1 });
+				await tokenY.transfer(poolInstance.address, amountY, { from: user1 });
+				await poolInstance.mintLP(user1, { from: user1 });
+			});
+
+			it('> burnLP', async () => {
+				const lpToRemove = BN(1000);
+
+				const lpUser1 = await poolInstance.balanceOf(user1);
+				assert.equal(lpUser1.toNumber(), initialLiquidity.toNumber());
+
+				// user1 gives back LP token to the pool
+				await poolInstance.transfer(poolInstance.address, lpUser1.sub(lpToRemove), {
+					from: user1,
+				});
+
+				// then ask to get back its tokens
+				const receipt = await poolInstance.burnLP(user1, { from: user1 });
+
+				await expectEvent(receipt, 'Transfer', {
+					from: poolInstance.address,
+					to: address0,
+					value: initialLiquidity.sub(lpToRemove),
+				});
+
+				await expectEvent(receipt, 'Transfer', {
+					from: poolInstance.address,
+					to: user1,
+					value: initialLiquidity.sub(lpToRemove),
+				});
+
+				await expectEvent(receipt, 'ReservesUpdated', {
+					reserveX: BN(1000),
+					reserveY: BN(1000),
+				});
+
+				await expectEvent(receipt, 'LPBurnt', {
+					provider: user1,
+					amountX: BN(amountX - 1000),
+					amountY: BN(amountY - 1000),
+				});
+
+				const tokenXTransferEvent = _.last(
+					await getTokenTransfersFromPastEvents(tokenX),
+				);
+				const tokenYTransferEvent = _.last(
+					await getTokenTransfersFromPastEvents(tokenY),
+				);
+
+				assert.deepEqual(tokenXTransferEvent, {
+					from: poolInstance.address,
+					to: user1,
+					value: amountX - 1000,
+				});
+				assert.deepEqual(tokenYTransferEvent, {
+					from: poolInstance.address,
+					to: user1,
+					value: amountY - 1000,
+				});
+
+				assert.equal((await poolInstance.totalSupply()).toNumber(), 1000);
+				assert.equal((await poolInstance.balanceOf(user1)).toNumber(), 1000);
+				assert.equal(
+					(await tokenX.balanceOf(poolInstance.address)).toNumber(),
+					1000,
+				);
+				assert.equal(
+					(await tokenY.balanceOf(poolInstance.address)).toNumber(),
+					1000,
+				);
+
+				assert.equal((await tokenX.balanceOf(user1)).toNumber(), 4000);
+				assert.equal((await tokenY.balanceOf(user1)).toNumber(), 4000);
+
+				const reserves = await poolInstance.getReserves();
+				assert.equal(reserves[0].toNumber(), 1000);
+				assert.equal(reserves[1].toNumber(), 1000);
+			});
 		});
 	});
 });

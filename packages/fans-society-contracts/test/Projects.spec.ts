@@ -3,6 +3,7 @@ import { assert } from 'chai';
 import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
 
 import {
+	address0,
 	AMM_SUPPLY,
 	AMM_TOKENS_POOL_SHARES,
 	AUTHOR_SUPPLY,
@@ -29,8 +30,6 @@ enum ProjectStatus {
 	Completed,
 	Launched,
 }
-
-const address0 = '0x0000000000000000000000000000000000000000';
 
 contract('Projects', (accounts) => {
 	const administrator = accounts[0];

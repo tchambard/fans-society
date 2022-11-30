@@ -27,6 +27,8 @@ export interface ITokenTransfer {
 	value: number;
 }
 
+export const address0 = '0x0000000000000000000000000000000000000000';
+
 export const MULTIPLIER = 100;
 
 export const AMM_SUPPLY = 15;
@@ -58,6 +60,7 @@ export async function deployProjectsInstances(
 	);
 	const PoolFactory = await deployPoolFactoryInstance(
 		contractOwnerAddress,
+		fansSocietyAddress,
 	);
 
 	const amm = await AMM.new(
@@ -95,8 +98,9 @@ export async function deployProjectTokenFactoryInstance(
 
 export async function deployPoolFactoryInstance(
 	contractOwnerAddress: string,
+	fansSocietyAddress: string,
 ): Promise<PoolFactoryInstance> {
-	return PoolFactory.new({
+	return PoolFactory.new(fansSocietyAddress, {
 		from: contractOwnerAddress,
 	});
 }
@@ -116,13 +120,13 @@ export async function getTokensCreatedFromPastEvents(
 export async function getPoolsCreatedFromPastEvents(
 	PoolFactory: PoolFactoryInstance,
 ): Promise<IPool[]> {
-	return (
-		await PoolFactory.getPastEvents('PoolCreated', { fromBlock: 0 })
-	).map(({ returnValues }) => ({
-		pool: returnValues.pool,
-		token1: returnValues.token1,
-		token2: returnValues.token2,
-	}));
+	return (await PoolFactory.getPastEvents('PoolCreated', { fromBlock: 0 })).map(
+		({ returnValues }) => ({
+			pool: returnValues.pool,
+			token1: returnValues.token1,
+			token2: returnValues.token2,
+		}),
+	);
 }
 
 export async function getTokenTransfersFromPastEvents(

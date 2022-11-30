@@ -11,6 +11,8 @@ import { PoolHelpers } from './PoolHelpers.sol';
 import { IPool } from './interfaces/IPool.sol';
 
 contract PoolFactory is IPoolFactory, Ownable {
+	address private immutable fansSocietyAddress;
+
 	address private immutable implementation;
 
 	/**
@@ -20,7 +22,8 @@ contract PoolFactory is IPoolFactory, Ownable {
 
 	event PoolCreated(address pool, address token1, address token2);
 
-	constructor() {
+	constructor(address _fansSocietyAddress) {
+		fansSocietyAddress = _fansSocietyAddress;
 		implementation = address(new Pool());
 	}
 
@@ -38,7 +41,7 @@ contract PoolFactory is IPoolFactory, Ownable {
 		);
 
 		poolAddress = Clones.cloneDeterministic(implementation, salt);
-		Pool(poolAddress).initialize(token1, token2);
+		Pool(poolAddress).initialize(fansSocietyAddress, token1, token2);
 
 		tokenPools[token1].push(poolAddress);
 		tokenPools[token2].push(poolAddress);

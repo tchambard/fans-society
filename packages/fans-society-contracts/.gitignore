@@ -1,1 +1,3 @@
-artifacts/build-info
+artifacts
+types
+!types/.gitkeep

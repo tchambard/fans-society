@@ -140,6 +140,7 @@ contract('Tokens', (accounts) => {
 			});
 		});
 	});
+
 	describe('> Project token ERC20', () => {
 		let erc20Instance: ProjectTokenERC20Instance;
 
