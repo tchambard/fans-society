@@ -28,6 +28,7 @@ contract('Pools', (accounts) => {
 	const author1 = accounts[2];
 	const author2 = accounts[3];
 	const user1 = accounts[4];
+	const user2 = accounts[5];
 
 	let wethToken: WETHTokenInstance;
 	let projectTokenFactory: ProjectTokenFactoryInstance;
@@ -91,6 +92,9 @@ contract('Pools', (accounts) => {
 
 		await tokenX.transfer(user1, BN(5000));
 		await tokenY.transfer(user1, BN(5000));
+
+		await tokenX.transfer(user2, BN(1000));
+		await tokenY.transfer(user2, BN(1000));
 	});
 
 	describe('> pool is created', () => {
@@ -243,6 +247,56 @@ contract('Pools', (accounts) => {
 				const reserves = await poolInstance.getReserves();
 				assert.equal(reserves[0].toNumber(), 1000);
 				assert.equal(reserves[1].toNumber(), 1000);
+			});
+
+			it('> swap with input on tokenX', async () => {
+				const amountIn = BN(100);
+				const expectedAmountOut = 95;
+
+				await tokenX.transfer(poolInstance.address, amountIn, { from: user2 });
+
+				const receipt = await poolInstance.swap(tokenX.address, { from: user2 });
+
+				const tokenYTransferEvent = _.last(
+					await getTokenTransfersFromPastEvents(tokenY),
+				);
+
+				assert.deepEqual(tokenYTransferEvent, {
+					from: poolInstance.address,
+					to: user2,
+					value: expectedAmountOut,
+				});
+
+				await expectEvent(receipt, 'ReservesUpdated', {
+					reserveX: amountX.add(amountIn),
+					reserveY: amountY.sub(BN(expectedAmountOut)),
+				});
+
+				await expectEvent(receipt, 'Swap', {
+					caller: user2,
+					tokenIn: tokenX.address,
+					amountIn: amountIn,
+					tokenOut: tokenY.address,
+					amountOut: BN(expectedAmountOut),
+				});
+
+				const reserves = await poolInstance.getReserves();
+				assert.equal(reserves[0].toNumber(), amountX.add(amountIn).toNumber());
+				assert.equal(
+					reserves[1].toNumber(),
+					amountY.sub(BN(expectedAmountOut)).toNumber(),
+				);
+				assert.equal(
+					(await tokenX.balanceOf(poolInstance.address)).toNumber(),
+					amountX.add(amountIn).toNumber(),
+				);
+				assert.equal(
+					(await tokenY.balanceOf(poolInstance.address)).toNumber(),
+					amountY.sub(BN(expectedAmountOut)),
+				);
+
+				assert.equal((await tokenX.balanceOf(user2)).toNumber(), 900);
+				assert.equal((await tokenY.balanceOf(user2)).toNumber(), 1095);
 			});
 		});
 	});
