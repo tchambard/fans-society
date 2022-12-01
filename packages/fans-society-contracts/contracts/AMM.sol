@@ -43,7 +43,7 @@ contract AMM is Projects {
 
 	function launchProject(
 		uint256 _id
-	) external statusIs(_id, ProjectStatus.Completed) {
+	) external statusIs(_id, ProjectStatus.Completed) onlyPartner(_id) {
 		Project memory project = projects[_id];
 
 		(

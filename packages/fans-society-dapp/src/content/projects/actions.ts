@@ -40,6 +40,7 @@ export interface IProjectListCapabilities {
 
 export interface IProjectDetailCapabilities {
 	$canAbort?: boolean;
+	$canValidate?: boolean;
 }
 
 export enum ProjectStatus {

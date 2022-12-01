@@ -197,14 +197,23 @@ contract('AMM', (accounts) => {
 				assert.equal(event?.returnValues.status, ProjectStatus.Completed);
 			});
 
-			describe('> launchProject', () => {
+			it('> launchProject should fail if not partner', async () => {
+				await expectRevert(
+					amm.launchProject(projectId, {
+						from: administrator,
+					}),
+					'Not partner',
+				);
+			});
+
+			describe('> launchProject as partner', () => {
 				let launchProjectReceipt: Truffle.TransactionResponse<AllEvents>;
 				let erc20Instance: ProjectTokenERC20Instance;
 				let poolInstance: PoolInstance;
 
 				beforeEach(async () => {
 					launchProjectReceipt = await amm.launchProject(projectId, {
-						from: administrator,
+						from: partnerAddress,
 					});
 					const tokenCreated = _.last(
 						await getTokensCreatedFromPastEvents(projectTokenFactory),
@@ -314,7 +323,7 @@ contract('AMM', (accounts) => {
 
 				beforeEach(async () => {
 					await amm.launchProject(projectId, {
-						from: administrator,
+						from: partnerAddress,
 					});
 					const tokenCreated = _.last(
 						await getTokensCreatedFromPastEvents(projectTokenFactory),
