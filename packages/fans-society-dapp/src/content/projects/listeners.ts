@@ -1,10 +1,10 @@
 import {
-	Claimed,
+	TokensClaimed,
 	Committed,
 	ProjectCreated,
 	ProjectStatusChanged,
 	Withdrawed,
-} from 'fans-society-contracts/types/web3/contracts/FansSociety';
+} from 'fans-society-contracts/types/web3/contracts/AMM';
 import { ClientFactory } from 'src/services/ClientFactory';
 import {
 	IProjectClaim,
@@ -45,7 +45,7 @@ export const listenProjectCreated = (
 			target: +web3.utils.fromWei(returnValues.target, 'ether'),
 			minInvest: +web3.utils.fromWei(returnValues.minInvest, 'ether'),
 			maxInvest: +web3.utils.fromWei(returnValues.maxInvest, 'ether'),
-			authorAddress: returnValues.authorAddress,
+			partnerAddress: returnValues.partnerAddress,
 			status: ProjectStatus.Opened,
 			$capabilities: {
 				$canAbort: contractInfo.isOwner,
@@ -99,9 +99,9 @@ export const listenClaimed = (
 	onData: (data: IProjectClaim) => void,
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
-	const eventHandler = async ({ returnValues }: Claimed) => {
+	const eventHandler = async ({ returnValues }: TokensClaimed) => {
 		onData({
-			id: returnValues.id,
+			id: returnValues.projectId,
 			address: returnValues.caller,
 			amount: +web3.utils.fromWei(returnValues.amount, 'ether'),
 		});

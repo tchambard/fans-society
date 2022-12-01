@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { ERC20Upgradeable } from '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol';
 import { Initializable } from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import { ERC20Upgradeable } from '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol';
+import { SafeERC20Upgradeable } from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
 
 import { IProjectTokenERC20 } from './interfaces/IProjectTokenERC20.sol';
 import 'hardhat/console.sol';
@@ -14,94 +15,67 @@ contract ProjectTokenERC20 is
 {
 	uint256 public maxTotalSupply;
 
-	address private owner;
+	address private amm;
 
 	mapping(address => bool) private claimed;
+
+	event Claimed(address account, uint amount);
+
+	modifier onlyAmm() {
+		require(msg.sender == amm, 'Caller is not AMM');
+		_;
+	}
 
 	function initialize(
 		string memory _name,
 		string memory _symbol,
-		uint40 _totalSupply,
-		uint40 _ammGlobalShare,
-		uint40 _ammPoolShare,
-		uint40 _authorGlobalShare,
-		uint40 _authorPoolShare,
 		address _amm,
-		address _author
+		uint40 _totalSupply,
+		uint40 _initialSupply
 	) public virtual initializer {
-		require(
-			_totalSupply >= _ammGlobalShare + _authorGlobalShare,
-			'total supply too small'
-		);
-		owner = _amm;
+		require(_totalSupply >= _initialSupply, 'total supply too small');
+		amm = _amm;
 		maxTotalSupply = _totalSupply;
 
-		__ProjectTokenERC20_init(
-			_name,
-			_symbol,
-			_ammGlobalShare,
-			_ammPoolShare,
-			_authorGlobalShare,
-			_authorPoolShare,
-			_amm,
-			_author
-		);
+		__ProjectTokenERC20_init(_name, _symbol, _initialSupply);
 	}
 
 	/**
 	 * @dev Mint supplies
-	 * - `ammShare` amount of token and transfers them to `amm` contract.
-	 * - `authorShare` amount of token and transfers them to `author`.
-	 * - `projectShare` amount of token and transfers them to `projectContract`.
+	 * - `initialSupply` amount of tokens to mint and assign to `amm` contract.
 	 *
 	 * See {ERC20-constructor}.
 	 */
 	function __ProjectTokenERC20_init(
 		string memory _name,
 		string memory _symbol,
-		uint40 _ammGlobalShare,
-		uint40 _ammPoolShare,
-		uint40 _authorGlobalShare,
-		uint40 _authorPoolShare,
-		address _amm,
-		address _author
+		uint40 _initialSupply
 	) internal onlyInitializing {
 		__ERC20_init_unchained(_name, _symbol);
-		__ProjectTokenERC20_init_unchained(
-			_ammGlobalShare,
-			_ammPoolShare,
-			_authorGlobalShare,
-			_authorPoolShare,
-			_amm,
-			_author
-		);
+		__ProjectTokenERC20_init_unchained(_initialSupply);
 	}
 
 	function __ProjectTokenERC20_init_unchained(
-		uint40 _ammGlobalShare,
-		uint40 _ammPoolShare,
-		uint40 _authorGlobalShare,
-		uint40 _authorPoolShare,
-		address _amm,
-		address _author
+		uint40 _initialSupply
 	) internal onlyInitializing {
-		require(_ammGlobalShare >= _ammPoolShare, 'AMM pool share too large');
-		require(
-			_authorGlobalShare >= _authorPoolShare,
-			'Author pool share too large'
-		);
-		_mint(_amm, _ammGlobalShare);
-		_mint(_author, _authorGlobalShare);
-		_approve(_amm, owner, _ammPoolShare);
-		_approve(_author, owner, _authorPoolShare);
+		_mint(amm, _initialSupply);
 	}
 
-	function claim(address account, uint256 amount) external {
-		require(msg.sender == owner, 'Caller is not AMM');
+	function safeTransferFrom(
+		address from,
+		address to,
+		uint256 value
+	) external onlyAmm {
+		_approve(from, amm, value);
+		_transfer(from, to, value);
+	}
+
+	function claim(address account, uint256 amount) external onlyAmm {
 		require(!claimed[account], 'already claimed');
 		uint256 totalSupply = totalSupply();
 		require((totalSupply + amount) <= maxTotalSupply, 'maxTotalSupply limit');
 		_mint(account, amount);
 		claimed[account] = true;
+		emit Claimed(account, amount);
 	}
 }

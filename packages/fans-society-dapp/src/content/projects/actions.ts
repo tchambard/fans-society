@@ -10,7 +10,7 @@ export interface IProjectsContractInfo {
 }
 
 export interface ICreateProjectParams {
-	authorAddress: string;
+	partnerAddress: string;
 	name: string;
 	symbol: string;
 	description: string;
@@ -56,7 +56,7 @@ export interface IProjectListItem {
 	target: number;
 	minInvest: number;
 	maxInvest: number;
-	authorAddress: string;
+	partnerAddress: string;
 	status: ProjectStatus;
 	$capabilities: IProjectDetailCapabilities;
 }
@@ -70,7 +70,7 @@ export interface IProjectDetail {
 	minInvest: number;
 	maxInvest: number;
 	fund: number;
-	authorAddress: string;
+	partnerAddress: string;
 	status: ProjectStatus;
 	$capabilities: IProjectDetailCapabilities;
 }

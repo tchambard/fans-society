@@ -51,8 +51,8 @@ export default ({
 					<Stack direction={'column'}>
 						<TextFieldElement
 							type={'text'}
-							name={'authorAddress'}
-							label={'Productor address'}
+							name={'partnerAddress'}
+							label={'Partner address'}
 							required={true}
 						/>
 						<br />

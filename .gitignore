@@ -10,4 +10,3 @@ cache
 !.yarn/plugins
 .history
 .env
-artifacts

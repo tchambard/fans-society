@@ -7,6 +7,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	const [deployer] = await getUnnamedAccounts();
 
+	const fansSocietyAddress = '0xa0Ee7A142d267C1f36714E4a8F75612F20a79720'; // TODO
+
 	let wethTokenAddress: string;
 	if (hre.network.name === 'localhost') {
 		wethTokenAddress = (
@@ -30,10 +32,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		},
 	);
 
-	const { address: tokensPoolFactoryAddress } = await deploy('PoolFactory', {
+	const { address: poolFactoryAddress } = await deploy('PoolFactory', {
 		from: deployer,
 		log: true,
 		autoMine: true,
+		args: [fansSocietyAddress],
 	});
 
 	await deploy('AMM', {
@@ -41,10 +44,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		log: true,
 		autoMine: true,
 		args: [
-			'0xa0Ee7A142d267C1f36714E4a8F75612F20a79720',
+			fansSocietyAddress,
 			wethTokenAddress,
 			projectTokenFactoryAddress,
-			tokensPoolFactoryAddress,
+			poolFactoryAddress,
 		],
 	});
 };

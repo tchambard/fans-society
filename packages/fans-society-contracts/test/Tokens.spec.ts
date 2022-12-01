@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
+import { expectRevert } from '@openzeppelin/test-helpers';
 
 import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/ProjectTokenFactory';
 import {
@@ -13,7 +13,7 @@ const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
 
 contract('Tokens', (accounts) => {
 	const administrator = accounts[0];
-	const author = accounts[1];
+	const partner = accounts[1];
 	const account3 = accounts[2];
 
 	let projectTokenFactory: ProjectTokenFactoryInstance;
@@ -21,8 +21,7 @@ contract('Tokens', (accounts) => {
 	const totalSupply = 1_000_000;
 	const ammGlobalShare = 10_000;
 	const ammPoolShare = 9_000;
-	const authorGlobalShare = 800_000;
-	const authorPoolShare = 700_000;
+	const partnerGlobalShare = 800_000;
 
 	beforeEach(async () => {
 		projectTokenFactory = await deployProjectTokenFactoryInstance(administrator);
@@ -30,77 +29,17 @@ contract('Tokens', (accounts) => {
 
 	describe('> Project token factory', () => {
 		describe('> createToken', () => {
-			it('> should fail when called out of amm contract', async () => {
-				await expectRevert(
-					projectTokenFactory.createToken(
-						'Test',
-						'TEST',
-						totalSupply,
-						ammGlobalShare,
-						ammPoolShare,
-						authorGlobalShare,
-						authorPoolShare,
-						administrator,
-						author,
-						{
-							from: author,
-						},
-					),
-					'Caller is not AMM',
-				);
-			});
-
 			it('> should fail with total supply lower than distributed shared', async () => {
 				await expectRevert(
 					projectTokenFactory.createToken(
 						'Test',
 						'TEST',
-						100,
-						ammGlobalShare,
-						ammPoolShare,
-						authorGlobalShare,
-						authorPoolShare,
 						administrator,
-						author,
+						100,
+						ammGlobalShare + partnerGlobalShare,
 						{ from: administrator },
 					),
 					'total supply too small',
-				);
-			});
-
-			it('> should fail with amm pool share larger than amm global share', async () => {
-				await expectRevert(
-					projectTokenFactory.createToken(
-						'Test',
-						'TEST',
-						totalSupply,
-						100,
-						ammPoolShare,
-						authorGlobalShare,
-						authorPoolShare,
-						administrator,
-						author,
-						{ from: administrator },
-					),
-					'AMM pool share too large',
-				);
-			});
-
-			it('> should fail with author pool share larger than author global share', async () => {
-				await expectRevert(
-					projectTokenFactory.createToken(
-						'Test',
-						'TEST',
-						totalSupply,
-						ammGlobalShare,
-						ammPoolShare,
-						100,
-						authorPoolShare,
-						administrator,
-						author,
-						{ from: administrator },
-					),
-					'Author pool share too large',
 				);
 			});
 
@@ -111,13 +50,9 @@ contract('Tokens', (accounts) => {
 				await projectTokenFactory.createToken(
 					name,
 					symbol,
-					totalSupply,
-					ammGlobalShare,
-					ammPoolShare,
-					authorGlobalShare,
-					authorPoolShare,
 					administrator,
-					author,
+					totalSupply,
+					ammGlobalShare + partnerGlobalShare,
 					{ from: administrator },
 				);
 
@@ -131,7 +66,7 @@ contract('Tokens', (accounts) => {
 				const erc20Instance = await ProjectTokenERC20.at(lastTokenCreated?.token);
 				assert.equal(
 					(await erc20Instance.totalSupply()).toNumber(),
-					ammGlobalShare + authorGlobalShare,
+					ammGlobalShare + partnerGlobalShare,
 				);
 				assert.equal(
 					(await erc20Instance.maxTotalSupply()).toNumber(),
@@ -140,6 +75,7 @@ contract('Tokens', (accounts) => {
 			});
 		});
 	});
+
 	describe('> Project token ERC20', () => {
 		let erc20Instance: ProjectTokenERC20Instance;
 
@@ -147,13 +83,9 @@ contract('Tokens', (accounts) => {
 			await projectTokenFactory.createToken(
 				'Test',
 				'TEST',
-				totalSupply,
-				ammGlobalShare,
-				ammPoolShare,
-				authorGlobalShare,
-				authorPoolShare,
 				administrator,
-				author,
+				totalSupply,
+				ammGlobalShare + partnerGlobalShare,
 				{ from: administrator },
 			);
 			const lastTokenCreated = _.last(
@@ -171,7 +103,7 @@ contract('Tokens', (accounts) => {
 			});
 
 			it('> should fail if total supply is lower than distributed shared', async () => {
-				const availableSupply = totalSupply - (ammGlobalShare + authorGlobalShare);
+				const availableSupply = totalSupply - (ammGlobalShare + partnerGlobalShare);
 				await expectRevert(
 					erc20Instance.claim(account3, availableSupply + 1, {
 						from: administrator,
