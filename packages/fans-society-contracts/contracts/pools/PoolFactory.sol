@@ -20,7 +20,7 @@ contract PoolFactory is IPoolFactory, Ownable {
 	 */
 	mapping(address => address[]) private tokenPools;
 
-	event PoolCreated(address pool, address token1, address token2);
+	event PoolCreated(address pool, address tokenX, address token2);
 
 	constructor(address _fansSocietyAddress) {
 		fansSocietyAddress = _fansSocietyAddress;
@@ -29,25 +29,25 @@ contract PoolFactory is IPoolFactory, Ownable {
 
 	function createPool(
 		address _amm,
-		address _token1,
-		address _token2
+		address _tokenX,
+		address _tokenY
 	) public returns (address poolAddress) {
-		(address token1, address token2, bytes32 salt) = PoolHelpers.computePoolSalt(
-			_token1,
-			_token2
+		(address tokenX, address token2, bytes32 salt) = PoolHelpers.computePoolSalt(
+			_tokenX,
+			_tokenY
 		);
 		require(
-			Address.isContract(_token1) && Address.isContract(_token2),
+			Address.isContract(_tokenX) && Address.isContract(_tokenY),
 			'not contract'
 		);
 
 		poolAddress = Clones.cloneDeterministic(implementation, salt);
-		Pool(poolAddress).initialize(_amm, fansSocietyAddress, token1, token2);
+		Pool(poolAddress).initialize(_amm, fansSocietyAddress, tokenX, token2);
 
-		tokenPools[token1].push(poolAddress);
+		tokenPools[tokenX].push(poolAddress);
 		tokenPools[token2].push(poolAddress);
 
-		emit PoolCreated(poolAddress, token1, token2);
+		emit PoolCreated(poolAddress, tokenX, token2);
 		return (poolAddress);
 	}
 
@@ -59,10 +59,10 @@ contract PoolFactory is IPoolFactory, Ownable {
 	}
 
 	function getPool(
-		address _token1,
-		address _token2
+		address _tokenX,
+		address _tokenY
 	) external view returns (address pool) {
-		(, , bytes32 salt) = PoolHelpers.computePoolSalt(_token1, _token2);
+		(, , bytes32 salt) = PoolHelpers.computePoolSalt(_tokenX, _tokenY);
 		return Clones.predictDeterministicAddress(implementation, salt);
 	}
 }

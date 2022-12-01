@@ -44,15 +44,13 @@ contract Pool is Initializable, LPTokenERC20 {
 		tokenY = _tokenY;
 	}
 
-	function getReserves()
+	function getReserves(address _tokenX)
 		public
 		view
-		returns (address _tokenX, address _tokenY, uint256 _reserveX, uint256 _reserveY)
+		returns (uint256 _reserveX, uint256 _reserveY)
 	{
-		_tokenX = tokenX;
-		_tokenY = tokenY;
-		_reserveX = reserveX;
-		_reserveY = reserveY;
+		require(_tokenX == tokenX || _tokenX == tokenY, 'invalid token address');
+		(_reserveX, _reserveY) = _tokenX == tokenX ? (reserveX, reserveY) : (reserveY, reserveX);
 	}
 
 	function mintLP(address provider) external returns (uint liquidity) {
@@ -93,8 +91,7 @@ contract Pool is Initializable, LPTokenERC20 {
 		address provider
 	) external returns (uint amountX, uint amountY) {
 		(uint _reserveX, uint _reserveY) = (reserveX, reserveY);
-		address _tokenX = tokenX;
-		address _tokenY = tokenY;
+		(address _tokenX, address _tokenY) = (tokenX, tokenY);
 
 		uint balanceX = IERC20(_tokenX).balanceOf(address(this));
 		uint balanceY = IERC20(_tokenY).balanceOf(address(this));
@@ -124,18 +121,15 @@ contract Pool is Initializable, LPTokenERC20 {
 		emit LPBurnt(provider, amountX, amountY);
 	}
 
-	function swap(address _tokenIn) external returns (uint amountOut) {
-		require(
-			_tokenIn == address(tokenX) || _tokenIn == address(tokenY),
-			'bad token'
-		);
+	function swap(address _tokenIn, address _recipient) external returns (uint amountOut) {
+		require(_tokenIn == tokenX || _tokenIn == tokenY, 'bad token');
 
 		(
 			address tokenIn,
 			address tokenOut,
 			uint reserveIn,
 			uint reserveOut
-		) = _tokenIn == address(tokenX)
+		) = _tokenIn == tokenX
 				? (tokenX, tokenY, reserveX, reserveY)
 				: (tokenY, tokenX, reserveY, reserveX);
 
@@ -148,14 +142,14 @@ contract Pool is Initializable, LPTokenERC20 {
 		amountOut = (reserveOut * amountInWithFees) / (reserveIn + amountInWithFees);
 		require(amountOut < reserveOut, 'not enough liquidity for swap');
 
-		SafeERC20.safeTransfer(IERC20(tokenOut), msg.sender, amountOut);
+		SafeERC20.safeTransfer(IERC20(tokenOut), _recipient, amountOut);
 
 		_updateReserves(
 			IERC20(tokenX).balanceOf(address(this)),
 			IERC20(tokenY).balanceOf(address(this))
 		);
 
-		emit Swap(msg.sender, tokenIn, amountIn, tokenOut, amountOut);
+		emit Swap(_recipient, tokenIn, amountIn, tokenOut, amountOut);
 	}
 
 	function _updateReserves(uint _balanceX, uint _balanceY) private {

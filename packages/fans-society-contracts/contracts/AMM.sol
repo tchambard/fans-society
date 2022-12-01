@@ -10,6 +10,7 @@ import { IWETH } from './interfaces/IWETH.sol';
 import { IProjectTokenFactory } from './tokens/interfaces/IProjectTokenFactory.sol';
 import { IPoolFactory } from './pools/interfaces/IPoolFactory.sol';
 import { IPool } from './pools/interfaces/IPool.sol';
+import { PoolHelpers } from './pools/PoolHelpers.sol';
 import { IProjectTokenERC20 } from './tokens/interfaces/IProjectTokenERC20.sol';
 
 import 'hardhat/console.sol';
@@ -127,51 +128,48 @@ contract AMM is Projects {
 	function addPoolLiquidity(address _tokenX, address _tokenY, uint _amountX, uint _amountY) external payable {
 		address pool = IPoolFactory(poolFactory).getPool(_tokenX, _tokenY);
 
-		(address tokenX, address tokenY, uint reserveX, uint reserveY) = IPool(pool).getReserves();
-		(uint amountX, uint amountY) = tokenX == _tokenX ? (_amountX, _amountY) : (_amountY, _amountX);
+		(uint reserveX, uint reserveY) = IPool(pool).getReserves(_tokenX);
 
-		require(reserveX > 0 && reserveY > 0, 'not enough liquidity');
-
-		if (tokenX == weth) {
-			require(amountX == 0 && amountY > 0 && msg.value > 0, 'invalid amount state');
+		if (_tokenX == weth) {
+			require(_amountX == 0 && _amountY > 0 && msg.value > 0, 'invalid amount state');
 
 			IWETH(weth).deposit{ value: msg.value }();
 			assert(IWETH(weth).transfer(pool, msg.value));
 
         	uint quoteAmountY = msg.value * reserveY / reserveX;
 			
-			IProjectTokenERC20(tokenY).safeTransferFrom(
+			IProjectTokenERC20(_tokenY).safeTransferFrom(
 				msg.sender,
 				pool,
 				quoteAmountY
 			);
 
-		} else if (tokenY == weth) {
-			require(amountY == 0 && amountX > 0 && msg.value > 0, 'invalid amount state');
+		} else if (_tokenY == weth) {
+			require(_amountY == 0 && _amountX > 0 && msg.value > 0, 'invalid amount state');
 
 			IWETH(weth).deposit{ value: msg.value }();
 			assert(IWETH(weth).transfer(pool, msg.value));
 
         	uint quoteAmountX = msg.value * reserveX / reserveY;
 
-			IProjectTokenERC20(tokenX).safeTransferFrom(
+			IProjectTokenERC20(_tokenX).safeTransferFrom(
 				msg.sender,
 				pool,
 				quoteAmountX
 			);
 
 		} else {
-			require(msg.value == 0 && amountX > 0 && amountY > 0, 'invalid amount state');
+			require(msg.value == 0 && _amountX > 0 && _amountY > 0, 'invalid amount state');
 
-			IProjectTokenERC20(tokenX).safeTransferFrom(
+			IProjectTokenERC20(_tokenX).safeTransferFrom(
 				msg.sender,
 				pool,
-				amountX
+				_amountX
 			);
 
 			uint quoteAmountY = msg.value * reserveY / reserveX;
 
-			IProjectTokenERC20(tokenY).safeTransferFrom(
+			IProjectTokenERC20(_tokenY).safeTransferFrom(
 				msg.sender,
 				pool,
 				quoteAmountY
@@ -185,8 +183,7 @@ contract AMM is Projects {
 
 	function removePoolLiquidity(address _tokenX, address _tokenY, uint _amountLP) external returns (uint amountX, uint amountY){
 		address pool = IPoolFactory(poolFactory).getPool(_tokenX, _tokenY);
-
-		(address tokenX,, uint reserveX, uint reserveY) = IPool(pool).getReserves();
+		(uint reserveX, uint reserveY) = IPool(pool).getReserves(_tokenX);
 
 		require(reserveX > 0 && reserveY > 0, 'not enough liquidity');
 
@@ -195,29 +192,31 @@ contract AMM is Projects {
 			pool,
 			_amountLP
 		);
-
 		(uint _amountX, uint _amountY) = IPool(pool).burnLP(msg.sender);
-
-		(amountX, amountY) = tokenX == _tokenX ? (_amountX, _amountY) : (_amountY, _amountX);
+		(address tokenX,) = PoolHelpers.sortTokens(_tokenX, _tokenY);
+        (amountX, amountY) = address(_tokenX) != address(tokenX) ? (_amountY, _amountX) : (_amountX, _amountY);
 	}
 
-	function swap(address tokenIn, address tokenOut, uint amountIn) external payable {
-		address pool = IPoolFactory(poolFactory).getPool(tokenIn, tokenOut);
+	function swap(address _tokenIn, address _tokenOut, uint _amount) external payable {
+		address pool = IPoolFactory(poolFactory).getPool(_tokenIn, _tokenOut);
+		(uint reserveX, uint reserveY) = IPool(pool).getReserves(_tokenIn);
 
-		if (tokenIn == weth) {
-			require(amountIn == 0 && msg.value > 0, 'invalid value state');
+		require(reserveX > 0 && reserveY > 0, 'not enough liquidity');
+
+		if (_tokenIn == weth) {
+			require(_amount == 0 && msg.value > 0, 'invalid amount state');
 			IWETH(weth).deposit{ value: msg.value }();
 			assert(IWETH(weth).transfer(pool, msg.value));
 		} else {
-			require(msg.value == 0 && amountIn > 0, 'invalid amount state');
-			IProjectTokenERC20(tokenIn).safeTransferFrom(
+			require(msg.value == 0 && _amount > 0, 'invalid amount state');
+			IProjectTokenERC20(_tokenIn).safeTransferFrom(
 				msg.sender,
 				pool,
-				amountIn
+				_amount
 			);
 		}
 
-		IPool(pool).swap(tokenIn);
+		IPool(pool).swap(_tokenIn, msg.sender);
 	}
 
 	function computeTokenShares(

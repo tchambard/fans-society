@@ -3,7 +3,7 @@
   "chainId": "1337",
   "contracts": {
     "AMM": {
-      "address": "0x967AB65ef14c58bD4DcfFeaAA1ADb40a022140E5",
+      "address": "0x0aec7c174554AF8aEc3680BB58431F6618311510",
       "abi": [
         {
           "inputs": [
@@ -508,17 +508,17 @@
           "inputs": [
             {
               "internalType": "address",
-              "name": "tokenIn",
+              "name": "_tokenIn",
               "type": "address"
             },
             {
               "internalType": "address",
-              "name": "tokenOut",
+              "name": "_tokenOut",
               "type": "address"
             },
             {
               "internalType": "uint256",
-              "name": "amountIn",
+              "name": "_amount",
               "type": "uint256"
             }
           ],
@@ -556,7 +556,7 @@
       ]
     },
     "PoolFactory": {
-      "address": "0xc7cDb7A2E5dDa1B7A0E792Fe1ef08ED20A6F56D4",
+      "address": "0xe1708FA6bb2844D5384613ef0846F9Bc1e8eC55E",
       "abi": [
         {
           "inputs": [
@@ -600,7 +600,7 @@
             {
               "indexed": false,
               "internalType": "address",
-              "name": "token1",
+              "name": "tokenX",
               "type": "address"
             },
             {
@@ -622,12 +622,12 @@
             },
             {
               "internalType": "address",
-              "name": "_token1",
+              "name": "_tokenX",
               "type": "address"
             },
             {
               "internalType": "address",
-              "name": "_token2",
+              "name": "_tokenY",
               "type": "address"
             }
           ],
@@ -646,12 +646,12 @@
           "inputs": [
             {
               "internalType": "address",
-              "name": "_token1",
+              "name": "_tokenX",
               "type": "address"
             },
             {
               "internalType": "address",
-              "name": "_token2",
+              "name": "_tokenY",
               "type": "address"
             }
           ],

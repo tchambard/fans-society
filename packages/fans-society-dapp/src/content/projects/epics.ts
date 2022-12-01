@@ -5,7 +5,7 @@ import { isActionOf } from 'typesafe-actions';
 import {
 	Committed,
 	ProjectCreated,
-} from 'fans-society-contracts/types/web3/contracts/FansSociety';
+} from 'fans-society-contracts/types/web3/contracts/AMM';
 import { RootAction, RootState, Services } from 'state-types';
 
 import { findRpcMessage } from 'src/eth-network/helpers';
@@ -83,7 +83,7 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 						target: +web3.utils.fromWei(v.target, 'ether'),
 						minInvest: +web3.utils.fromWei(v.minInvest, 'ether'),
 						maxInvest: +web3.utils.fromWei(v.maxInvest, 'ether'),
-						authorAddress: v.authorAddress,
+						partnerAddress: v.partnerAddress,
 						status: projectStatuses[v.id] || ProjectStatus.Opened,
 						$capabilities: {
 							$canAbort: state$.value.projects.contract.info.isOwner,
@@ -115,7 +115,7 @@ export const createProject: Epic<
 				const contract = state$.value.projects.contract.info.contract;
 
 				const {
-					authorAddress,
+					partnerAddress,
 					name,
 					symbol,
 					description,
@@ -127,7 +127,7 @@ export const createProject: Epic<
 
 				await contract.methods
 					.createProject(
-						authorAddress,
+						partnerAddress,
 						name,
 						symbol,
 						description,
@@ -195,7 +195,7 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 					target: +web3.utils.fromWei(data.target, 'ether'),
 					minInvest: +web3.utils.fromWei(data.minInvest, 'ether'),
 					maxInvest: +web3.utils.fromWei(data.maxInvest, 'ether'),
-					authorAddress: data.authorAddress,
+					partnerAddress: data.partnerAddress,
 					fund: +web3.utils.fromWei(data.fund, 'ether'),
 					status: +data.status,
 					$capabilities: {
