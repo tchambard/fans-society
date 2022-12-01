@@ -16,7 +16,7 @@ import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/P
 import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
 import { PoolFactoryInstance } from '../types/truffle/contracts/pools/PoolFactory';
 import { PoolInstance } from '../types/truffle/contracts/pools/Pool';
-import { ETHTokenInstance } from '../types/truffle/contracts/common/ETHToken';
+import { WETHTokenInstance } from '../types/truffle/contracts/common/WETHToken';
 
 const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
 const Pool = artifacts.require('Pool');
@@ -28,7 +28,7 @@ enum ProjectStatus {
 	Launched,
 }
 
-contract.only('AMM', (accounts) => {
+contract('AMM', (accounts) => {
 	const administrator = accounts[0];
 	const fsociety = accounts[1];
 	const partnerAddress = accounts[2];
@@ -37,7 +37,7 @@ contract.only('AMM', (accounts) => {
 	let amm: AMMInstance;
 	let projectTokenFactory: ProjectTokenFactoryInstance;
 	let poolFactory: PoolFactoryInstance;
-	let wethToken: ETHTokenInstance;
+	let wethToken: WETHTokenInstance;
 
 	beforeEach(async () => {
 		const contracts = await deployProjectsInstances(administrator, fsociety);
