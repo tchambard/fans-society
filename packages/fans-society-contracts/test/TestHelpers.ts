@@ -3,6 +3,7 @@ import { PoolFactoryInstance } from '../types/truffle/contracts/pools/PoolFactor
 import { AMMInstance } from '../types/truffle/contracts/AMM';
 import { WETHTokenInstance } from '../types/truffle/contracts/common/WETHToken';
 import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
+import { IWETH } from '../types/web3/contracts/interfaces';
 
 const ProjectTokenFactory = artifacts.require('ProjectTokenFactory');
 const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
@@ -28,23 +29,18 @@ export interface ITokenTransfer {
 	value: number;
 }
 
+export interface IWethTransfer {
+	src: string;
+	dst: string;
+	wad: number;
+}
+
+export interface IWethDeposit {
+	dst: string;
+	wad: number;
+}
+
 export const address0 = '0x0000000000000000000000000000000000000000';
-
-export const MULTIPLIER = 100;
-
-export const AMM_SUPPLY = 15;
-export const INVESTORS_SUPPLY = 15;
-export const AUTHOR_SUPPLY = 70;
-
-export const AMM_TOKENS_TEAM_SHARES = 20;
-export const AMM_TOKENS_POOL_SHARES = 80;
-export const AUTHOR_TOKENS_POOL_SHARES = 80;
-
-export const AMM_FUNDS = 15;
-export const AUTHOR_FUNDS = 85;
-export const AMM_FUNDS_FSOCIETY_SHARES = 20;
-export const AMM_FUNDS_POOL_SHARES = 80;
-export const AUTHOR_FUNDS_POOL_SHARES = 30;
 
 export async function deployProjectsInstances(
 	contractOwnerAddress: string,
@@ -52,7 +48,7 @@ export async function deployProjectsInstances(
 ): Promise<{
 	wethToken: WETHTokenInstance;
 	projectTokenFactory: ProjectTokenFactoryInstance;
-	PoolFactory: PoolFactoryInstance;
+	poolFactory: PoolFactoryInstance;
 	amm: AMMInstance;
 }> {
 	const wethToken = await deployWethInstance(contractOwnerAddress);
@@ -77,7 +73,7 @@ export async function deployProjectsInstances(
 	return {
 		wethToken,
 		projectTokenFactory,
-		PoolFactory,
+		poolFactory: PoolFactory,
 		amm,
 	};
 }
@@ -142,6 +138,29 @@ export async function getTokenTransfersFromPastEvents(
 			from: returnValues.from,
 			to: returnValues.to,
 			value: +returnValues.value,
+		}),
+	);
+}
+
+export async function getWethTransfersFromPastEvents(
+	wethInstance: WETHTokenInstance,
+): Promise<IWethTransfer[]> {
+	return (await wethInstance.getPastEvents('Transfer', { fromBlock: 0 })).map(
+		({ returnValues }) => ({
+			src: returnValues.src,
+			dst: returnValues.dst,
+			wad: +returnValues.wad,
+		}),
+	);
+}
+
+export async function getWethDepositsFromPastEvents(
+	wethInstance: WETHTokenInstance,
+): Promise<IWethDeposit[]> {
+	return (await wethInstance.getPastEvents('Deposit', { fromBlock: 0 })).map(
+		({ returnValues }) => ({
+			dst: returnValues.dst,
+			wad: +returnValues.wad,
 		}),
 	);
 }

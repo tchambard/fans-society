@@ -19,7 +19,7 @@ contract Pool is Initializable, LPTokenERC20 {
 	uint private reserveX;
 	uint private reserveY;
 
-	uint public k; // k = x * y
+	uint private k; // k = x * y
 
 	event LPMinted(address indexed provider, uint amountX, uint amountY);
 	event LPBurnt(address indexed provider, uint amountX, uint amountY);
@@ -32,13 +32,13 @@ contract Pool is Initializable, LPTokenERC20 {
 	);
 	event ReservesUpdated(uint reserveX, uint reserveY);
 
-	constructor() LPTokenERC20() {}
-
 	function initialize(
+		address _amm,
 		address _fansSocietyAddress,
 		address _tokenX,
 		address _tokenY
 	) public virtual initializer {
+		__LPTokenERC20_init(_amm);
 		fansSocietyAddress = _fansSocietyAddress;
 		tokenX = _tokenX;
 		tokenY = _tokenY;
@@ -47,8 +47,10 @@ contract Pool is Initializable, LPTokenERC20 {
 	function getReserves()
 		public
 		view
-		returns (uint256 _reserveX, uint256 _reserveY)
+		returns (address _tokenX, address _tokenY, uint256 _reserveX, uint256 _reserveY)
 	{
+		_tokenX = tokenX;
+		_tokenY = tokenY;
 		_reserveX = reserveX;
 		_reserveY = reserveY;
 	}
@@ -62,7 +64,7 @@ contract Pool is Initializable, LPTokenERC20 {
 		uint amountY = balanceY - _reserveY;
 
 		if (_reserveX > 0 || _reserveY > 0) {
-			require(_reserveX * amountX == _reserveY * amountY, 'x / y != dx / dy');
+			require(_reserveX * amountY == _reserveY * amountX, 'x / y != dx / dy');
 		}
 
 		_mintFansSocietyFees(_reserveX, _reserveY);
@@ -142,7 +144,7 @@ contract Pool is Initializable, LPTokenERC20 {
 		uint amountIn = balanceIn - reserveIn;
 		require(amountIn > 0, 'not enough input');
 
-		uint amountInWithFees = (amountIn * 990) / 1000; // 1% fees
+		uint amountInWithFees = (amountIn * 990) / 1000; // 1% fees for fans society
 		amountOut = (reserveOut * amountInWithFees) / (reserveIn + amountInWithFees);
 		require(amountOut < reserveOut, 'not enough liquidity for swap');
 

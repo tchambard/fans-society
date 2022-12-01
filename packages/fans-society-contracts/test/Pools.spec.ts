@@ -8,7 +8,6 @@ import {
 	deployProjectTokenFactoryInstance,
 	deployPoolFactoryInstance,
 	getPoolsCreatedFromPastEvents,
-	IToken,
 	address0,
 	getTokenTransfersFromPastEvents,
 	getLastSortedTokenAddressesFromPastEvents,
@@ -27,8 +26,6 @@ contract('Pools', (accounts) => {
 
 	let projectTokenFactory: ProjectTokenFactoryInstance;
 	let PoolFactory: PoolFactoryInstance;
-
-	let tokens: IToken[];
 
 	const tX_totalSupply = 1_000_000;
 	const tX_initialSupply = 800_000;
@@ -82,7 +79,7 @@ contract('Pools', (accounts) => {
 		let poolInstance: PoolInstance;
 
 		beforeEach(async () => {
-			await PoolFactory.createPool(tokenX.address, tokenY.address, {
+			await PoolFactory.createPool(administrator, tokenX.address, tokenY.address, {
 				from: administrator,
 			});
 			const poolCreatedEvent = _.last(
@@ -140,8 +137,8 @@ contract('Pools', (accounts) => {
 					amountY,
 				);
 				const reserves = await poolInstance.getReserves();
-				assert.equal(reserves[0].toNumber(), amountX);
-				assert.equal(reserves[1].toNumber(), amountY);
+				assert.equal(reserves[2].toNumber(), amountX);
+				assert.equal(reserves[3].toNumber(), amountY);
 			});
 		});
 
@@ -226,8 +223,8 @@ contract('Pools', (accounts) => {
 				assert.equal((await tokenY.balanceOf(user1)).toNumber(), 4000);
 
 				const reserves = await poolInstance.getReserves();
-				assert.equal(reserves[0].toNumber(), 1000);
-				assert.equal(reserves[1].toNumber(), 1000);
+				assert.equal(reserves[2].toNumber(), 1000);
+				assert.equal(reserves[3].toNumber(), 1000);
 			});
 
 			it('> swap with input on tokenX', async () => {
@@ -263,9 +260,9 @@ contract('Pools', (accounts) => {
 				});
 
 				const reserves = await poolInstance.getReserves();
-				assert.equal(reserves[0].toNumber(), amountX.add(amountIn).toNumber());
+				assert.equal(reserves[2].toNumber(), amountX.add(amountIn).toNumber());
 				assert.equal(
-					reserves[1].toNumber(),
+					reserves[3].toNumber(),
 					amountY.sub(BN(expectedAmountOut)).toNumber(),
 				);
 				assert.equal(

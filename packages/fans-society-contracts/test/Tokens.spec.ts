@@ -13,7 +13,7 @@ const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
 
 contract('Tokens', (accounts) => {
 	const administrator = accounts[0];
-	const author = accounts[1];
+	const partner = accounts[1];
 	const account3 = accounts[2];
 
 	let projectTokenFactory: ProjectTokenFactoryInstance;
@@ -21,7 +21,7 @@ contract('Tokens', (accounts) => {
 	const totalSupply = 1_000_000;
 	const ammGlobalShare = 10_000;
 	const ammPoolShare = 9_000;
-	const authorGlobalShare = 800_000;
+	const partnerGlobalShare = 800_000;
 
 	beforeEach(async () => {
 		projectTokenFactory = await deployProjectTokenFactoryInstance(administrator);
@@ -36,7 +36,7 @@ contract('Tokens', (accounts) => {
 						'TEST',
 						administrator,
 						100,
-						ammGlobalShare + authorGlobalShare,
+						ammGlobalShare + partnerGlobalShare,
 						{ from: administrator },
 					),
 					'total supply too small',
@@ -52,7 +52,7 @@ contract('Tokens', (accounts) => {
 					symbol,
 					administrator,
 					totalSupply,
-					ammGlobalShare + authorGlobalShare,
+					ammGlobalShare + partnerGlobalShare,
 					{ from: administrator },
 				);
 
@@ -66,7 +66,7 @@ contract('Tokens', (accounts) => {
 				const erc20Instance = await ProjectTokenERC20.at(lastTokenCreated?.token);
 				assert.equal(
 					(await erc20Instance.totalSupply()).toNumber(),
-					ammGlobalShare + authorGlobalShare,
+					ammGlobalShare + partnerGlobalShare,
 				);
 				assert.equal(
 					(await erc20Instance.maxTotalSupply()).toNumber(),
@@ -85,7 +85,7 @@ contract('Tokens', (accounts) => {
 				'TEST',
 				administrator,
 				totalSupply,
-				ammGlobalShare + authorGlobalShare,
+				ammGlobalShare + partnerGlobalShare,
 				{ from: administrator },
 			);
 			const lastTokenCreated = _.last(
@@ -103,7 +103,7 @@ contract('Tokens', (accounts) => {
 			});
 
 			it('> should fail if total supply is lower than distributed shared', async () => {
-				const availableSupply = totalSupply - (ammGlobalShare + authorGlobalShare);
+				const availableSupply = totalSupply - (ammGlobalShare + partnerGlobalShare);
 				await expectRevert(
 					erc20Instance.claim(account3, availableSupply + 1, {
 						from: administrator,

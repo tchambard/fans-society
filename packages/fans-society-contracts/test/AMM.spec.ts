@@ -4,22 +4,19 @@ import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
 
 import {
 	address0,
-	AMM_SUPPLY,
-	AMM_TOKENS_POOL_SHARES,
-	AUTHOR_SUPPLY,
-	AUTHOR_TOKENS_POOL_SHARES,
 	deployProjectsInstances,
 	getPoolsCreatedFromPastEvents,
 	getTokensCreatedFromPastEvents,
 	getTokenTransfersFromPastEvents,
-	INVESTORS_SUPPLY,
-	MULTIPLIER,
+	getWethDepositsFromPastEvents,
+	getWethTransfersFromPastEvents,
 } from './TestHelpers';
 import { AllEvents, AMMInstance } from '../types/truffle/contracts/AMM';
 import { ProjectTokenFactoryInstance } from '../types/truffle/contracts/tokens/ProjectTokenFactory';
 import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
 import { PoolFactoryInstance } from '../types/truffle/contracts/pools/PoolFactory';
 import { PoolInstance } from '../types/truffle/contracts/pools/Pool';
+import { WETHTokenInstance } from '../types/truffle/contracts/common/WETHToken';
 
 const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
 const Pool = artifacts.require('Pool');
@@ -31,35 +28,48 @@ enum ProjectStatus {
 	Launched,
 }
 
-contract('AMM', (accounts) => {
+contract.only('AMM', (accounts) => {
 	const administrator = accounts[0];
 	const fsociety = accounts[1];
-	const authorAddress = accounts[2];
+	const partnerAddress = accounts[2];
 	const fans = accounts.slice(3);
 
 	let amm: AMMInstance;
 	let projectTokenFactory: ProjectTokenFactoryInstance;
 	let poolFactory: PoolFactoryInstance;
+	let wethToken: WETHTokenInstance;
 
 	beforeEach(async () => {
 		const contracts = await deployProjectsInstances(administrator, fsociety);
 		amm = contracts.amm;
 		projectTokenFactory = contracts.projectTokenFactory;
-		poolFactory = contracts.PoolFactory;
+		poolFactory = contracts.poolFactory;
+		wethToken = contracts.wethToken;
 	});
 
+	const totalFunds = 1; // 1 ETH
 	const name = 'The god father';
 	const description = 'A very famous mafia film';
 	const symbol = 'TGF';
-	const target = web3.utils.toWei('1'); // 1 ETH
-	const minInvest = web3.utils.toWei('0.01'); // 0.1 ETH
-	const maxInvest = web3.utils.toWei('0.1'); // 0.01 ETH
-	const totalSupply = 10_000; // multiplier is 10_000 on solidity side so total supply is 100_000_000
+	const target = web3.utils.toWei(totalFunds.toString()); // 1 ETH
+	const minInvest = web3.utils.toWei((totalFunds / 100).toString()); // 0.1 ETH
+	const maxInvest = web3.utils.toWei((totalFunds / 10).toString()); // 0.01 ETH
+	const totalSupply = 100_000_000;
 
-	describe('> no project exixt', () => {
+	// tokens
+	const partnerTokenShares = (totalSupply * 20) / 100; // 20%
+	const investorsTokenShares = (totalSupply * 49) / 100; // 49%
+	const poolTokenShares = (totalSupply * 18) / 100; // 18%
+	const fansSocietyTokenShares = (totalSupply * 13) / 100; // 13%
+
+	// funds
+	const poolFundsShares = (totalFunds * 10) / 100; // 10%
+	const partnerFundsShares = (totalFunds * 90) / 100; // 90%
+
+	context('# no project exist', () => {
 		it('> createProject should succeed when called with contract owner address', async () => {
 			const receipt = await amm.createProject(
-				authorAddress,
+				partnerAddress,
 				name,
 				symbol,
 				description,
@@ -79,7 +89,7 @@ contract('AMM', (accounts) => {
 				minInvest,
 				maxInvest,
 				totalSupply: BN(totalSupply),
-				authorAddress,
+				partnerAddress,
 			});
 
 			const createdProject = await amm.projects(1);
@@ -93,17 +103,17 @@ contract('AMM', (accounts) => {
 			assert.equal(createdProject['maxInvest'], maxInvest);
 			assert.equal(createdProject['totalSupply'].toNumber(), totalSupply);
 			assert.equal(createdProject['status'].toNumber(), 0);
-			assert.equal(createdProject['authorAddress'], authorAddress);
+			assert.equal(createdProject['partnerAddress'], partnerAddress);
 			assert.equal(createdProject['tokenAddress'], address0);
 		});
 	});
 
-	describe('> one project is created', () => {
+	context('# one project is created', () => {
 		let projectId: number;
 
 		beforeEach(async () => {
 			await amm.createProject(
-				authorAddress,
+				partnerAddress,
 				name,
 				symbol,
 				description,
@@ -160,11 +170,17 @@ contract('AMM', (accounts) => {
 			});
 		});
 
-		describe('> project funds are completed', () => {
-			const nbFans = 10;
+		describe('> claimProjectTokens', () => {
+			it('> should fail until project is completed', async () => {
+				await expectRevert(
+					amm.claimProjectTokens(projectId, { from: fans[0] }),
+					'Bad project status',
+				);
+			});
+		});
 
-			const expectedAuthorSupply = totalSupply * AUTHOR_SUPPLY * MULTIPLIER;
-			const expectedAmmSupply = totalSupply * AMM_SUPPLY * MULTIPLIER;
+		context('# project funds are completed', () => {
+			const nbFans = 10;
 
 			beforeEach(async () => {
 				for (let i = 0; i < nbFans; i++) {
@@ -183,11 +199,21 @@ contract('AMM', (accounts) => {
 
 			describe('> launchProject', () => {
 				let launchProjectReceipt: Truffle.TransactionResponse<AllEvents>;
+				let erc20Instance: ProjectTokenERC20Instance;
+				let poolInstance: PoolInstance;
 
 				beforeEach(async () => {
 					launchProjectReceipt = await amm.launchProject(projectId, {
 						from: administrator,
 					});
+					const tokenCreated = _.last(
+						await getTokensCreatedFromPastEvents(projectTokenFactory),
+					);
+					erc20Instance = await ProjectTokenERC20.at(tokenCreated?.token);
+					const poolCreated = _.last(
+						await getPoolsCreatedFromPastEvents(poolFactory),
+					);
+					poolInstance = await Pool.at(poolCreated?.pool);
 				});
 
 				it('> should change project status', async () => {
@@ -208,22 +234,87 @@ contract('AMM', (accounts) => {
 					const erc20Instance = await ProjectTokenERC20.at(lastTokenCreated?.token);
 					assert.equal(
 						(await erc20Instance.totalSupply()).toNumber(),
-						expectedAuthorSupply + expectedAmmSupply,
+						partnerTokenShares + poolTokenShares + fansSocietyTokenShares,
 					);
 					assert.equal(
 						(await erc20Instance.maxTotalSupply()).toNumber(),
-						totalSupply * 10_000,
+						totalSupply,
 					);
+				});
+
+				it('> should dispatch tokens', async () => {
+					const transfers = await getTokenTransfersFromPastEvents(erc20Instance);
+
+					assert.sameDeepOrderedMembers(transfers, [
+						// transfer from erc20 to amm
+						{
+							from: address0,
+							to: amm.address,
+							value: partnerTokenShares + poolTokenShares + fansSocietyTokenShares,
+						},
+						// transfer from erc20 to partner
+						{
+							from: amm.address,
+							to: partnerAddress,
+							value: partnerTokenShares,
+						},
+						// transfer from erc20 to fans society
+						{
+							from: amm.address,
+							to: fsociety,
+							value: fansSocietyTokenShares,
+						},
+						// transfer from amm to pool
+						{
+							from: amm.address,
+							to: poolInstance.address,
+							value: poolTokenShares,
+						},
+					]);
+
+					assert.equal(
+						(await erc20Instance.balanceOf(partnerAddress)).toNumber(),
+						partnerTokenShares,
+						'Partner balance assertion failed',
+					);
+
+					assert.equal(
+						(await erc20Instance.balanceOf(amm.address)).toNumber(),
+						0,
+						'AMM balance assertion failed',
+					);
+				});
+
+				it('> should dispatch funds', async () => {
+					const deposits = await getWethDepositsFromPastEvents(wethToken);
+
+					assert.sameDeepOrderedMembers(deposits, [
+						// deposit for amm
+						{
+							dst: amm.address,
+							wad: +web3.utils.toWei(poolFundsShares.toString()),
+						},
+					]);
+
+					const transfers = await getWethTransfersFromPastEvents(wethToken);
+
+					assert.sameDeepOrderedMembers(transfers, [
+						// transfer from amm to pool
+						{
+							src: amm.address,
+							dst: poolInstance.address,
+							wad: +web3.utils.toWei(poolFundsShares.toString()),
+						},
+					]);
 				});
 			});
 
-			describe('> project is launched', () => {
-				let launchProjectReceipt: Truffle.TransactionResponse<AllEvents>;
+			context('# project is launched', () => {
 				let erc20Instance: ProjectTokenERC20Instance;
 				let poolInstance: PoolInstance;
 
 				beforeEach(async () => {
-					launchProjectReceipt = await amm.launchProject(projectId, {
+					await amm.launchProject(projectId, {
 						from: administrator,
 					});
 					const tokenCreated = _.last(
@@ -236,62 +327,266 @@ contract('AMM', (accounts) => {
 					poolInstance = await Pool.at(poolCreated?.pool);
 				});
 
-				it('> should have dispatched supply', async () => {
-					const transfers = await getTokenTransfersFromPastEvents(erc20Instance);
+				describe('> claimProjectTokens', () => {
+					it('> should allow a project participant to claim his token share', async () => {
+						const receipt = await amm.claimProjectTokens(projectId, {
+							from: fans[0],
+						});
+						const expectedAmount = investorsTokenShares / nbFans;
 
-					const expectedAmmToPoolTransferAmount =
-						(expectedAmmSupply * AMM_TOKENS_POOL_SHARES) / 100;
+						await expectEvent(receipt, 'TokensClaimed', {
+							projectId: BN(1),
+							caller: fans[0],
+							token: erc20Instance.address,
+							amount: BN(expectedAmount),
+						});
 
-					assert.sameDeepOrderedMembers(transfers, [
-						// transfer from erc20 to amm
-						{
-							from: address0,
-							to: amm.address,
-							value: expectedAmmSupply + expectedAuthorSupply,
-						},
-						// transfer from erc20 to author
-						{
-							from: amm.address,
-							to: authorAddress,
-							value: expectedAuthorSupply,
-						},
-						// transfer from amm to pool
-						{
-							from: amm.address,
-							to: poolInstance.address,
-							value: expectedAmmToPoolTransferAmount,
-						},
-					]);
-
-					assert.equal(
-						(await erc20Instance.balanceOf(authorAddress)).toNumber(),
-						expectedAuthorSupply,
-						'Author balance assertion failed',
-					);
-
-					assert.equal(
-						(await erc20Instance.balanceOf(amm.address)).toNumber(),
-						expectedAmmSupply - expectedAmmToPoolTransferAmount,
-						'AMM balance assertion failed',
-					);
-				});
-
-				it('> claimProjectTokens should allow a project participant to claim his token share', async () => {
-					const receipt = await amm.claimProjectTokens(projectId, { from: fans[0] });
-					const expectedAmount = (totalSupply * INVESTORS_SUPPLY) / nbFans; // 150_000
-
-					await expectEvent(receipt, 'TokensClaimed', {
-						projectId: BN(1),
-						caller: fans[0],
-						token: erc20Instance.address,
-						amount: BN(expectedAmount),
+						assert.equal(
+							(await erc20Instance.balanceOf(fans[0])).toNumber(),
+							expectedAmount,
+							'Participant balance assertion failed',
+						);
 					});
 
-					assert.equal(
-						(await erc20Instance.balanceOf(fans[0])).toNumber(),
-						expectedAmount,
-						'Participant balance assertion failed',
-					);
+					it('> should fail if not a participant', async () => {
+						await expectRevert(
+							amm.claimProjectTokens(projectId, { from: fans[10] }), // fans[10] did not participate on ICO
+							'No commitment',
+						);
+					});
+				});
+
+				context('# first fans investor has reclaimed his shares', () => {
+					beforeEach(async () => {
+						await amm.claimProjectTokens(projectId, {
+							from: fans[0],
+						});
+					});
+
+					describe('> addPoolLiquidity', () => {
+						it('> should fail when using weth on tokenX and no msg.value', async () => {
+							await expectRevert(
+								amm.addPoolLiquidity(wethToken.address, erc20Instance.address, 0, 100, {
+									from: fans[0],
+								}),
+								'invalid amount state',
+							);
+						});
+
+						it('> should fail when using weth on tokenY and no msg.value', async () => {
+							await expectRevert(
+								amm.addPoolLiquidity(erc20Instance.address, wethToken.address, 100, 0, {
+									from: fans[0],
+								}),
+								'invalid amount state',
+							);
+						});
+
+						it('> should fail when using weth on tokenX and no amountY value', async () => {
+							await expectRevert(
+								amm.addPoolLiquidity(wethToken.address, erc20Instance.address, 0, 0, {
+									from: fans[0],
+									value: web3.utils.toWei('0.001'),
+								}),
+								'invalid amount state',
+							);
+						});
+
+						it('> should fail when using weth on tokenY and no amountX value', async () => {
+							await expectRevert(
+								amm.addPoolLiquidity(erc20Instance.address, wethToken.address, 0, 0, {
+									from: fans[0],
+									value: web3.utils.toWei('0.001'),
+								}),
+								'invalid amount state',
+							);
+						});
+
+						it('> should fail when using weth on tokenX and amountX value not equal to zero', async () => {
+							await expectRevert(
+								amm.addPoolLiquidity(
+									wethToken.address,
+									erc20Instance.address,
+									100,
+									100,
+									{
+										from: fans[0],
+										value: web3.utils.toWei('0.001'),
+									},
+								),
+								'invalid amount state',
+							);
+						});
+
+						it('> should fail when using weth on tokenY and amountY value not equal to zero', async () => {
+							await expectRevert(
+								amm.addPoolLiquidity(
+									erc20Instance.address,
+									wethToken.address,
+									100,
+									100,
+									{
+										from: fans[0],
+										value: web3.utils.toWei('0.001'),
+									},
+								),
+								'invalid amount state',
+							);
+						});
+
+						it('> should succeed when using weth on tokenX with correct amounts', async () => {
+							const fanLpBalanceBefore = (
+								await poolInstance.balanceOf(fans[0])
+							).toNumber();
+
+							assert.equal(fanLpBalanceBefore, 0);
+
+							const receipt = await amm.addPoolLiquidity(
+								wethToken.address,
+								erc20Instance.address,
+								0,
+								100,
+								{
+									from: fans[0],
+									value: web3.utils.toWei('0.00001'),
+								},
+							);
+
+							const ammBalance = (
+								await poolInstance.balanceOf(amm.address)
+							).toNumber();
+
+							const totalSupply = (await poolInstance.totalSupply()).toNumber();
+
+							const fanLpBalanceAfter = (
+								await poolInstance.balanceOf(fans[0])
+							).toNumber();
+
+							assert.equal(fanLpBalanceAfter, totalSupply - ammBalance);
+						});
+
+						it('> should succeed when using weth on tokenY with correct amounts', async () => {
+							const fanLpBalanceBefore = (
+								await poolInstance.balanceOf(fans[0])
+							).toNumber();
+
+							assert.equal(fanLpBalanceBefore, 0);
+
+							const receipt = await amm.addPoolLiquidity(
+								erc20Instance.address,
+								wethToken.address,
+								100,
+								0,
+								{
+									from: fans[0],
+									value: web3.utils.toWei('0.00001'),
+								},
+							);
+
+							const ammBalance = (
+								await poolInstance.balanceOf(amm.address)
+							).toNumber();
+
+							const totalSupply = (await poolInstance.totalSupply()).toNumber();
+
+							const fanLpBalanceAfter = (
+								await poolInstance.balanceOf(fans[0])
+							).toNumber();
+
+							assert.equal(fanLpBalanceAfter, totalSupply - ammBalance);
+						});
+
+						it('> should succeed when using two ERC20 tokens with correct amounts', async () => {
+							// TODO
+						});
+
+						describe('> removePoolLiquidity', () => {
+							it('> should fail when caller does not own LP tokens', async () => {
+								await expectRevert(
+									amm.removePoolLiquidity(erc20Instance.address, wethToken.address, 10, {
+										from: fans[0],
+									}),
+									'ERC20: transfer amount exceeds balance',
+								);
+							});
+						});
+
+						context('# first fan investor has added liquidity', () => {
+							beforeEach(async () => {
+								await amm.addPoolLiquidity(
+									wethToken.address,
+									erc20Instance.address,
+									0,
+									100,
+									{
+										from: fans[0],
+										value: web3.utils.toWei('0.00001'),
+									},
+								);
+							});
+
+							describe('> removePoolLiquidity', () => {
+								it('> should succeed when caller ask for owned LP tokens amount', async () => {
+									const fanLpTokenBalanceBefore = (
+										await poolInstance.balanceOf(fans[0])
+									).toNumber();
+									assert.ok(fanLpTokenBalanceBefore > 0);
+
+									const params: any = [
+										wethToken.address,
+										erc20Instance.address,
+										fanLpTokenBalanceBefore,
+										{
+											from: fans[0],
+										},
+									];
+									const res = await amm.removePoolLiquidity.call.apply(null, params);
+									assert.equal(
+										web3.utils.fromWei(res['amountX']),
+										'0.000009999999951564',
+									);
+									assert.equal(res['amountY'].toNumber(), 1799);
+
+									await amm.removePoolLiquidity.apply(null, params);
+
+									const fanLpTokenBalanceAfter = (
+										await poolInstance.balanceOf(fans[0])
+									).toNumber();
+									assert.equal(fanLpTokenBalanceAfter, 0);
+								});
+
+								it('> should succeed when caller ask for owned LP tokens amount (reversed token order)', async () => {
+									const fanLpTokenBalanceBefore = (
+										await poolInstance.balanceOf(fans[0])
+									).toNumber();
+									assert.ok(fanLpTokenBalanceBefore > 0);
+
+									const params: any = [
+										erc20Instance.address,
+										wethToken.address,
+										fanLpTokenBalanceBefore,
+										{
+											from: fans[0],
+										},
+									];
+									const res = await amm.removePoolLiquidity.call.apply(null, params);
+
+									assert.equal(res['amountX'].toNumber(), 1799);
+									assert.equal(
+										web3.utils.fromWei(res['amountY']),
+										'0.000009999999951564',
+									);
+
+									await amm.removePoolLiquidity.apply(null, params);
+
+									const fanLpTokenBalanceAfter = (
+										await poolInstance.balanceOf(fans[0])
+									).toNumber();
+									assert.equal(fanLpTokenBalanceAfter, 0);
+								});
+							});
+						});
+					});
 				});
 			});
 		});

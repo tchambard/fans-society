@@ -28,6 +28,7 @@ contract PoolFactory is IPoolFactory, Ownable {
 	}
 
 	function createPool(
+		address _amm,
 		address _token1,
 		address _token2
 	) public returns (address poolAddress) {
@@ -41,7 +42,7 @@ contract PoolFactory is IPoolFactory, Ownable {
 		);
 
 		poolAddress = Clones.cloneDeterministic(implementation, salt);
-		Pool(poolAddress).initialize(fansSocietyAddress, token1, token2);
+		Pool(poolAddress).initialize(_amm, fansSocietyAddress, token1, token2);
 
 		tokenPools[token1].push(poolAddress);
 		tokenPools[token2].push(poolAddress);

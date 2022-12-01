@@ -3,7 +3,7 @@
   "chainId": "1337",
   "contracts": {
     "AMM": {
-      "address": "0xcC4c41415fc68B2fBf70102742A83cDe435e0Ca7",
+      "address": "0x967AB65ef14c58bD4DcfFeaAA1ADb40a022140E5",
       "abi": [
         {
           "inputs": [
@@ -129,7 +129,7 @@
             {
               "indexed": true,
               "internalType": "address",
-              "name": "authorAddress",
+              "name": "partnerAddress",
               "type": "address"
             }
           ],
@@ -227,6 +227,34 @@
         {
           "inputs": [
             {
+              "internalType": "address",
+              "name": "_tokenX",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_tokenY",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_amountX",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_amountY",
+              "type": "uint256"
+            }
+          ],
+          "name": "addPoolLiquidity",
+          "outputs": [],
+          "stateMutability": "payable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "uint256",
               "name": "_projectId",
               "type": "uint256"
@@ -291,7 +319,7 @@
           "inputs": [
             {
               "internalType": "address",
-              "name": "_authorAddress",
+              "name": "_partnerAddress",
               "type": "address"
             },
             {
@@ -423,7 +451,7 @@
             },
             {
               "internalType": "address",
-              "name": "authorAddress",
+              "name": "partnerAddress",
               "type": "address"
             },
             {
@@ -436,10 +464,67 @@
           "type": "function"
         },
         {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_tokenX",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_tokenY",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_amountLP",
+              "type": "uint256"
+            }
+          ],
+          "name": "removePoolLiquidity",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "amountX",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountY",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
           "inputs": [],
           "name": "renounceOwnership",
           "outputs": [],
           "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "tokenIn",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "tokenOut",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountIn",
+              "type": "uint256"
+            }
+          ],
+          "name": "swap",
+          "outputs": [],
+          "stateMutability": "payable",
           "type": "function"
         },
         {
@@ -471,7 +556,7 @@
       ]
     },
     "PoolFactory": {
-      "address": "0x8D81A3DCd17030cD5F23Ac7370e4Efb10D2b3cA4",
+      "address": "0xc7cDb7A2E5dDa1B7A0E792Fe1ef08ED20A6F56D4",
       "abi": [
         {
           "inputs": [
@@ -530,6 +615,11 @@
         },
         {
           "inputs": [
+            {
+              "internalType": "address",
+              "name": "_amm",
+              "type": "address"
+            },
             {
               "internalType": "address",
               "name": "_token1",
@@ -631,7 +721,7 @@
       ]
     },
     "ProjectTokenFactory": {
-      "address": "0x942ED2fa862887Dc698682cc6a86355324F0f01e",
+      "address": "0xa722bdA6968F50778B973Ae2701e90200C564B49",
       "abi": [
         {
           "inputs": [],
@@ -676,34 +766,19 @@
               "type": "string"
             },
             {
+              "internalType": "address",
+              "name": "_amm",
+              "type": "address"
+            },
+            {
               "internalType": "uint40",
               "name": "_totalSupply",
               "type": "uint40"
             },
             {
               "internalType": "uint40",
-              "name": "_ammGlobalShare",
+              "name": "_initialSupply",
               "type": "uint40"
-            },
-            {
-              "internalType": "uint40",
-              "name": "_ammPoolShare",
-              "type": "uint40"
-            },
-            {
-              "internalType": "uint40",
-              "name": "_authorGlobalShare",
-              "type": "uint40"
-            },
-            {
-              "internalType": "address",
-              "name": "_amm",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_author",
-              "type": "address"
             }
           ],
           "name": "createToken",

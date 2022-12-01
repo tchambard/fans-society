@@ -7,8 +7,6 @@ import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { ERC20Wrapper } from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol';
 import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 
-import './common/Constants.sol';
-
 contract Projects is Ownable {
 	enum ProjectStatus {
 		Opened,
@@ -28,7 +26,7 @@ contract Projects is Ownable {
 		uint maxInvest;
 		uint32 totalSupply;
 		ProjectStatus status;
-		address authorAddress;
+		address partnerAddress;
 		address tokenAddress;
 	}
 
@@ -47,7 +45,7 @@ contract Projects is Ownable {
 		uint minInvest,
 		uint maxInvest,
 		uint32 totalSupply,
-		address indexed authorAddress
+		address indexed partnerAddress
 	);
 
 	event Committed(uint indexed id, address indexed caller, uint amount);
@@ -56,8 +54,8 @@ contract Projects is Ownable {
 
 	event ProjectStatusChanged(uint indexed id, ProjectStatus status);
 
-	modifier onlyAuthor(uint _id) {
-		require(msg.sender == projects[_id].authorAddress, 'Not author');
+	modifier onlyPartner(uint _id) {
+		require(msg.sender == projects[_id].partnerAddress, 'Not partner');
 		_;
 	}
 
@@ -77,7 +75,7 @@ contract Projects is Ownable {
 	}
 
 	function createProject(
-		address _authorAddress,
+		address _partnerAddress,
 		string calldata _name,
 		string calldata _symbol,
 		string calldata _description,
@@ -99,7 +97,7 @@ contract Projects is Ownable {
 			maxInvest: _maxInvest,
 			totalSupply: _totalSupply,
 			status: ProjectStatus.Opened,
-			authorAddress: _authorAddress,
+			partnerAddress: _partnerAddress,
 			tokenAddress: address(0)
 		});
 
@@ -112,7 +110,7 @@ contract Projects is Ownable {
 			_minInvest,
 			_maxInvest,
 			_totalSupply,
-			_authorAddress
+			_partnerAddress
 		);
 	}
 
