@@ -7,8 +7,8 @@ import { RootState } from 'state-types';
 
 import {
 	CLEAR_PROJECTS_TX_ERROR,
-	LOAD_PROJECTS_CONTRACT_INFO,
-} from '../actions';
+	LOAD_CONTRACTS_INFO,
+} from '../../../store/amm/actions';
 
 interface IProjectContainerWrapperProps {
 	children?: ReactNode;
@@ -17,18 +17,18 @@ interface IProjectContainerWrapperProps {
 export default ({ children }: IProjectContainerWrapperProps) => {
 	const dispatch = useDispatch();
 
-	const { contract, txPending, error } = useSelector(
-		(state: RootState) => state.projects,
+	const { contracts, txPending, error } = useSelector(
+		(state: RootState) => state.amm,
 	);
 
 	useEffect(() => {
-		if (!contract.info) {
-			dispatch(LOAD_PROJECTS_CONTRACT_INFO.request());
+		if (!contracts.amm) {
+			dispatch(LOAD_CONTRACTS_INFO.request());
 		}
-	}, [contract.info]);
+	}, [contracts.amm]);
 
-	if (!contract.info || contract.loading) {
-		return <SuspenseLoader />;
+	if (!contracts.amm || contracts.loading) {
+		return <SuspenseLoader/>;
 	}
 
 	const handleCloseErrorSnack = (

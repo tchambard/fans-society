@@ -14,7 +14,10 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from 'state-types';
 
-import { COMMIT_ON_PROJECT, ICommitOnProjectParams } from '../../actions';
+import {
+	COMMIT_ON_PROJECT,
+	ICommitOnProjectParams,
+} from '../../../../store/amm/actions';
 
 interface IProjectCommitDialogProps {
 	dialogVisible: boolean;
@@ -29,7 +32,7 @@ export default ({
 }: IProjectCommitDialogProps) => {
 	const dispatch = useDispatch();
 
-	const { txPending } = useSelector((state: RootState) => state.projects);
+	const { txPending } = useSelector((state: RootState) => state.amm);
 	const [formData, setFormData] = useState<Partial<ICommitOnProjectParams>>({});
 
 	return (

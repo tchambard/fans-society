@@ -23,10 +23,10 @@ import ProjectListHeader from './ProjectListHeader';
 import SuspenseLoader from 'src/components/SuspenseLoader';
 
 export default () => {
-	const { projects } = useSelector((state: RootState) => state.projects);
+	const { projects } = useSelector((state: RootState) => state.amm);
 
 	if (projects.loading) {
-		return <SuspenseLoader />;
+		return <SuspenseLoader/>;
 	}
 
 	return (
@@ -35,7 +35,7 @@ export default () => {
 				<title>Projects</title>
 			</Helmet>
 			<PageTitleWrapper>
-				<ProjectListHeader />
+				<ProjectListHeader/>
 			</PageTitleWrapper>
 			<Container maxWidth={'xl'}>
 				<Grid

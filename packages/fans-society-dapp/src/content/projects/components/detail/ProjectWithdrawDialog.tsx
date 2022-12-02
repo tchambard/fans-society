@@ -11,7 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 import { Routes } from 'src/router';
-import { WITHDRAW_ON_PROJECT } from '../../actions';
+import { WITHDRAW_ON_PROJECT } from '../../../../store/amm/actions';
 
 interface IProjectAbortDialogProps {
 	projectId: string;

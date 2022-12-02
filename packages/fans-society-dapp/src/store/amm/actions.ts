@@ -1,12 +1,27 @@
 import { createAction, createAsyncAction } from 'typesafe-actions';
 
 import { contracts } from 'fans-society-contracts';
-import { String } from 'lodash';
 
-export interface IProjectsContractInfo {
+export interface IAMMContractInfo {
 	contract: contracts.AMM;
 	isOwner: boolean;
+}
+
+export interface ITokensFactoryContractInfo {
+	contract: contracts.tokens.ProjectTokenFactory;
+}
+
+export interface IPoolsFactoryContractInfo {
+	contract: contracts.pools.PoolFactory;
+}
+
+export interface IContractsInfo {
 	account: string;
+	contracts: {
+		amm: IAMMContractInfo;
+		tokensFactory: ITokensFactoryContractInfo;
+		poolsFactory: IPoolsFactoryContractInfo;
+	};
 }
 
 export interface ICreateProjectParams {
@@ -41,6 +56,8 @@ export interface IProjectListCapabilities {
 export interface IProjectDetailCapabilities {
 	$canAbort?: boolean;
 	$canValidate?: boolean;
+	$canCommit?: boolean;
+	$canWithdraw?: boolean;
 }
 
 export enum ProjectStatus {
@@ -103,11 +120,11 @@ export interface IListMyProjectCommitmentsParams {
 	projectId?: string;
 }
 
-export const LOAD_PROJECTS_CONTRACT_INFO = createAsyncAction(
-	'LOAD_PROJECTS_CONTRACT_INFO_REQUEST',
-	'LOAD_PROJECTS_CONTRACT_INFO_SUCCESS',
-	'LOAD_PROJECTS_CONTRACT_INFO_FAILURE',
-)<void, IProjectsContractInfo, string>();
+export const LOAD_CONTRACTS_INFO = createAsyncAction(
+	'LOAD_CONTRACTS_INFO_REQUEST',
+	'LOAD_CONTRACTS_INFO_SUCCESS',
+	'LOAD_CONTRACTS_INFO_FAILURE',
+)<void, IContractsInfo, string>();
 
 export const LIST_PROJECTS = createAsyncAction(
 	'LIST_PROJECTS_REQUEST',
@@ -186,6 +203,12 @@ export const REMOVE_PROJECT_COMMITMENT = createAction(
 		return (withdraw: IProjectWithdraw) => action(withdraw);
 	},
 );
+
+export const LAUNCH_PROJECT = createAsyncAction(
+	'LAUNCH_PROJECT_REQUEST',
+	'LAUNCH_PROJECT_SUCCESS',
+	'LAUNCH_PROJECT_FAILURE',
+)<string, void, string>();
 
 export const PROJECT_STATUS_CHANGED = createAction(
 	'PROJECTS_STATUS_CHANGED',

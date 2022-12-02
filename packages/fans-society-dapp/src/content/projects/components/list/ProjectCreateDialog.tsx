@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from 'state-types';
 
-import { CREATE_PROJECT, ICreateProjectParams } from '../../actions';
+import { CREATE_PROJECT, ICreateProjectParams } from '../../../../store/amm/actions';
 
 interface IProjectCreateDialogProps {
 	dialogVisible: boolean;
@@ -22,12 +22,12 @@ interface IProjectCreateDialogProps {
 }
 
 export default ({
-	dialogVisible,
-	setDialogVisible,
-}: IProjectCreateDialogProps) => {
+					dialogVisible,
+					setDialogVisible,
+				}: IProjectCreateDialogProps) => {
 	const dispatch = useDispatch();
 
-	const { txPending } = useSelector((state: RootState) => state.projects);
+	const { txPending } = useSelector((state: RootState) => state.amm);
 	const [formData, setFormData] = useState<Partial<ICreateProjectParams>>({});
 
 	return (
@@ -55,28 +55,28 @@ export default ({
 							label={'Partner address'}
 							required={true}
 						/>
-						<br />
+						<br/>
 						<TextFieldElement
 							type={'text'}
 							name={'name'}
 							label={'Name'}
 							required={true}
 						/>
-						<br />
+						<br/>
 						<TextFieldElement
 							type={'text'}
 							name={'symbol'}
 							label={'Symbol'}
 							required={true}
 						/>
-						<br />
+						<br/>
 						<TextFieldElement
 							type={'text'}
 							name={'description'}
 							label={'Description'}
 							required={true}
 						/>
-						<br />
+						<br/>
 						<TextFieldElement
 							type={'number'}
 							name={'target'}
@@ -84,7 +84,7 @@ export default ({
 							required={true}
 							placeholder={'ETH value'}
 						/>
-						<br />
+						<br/>
 						<TextFieldElement
 							type={'number'}
 							name={'minInvest'}
@@ -92,15 +92,15 @@ export default ({
 							required={true}
 							placeholder={'ETH value'}
 						/>
-						<br />
+						<br/>
 						<TextFieldElement
 							type={'number'}
 							name={'maxInvest'}
-							label={'Minimum invest amount'}
+							label={'Maximum invest amount'}
 							required={true}
 							placeholder={'ETH value'}
 						/>
-						<br />
+						<br/>
 						<TextFieldElement
 							type={'number'}
 							name={'totalSupply'}
@@ -108,13 +108,13 @@ export default ({
 							required={true}
 							placeholder={'Please enter a number of tokens'}
 						/>
-						<br />
+						<br/>
 						<LoadingButton
 							loading={txPending}
 							loadingPosition={'end'}
 							variant={'contained'}
 							color={'primary'}
-							endIcon={<SendIcon />}
+							endIcon={<SendIcon/>}
 							type={'submit'}
 						>
 							Submit

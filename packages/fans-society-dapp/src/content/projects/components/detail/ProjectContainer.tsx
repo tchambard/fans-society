@@ -13,13 +13,13 @@ import {
 	PROJECT_STATUS_CHANGED,
 	REMOVE_PROJECT_COMMITMENT,
 	WITHDRAWED,
-} from '../../actions';
+} from '../../../../store/amm/actions';
 import {
 	listenClaimed,
 	listenCommitted,
 	listenProjectStatusChanged,
 	listenWithdrawed,
-} from '../../listeners';
+} from '../../../../store/amm/listeners';
 import ProjectContainerWrapper from '../ProjectContainerWrapper';
 import ProjectDetail from './ProjectDetail';
 
@@ -30,13 +30,13 @@ export default () => {
 
 	const { account } = useSelector((state: RootState) => state.ethNetwork);
 
-	const { currentProject, contract } = useSelector(
-		(state: RootState) => state.projects,
+	const { currentProject, contracts } = useSelector(
+		(state: RootState) => state.amm,
 	);
 
 	useEffect(() => {
 		let destroyListeners: (() => void)[];
-		if (contract.info?.contract) {
+		if (contracts.amm?.contract) {
 			if (
 				currentProject.loading == false &&
 				currentProject.item?.id !== projectId
@@ -47,27 +47,25 @@ export default () => {
 				if (currentProject.item != null) {
 					destroyListeners = [
 						listenProjectStatusChanged(
-							contract.info,
+							contracts.amm,
 							(data) => dispatch(PROJECT_STATUS_CHANGED(data)),
 							projectId,
 						),
-						listenCommitted(contract.info, (data) => {
-							console.log('COMMITED', data);
+						listenCommitted(contracts.amm, (data) => {
 							dispatch(COMMITED(data));
 							dispatch(GET_PROJECT.request(projectId));
 							if (data.address === account) {
 								dispatch(ADD_PROJECT_COMMITMENT(data));
 							}
 						}),
-						listenWithdrawed(contract.info, (data) => {
-							console.log('WITHDRAWED', data);
+						listenWithdrawed(contracts.amm, (data) => {
 							dispatch(WITHDRAWED(data));
 							dispatch(GET_PROJECT.request(projectId));
 							if (data.address === account) {
 								dispatch(REMOVE_PROJECT_COMMITMENT(data));
 							}
 						}),
-						listenClaimed(contract.info, (data) => {
+						listenClaimed(contracts.amm, (data) => {
 							dispatch(CLAIMED(data));
 							dispatch(GET_PROJECT.request(projectId));
 						}),
@@ -76,7 +74,7 @@ export default () => {
 			}
 		}
 		return () => destroyListeners?.forEach((listener) => listener());
-	}, [contract.info, currentProject.item?.id]);
+	}, [contracts.amm, currentProject.item?.id]);
 
 	return (
 		<ProjectContainerWrapper>

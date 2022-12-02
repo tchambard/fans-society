@@ -24,10 +24,10 @@ export default () => {
 	const [commitDialogVisible, setCommitDialogVisible] = useState(false);
 	const [withdrawDialogVisible, setWithdrawDialogVisible] = useState(false);
 
-	const { currentProject } = useSelector((state: RootState) => state.projects);
+	const { currentProject } = useSelector((state: RootState) => state.amm);
 
 	if (!currentProject.item) {
-		return <SuspenseLoader />;
+		return <SuspenseLoader/>;
 	}
 
 	return (
@@ -67,7 +67,7 @@ export default () => {
 								<Tooltip placement={'bottom'} title={'Abort project'}>
 									<Button
 										variant="outlined"
-										startIcon={<CancelIcon />}
+										startIcon={<CancelIcon/>}
 										color={'error'}
 										onClick={() => setAbortDialogVisible(!abortDialogVisible)}
 									>

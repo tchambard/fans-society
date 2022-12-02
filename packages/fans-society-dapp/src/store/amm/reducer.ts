@@ -3,27 +3,39 @@ import { ActionType, createReducer } from 'typesafe-actions';
 import { SET_CURRENT_ACCOUNT } from 'src/eth-network/actions';
 
 import {
+	ABORT_PROJECT,
 	ADD_PROJECT_COMMITMENT,
 	CLEAR_PROJECTS_TX_ERROR,
 	COMMIT_ON_PROJECT,
 	CREATE_PROJECT,
 	GET_PROJECT,
+	IAMMContractInfo,
+	IPoolsFactoryContractInfo,
 	IProjectDetail,
 	IProjectListCapabilities,
 	IProjectListItem,
-	IProjectsContractInfo,
+	ITokensFactoryContractInfo,
+	LAUNCH_PROJECT,
 	LIST_MY_PROJECT_COMMITMENTS,
 	LIST_PROJECTS,
-	LOAD_PROJECTS_CONTRACT_INFO,
-	ProjectStatus,
+	LOAD_CONTRACTS_INFO,
 	PROJECT_ADDED,
 	PROJECT_STATUS_CHANGED,
+	ProjectStatus,
 	REMOVE_PROJECT_COMMITMENT,
 	WITHDRAW_ON_PROJECT,
 } from './actions';
 
 export interface IProjectsState {
-	contract: { info?: IProjectsContractInfo; loading: boolean };
+	account?: {
+		address: string;
+	};
+	contracts: {
+		loading: boolean;
+		amm?: IAMMContractInfo;
+		tokensFactory?: ITokensFactoryContractInfo;
+		poolsFactory?: IPoolsFactoryContractInfo;
+	};
 	projects: {
 		items: { [id: string]: IProjectListItem };
 		$capabilities: IProjectListCapabilities;
@@ -39,7 +51,9 @@ export interface IProjectsState {
 }
 
 const initialState: IProjectsState = {
-	contract: { loading: false },
+	contracts: {
+		loading: false,
+	},
 	projects: { items: {}, $capabilities: {}, loading: false },
 	commitments: { items: {}, loading: false },
 	currentProject: { loading: false },
@@ -48,29 +62,31 @@ const initialState: IProjectsState = {
 
 export default createReducer(initialState)
 	.handleAction(
-		[LOAD_PROJECTS_CONTRACT_INFO.request],
+		[LOAD_CONTRACTS_INFO.request],
 		(state: IProjectsState): IProjectsState => {
 			return {
 				...state,
-				contract: {
-					info: undefined,
+				contracts: {
+					...state.contracts,
 					loading: true,
+					amm: undefined,
 				},
 			};
 		},
 	)
 
 	.handleAction(
-		[LOAD_PROJECTS_CONTRACT_INFO.failure],
+		[LOAD_CONTRACTS_INFO.failure],
 		(
 			state: IProjectsState,
-			action: ActionType<typeof LOAD_PROJECTS_CONTRACT_INFO.failure>,
+			action: ActionType<typeof LOAD_CONTRACTS_INFO.failure>,
 		): IProjectsState => {
 			return {
 				...state,
-				contract: {
-					...state.contract,
+				contracts: {
+					...state.contracts,
 					loading: false,
+					amm: state.contracts.amm,
 				},
 				error: action.payload,
 			};
@@ -78,16 +94,22 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[LOAD_PROJECTS_CONTRACT_INFO.success],
+		[LOAD_CONTRACTS_INFO.success],
 		(
 			state: IProjectsState,
-			action: ActionType<typeof LOAD_PROJECTS_CONTRACT_INFO.success>,
+			action: ActionType<typeof LOAD_CONTRACTS_INFO.success>,
 		): IProjectsState => {
 			return {
 				...state,
-				contract: {
-					info: action.payload,
+				account: {
+					address: action.payload.account,
+				},
+				contracts: {
+					...state.contracts,
 					loading: false,
+					amm: action.payload.contracts.amm,
+					tokensFactory: action.payload.contracts.tokensFactory,
+					poolsFactory: action.payload.contracts.poolsFactory,
 				},
 			};
 		},
@@ -141,7 +163,7 @@ export default createReducer(initialState)
 						}, {}) || {},
 					loading: false,
 					$capabilities: {
-						$canCreate: state.contract.info?.isOwner,
+						$canCreate: state.contracts.amm?.isOwner,
 					},
 				},
 			};
@@ -170,6 +192,8 @@ export default createReducer(initialState)
 	.handleAction(
 		[
 			CREATE_PROJECT.request,
+			ABORT_PROJECT.request,
+			LAUNCH_PROJECT.request,
 			COMMIT_ON_PROJECT.request,
 			WITHDRAW_ON_PROJECT.request,
 		],
@@ -184,6 +208,8 @@ export default createReducer(initialState)
 	.handleAction(
 		[
 			CREATE_PROJECT.failure,
+			ABORT_PROJECT.failure,
+			LAUNCH_PROJECT.failure,
 			COMMIT_ON_PROJECT.failure,
 			WITHDRAW_ON_PROJECT.failure,
 		],
@@ -202,6 +228,8 @@ export default createReducer(initialState)
 	.handleAction(
 		[
 			CREATE_PROJECT.success,
+			ABORT_PROJECT.success,
+			LAUNCH_PROJECT.success,
 			COMMIT_ON_PROJECT.success,
 			WITHDRAW_ON_PROJECT.success,
 		],
@@ -296,14 +324,34 @@ export default createReducer(initialState)
 			state: IProjectsState,
 			action: ActionType<typeof LIST_MY_PROJECT_COMMITMENTS.success>,
 		): IProjectsState => {
+			const commitmentsItems = {
+				...state.commitments.items,
+				...action.payload,
+			};
+			const currentProjectCommitment =
+				commitmentsItems[state.currentProject.item.id] || 0;
+
 			return {
 				...state,
+				currentProject: {
+					...state.currentProject,
+					item: {
+						...state.currentProject.item,
+						$capabilities: {
+							...state.currentProject.item.$capabilities,
+							$canCommit:
+								state.currentProject.item.status < ProjectStatus.Completed &&
+								state.currentProject.item.fund < state.currentProject.item.target &&
+								currentProjectCommitment < state.currentProject.item.maxInvest,
+							$canWithdraw:
+								state.currentProject.item.status < ProjectStatus.Completed &&
+								currentProjectCommitment > 0,
+						},
+					},
+				},
 				commitments: {
 					...state.commitments,
-					items: {
-						...state.commitments.items,
-						...action.payload,
-					},
+					items: commitmentsItems,
 					loading: false,
 				},
 			};
@@ -358,7 +406,12 @@ export default createReducer(initialState)
 			state: IProjectsState,
 			action: ActionType<typeof PROJECT_STATUS_CHANGED>,
 		): IProjectsState => {
+			const account = state.account.address;
+
 			let currentProject = state.currentProject;
+			const currentProjectCommitment =
+				state.commitments.items[currentProject.item.id] || 0;
+
 			if (action.payload.id === state.currentProject.item?.id) {
 				currentProject = {
 					...state.currentProject,
@@ -366,8 +419,18 @@ export default createReducer(initialState)
 						...state.currentProject.item,
 						$capabilities: {
 							$canAbort:
-								state.contract.info.isOwner &&
+								state.contracts.amm.isOwner &&
 								action.payload.status < ProjectStatus.Launched,
+							$canValidate:
+								account === state.currentProject.item.partnerAddress &&
+								action.payload.status === ProjectStatus.Completed,
+							$canCommit:
+								action.payload.status < ProjectStatus.Completed &&
+								state.currentProject.item.fund < state.currentProject.item.target &&
+								currentProjectCommitment < currentProject.item.maxInvest,
+							$canWithdraw:
+								action.payload.status < ProjectStatus.Completed &&
+								currentProjectCommitment > 0,
 						},
 					},
 				};

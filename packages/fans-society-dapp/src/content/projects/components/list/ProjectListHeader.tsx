@@ -9,7 +9,7 @@ import ProjectCreateDialog from './ProjectCreateDialog';
 
 export default () => {
 	const [createDialogVisible, setCreateDialogVisible] = useState(false);
-	const { projects } = useSelector((state: RootState) => state.projects);
+	const { projects } = useSelector((state: RootState) => state.amm);
 
 	return (
 		<>
@@ -26,7 +26,7 @@ export default () => {
 								color={'primary'}
 								onClick={() => setCreateDialogVisible(!createDialogVisible)}
 							>
-								<AddCircleIcon />
+								<AddCircleIcon/>
 							</IconButton>
 						</Tooltip>
 					)}

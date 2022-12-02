@@ -11,9 +11,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 import { Routes } from 'src/router';
-import { ABORT_PROJECT } from '../../../../store/amm/actions';
+import { LAUNCH_PROJECT } from '../../../../store/amm/actions';
 
-interface IProjectAbortDialogProps {
+interface IProjectValidateDialogProps {
 	projectId: string;
 	dialogVisible: boolean;
 	setDialogVisible: React.Dispatch<React.SetStateAction<boolean>>;
@@ -23,7 +23,7 @@ export default ({
 	projectId,
 	dialogVisible,
 	setDialogVisible,
-}: IProjectAbortDialogProps) => {
+}: IProjectValidateDialogProps) => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 
@@ -36,11 +36,11 @@ export default ({
 			fullWidth={true}
 		>
 			<DialogTitle id={'delete-project-title'}>
-				{'Are you sure to abort this project ?'}
+				{'Are you sure to validate this project ?'}
 			</DialogTitle>
 			<DialogContent dividers>
 				<DialogContentText id={'alert-dialog-description'}>
-					This operation will abort project ICO.
+					This operation will validate the project and create ERC20 token.
 				</DialogContentText>
 			</DialogContent>
 			<DialogActions>
@@ -50,7 +50,7 @@ export default ({
 				<Button
 					color={'primary'}
 					onClick={() => {
-						dispatch(ABORT_PROJECT.request(projectId));
+						dispatch(LAUNCH_PROJECT.request(projectId));
 
 						setDialogVisible(false);
 						navigate(Routes.PROJECT_LIST);

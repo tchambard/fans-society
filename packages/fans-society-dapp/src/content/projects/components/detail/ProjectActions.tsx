@@ -2,16 +2,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-
-import { RootState } from 'state-types';
 
 import ActionsMenu, { IActionMenuItem } from 'src/components/ActionsMenu';
-import { IProjectDetailCapabilities } from '../../actions';
+import { IProjectDetailCapabilities } from '../../../../store/amm/actions';
 import ProjectAbortDialog from '../list/ProjectAbortDialog';
 import ProjectCommitDialog from './ProjectCommitDialog';
 import ProjectWithdrawDialog from './ProjectWithdrawDialog';
-import SuspenseLoader from 'src/components/SuspenseLoader';
+import ProjectValidateDialog from '../list/ProjectValidateDialog';
 
 interface IProps {
 	projectId: string;
@@ -20,6 +17,7 @@ interface IProps {
 
 export default ({ projectId, capabilities }: IProps) => {
 	const [abortDialogVisible, setAbortDialogVisible] = useState(false);
+	const [validateDialogVisible, setValidateDialogVisible] = useState(false);
 	const [commitDialogVisible, setCommitDialogVisible] = useState(false);
 	const [withdrawDialogVisible, setWithdrawDialogVisible] = useState(false);
 
@@ -30,6 +28,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'primary',
 			icon: <PlaylistAddIcon fontSize={'small'} />,
 			url: '',
+			hidden: !capabilities.$canCommit,
 			onClick: () => setCommitDialogVisible(!commitDialogVisible),
 		},
 		{
@@ -38,6 +37,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'primary',
 			icon: <PlaylistRemoveIcon fontSize={'small'} />,
 			url: '',
+			hidden: !capabilities.$canWithdraw,
 			onClick: () => setWithdrawDialogVisible(!withdrawDialogVisible),
 		},
 		{
@@ -49,11 +49,28 @@ export default ({ projectId, capabilities }: IProps) => {
 			hidden: !capabilities.$canAbort,
 			onClick: () => setAbortDialogVisible(!abortDialogVisible),
 		},
+		{
+			title: 'Validate',
+			description: 'Validate project',
+			color: 'info',
+			icon: <DeleteIcon fontSize={'small'} />,
+			url: '',
+			hidden: !capabilities.$canValidate,
+			onClick: () => setValidateDialogVisible(!validateDialogVisible),
+		},
 	];
 
 	return (
 		<>
 			<ActionsMenu items={menuItems} mode={'button'} />
+
+			{validateDialogVisible && (
+				<ProjectValidateDialog
+					projectId={projectId}
+					dialogVisible={validateDialogVisible}
+					setDialogVisible={setValidateDialogVisible}
+				/>
+			)}
 
 			{abortDialogVisible && (
 				<ProjectAbortDialog

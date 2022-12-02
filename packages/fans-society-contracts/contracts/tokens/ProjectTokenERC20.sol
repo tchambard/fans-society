@@ -19,8 +19,6 @@ contract ProjectTokenERC20 is
 
 	mapping(address => bool) private claimed;
 
-	event Claimed(address account, uint amount);
-
 	modifier onlyAmm() {
 		require(msg.sender == amm, 'Caller is not AMM');
 		_;
@@ -76,6 +74,6 @@ contract ProjectTokenERC20 is
 		require((totalSupply + amount) <= maxTotalSupply, 'maxTotalSupply limit');
 		_mint(account, amount);
 		claimed[account] = true;
-		emit Claimed(account, amount);
+		emit TokenClaimed(account, amount);
 	}
 }

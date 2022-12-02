@@ -2,7 +2,7 @@ import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { Helmet } from 'react-helmet-async';
 
-import PageTitleWrapper from 'src/components/PageTitleWrapper';
+import PageTitleWrapper from 'src/components/PageTitleWrapper/index';
 
 export default () => {
 	return (

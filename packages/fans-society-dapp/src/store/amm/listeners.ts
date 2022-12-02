@@ -1,23 +1,24 @@
 import {
-	TokensClaimed,
 	Committed,
 	ProjectCreated,
 	ProjectStatusChanged,
+	TokensClaimed,
 	Withdrawed,
 } from 'fans-society-contracts/types/web3/contracts/AMM';
 import { ClientFactory } from 'src/services/ClientFactory';
 import {
+	IAMMContractInfo,
+	IContractsInfo,
 	IProjectClaim,
 	IProjectCommitment,
 	IProjectListItem,
-	IProjectsContractInfo,
 	IProjectStatusChangedEvent,
 	IProjectWithdraw,
 	ProjectStatus,
 } from './actions';
 
 export const listenProjectStatusChanged = (
-	contractInfo: IProjectsContractInfo,
+	contractInfo: IAMMContractInfo,
 	onData: (data: IProjectStatusChangedEvent) => void,
 	projectId?: string,
 ): (() => void) => {
@@ -33,7 +34,8 @@ export const listenProjectStatusChanged = (
 };
 
 export const listenProjectCreated = (
-	contractInfo: IProjectsContractInfo,
+	account: string,
+	contract: IAMMContractInfo,
 	onData: (data: IProjectListItem) => void,
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
@@ -48,18 +50,21 @@ export const listenProjectCreated = (
 			partnerAddress: returnValues.partnerAddress,
 			status: ProjectStatus.Opened,
 			$capabilities: {
-				$canAbort: contractInfo.isOwner,
+				$canAbort: contract.isOwner,
+				$canCommit: true,
+				$canWithdraw: false,
+				$canValidate: account === returnValues.partnerAddress,
 			},
 		});
 	};
-	const emitter = contractInfo.contract.events
+	const emitter = contract.contract.events
 		.ProjectCreated()
 		.on('data', eventHandler);
 	return () => emitter.removeListener('data', eventHandler);
 };
 
 export const listenCommitted = (
-	contractInfo: IProjectsContractInfo,
+	contractInfo: IAMMContractInfo,
 	onData: (data: IProjectCommitment) => void,
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
@@ -77,7 +82,7 @@ export const listenCommitted = (
 };
 
 export const listenWithdrawed = (
-	contractInfo: IProjectsContractInfo,
+	contractInfo: IAMMContractInfo,
 	onData: (data: IProjectWithdraw) => void,
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
@@ -95,7 +100,7 @@ export const listenWithdrawed = (
 };
 
 export const listenClaimed = (
-	contractInfo: IProjectsContractInfo,
+	contractInfo: IAMMContractInfo,
 	onData: (data: IProjectClaim) => void,
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
