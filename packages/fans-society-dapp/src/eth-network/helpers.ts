@@ -25,7 +25,7 @@ export interface IDynamicContractImportDefinitions {
 export const NETWORKS = {
 	1: 'mainnet',
 	5: 'goerli',
-	31337: 'localhost',
+	1337: 'localhost',
 };
 
 export async function getContractInfo(
