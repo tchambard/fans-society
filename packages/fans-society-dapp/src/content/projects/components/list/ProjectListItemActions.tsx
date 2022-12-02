@@ -3,7 +3,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
 
 import ActionsMenu, { IActionMenuItem } from 'src/components/ActionsMenu';
-import { IProjectDetailCapabilities } from '../../actions';
+import { IProjectDetailCapabilities } from '../../../../store/amm/actions';
 import ProjectAbortDialog from './ProjectAbortDialog';
 
 interface IProps {

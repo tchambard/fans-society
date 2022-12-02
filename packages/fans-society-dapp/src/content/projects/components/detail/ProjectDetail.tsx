@@ -76,11 +76,11 @@ export default ({}) => {
 	const theme = useTheme();
 
 	const { currentProject, commitments } = useSelector(
-		(state: RootState) => state.projects,
+		(state: RootState) => state.amm,
 	);
 
 	if (!currentProject.item || currentProject.loading) {
-		return <SuspenseLoader />;
+		return <SuspenseLoader/>;
 	}
 
 	return (
@@ -98,7 +98,7 @@ export default ({}) => {
 							<Tooltip arrow placement={'top'} title={'Go back'}>
 								<Link to={Routes.PROJECT_LIST}>
 									<IconButton color={'primary'} sx={{ p: 2, mr: 2 }}>
-										<ArrowBackTwoToneIcon />
+										<ArrowBackTwoToneIcon/>
 									</IconButton>
 								</Link>
 							</Tooltip>
@@ -169,7 +169,7 @@ export default ({}) => {
 							</Box>
 
 							<Box>
-								<Divider variant="middle" />
+								<Divider variant="middle"/>
 								<div style={{ color: theme.palette.text.secondary }}>My share</div>
 								<div style={{ fontSize: '1.5em' }}>
 									{commitments.items[currentProject.item.id] || 0} ETH

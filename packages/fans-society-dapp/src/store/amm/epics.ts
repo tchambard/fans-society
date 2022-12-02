@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { Epic } from 'redux-observable';
 import { filter, mergeMap } from 'rxjs/operators';
 import { isActionOf } from 'typesafe-actions';
@@ -5,6 +6,7 @@ import { isActionOf } from 'typesafe-actions';
 import {
 	Committed,
 	ProjectCreated,
+	Withdrawed,
 } from 'fans-society-contracts/types/web3/contracts/AMM';
 import { RootAction, RootState, Services } from 'state-types';
 
@@ -15,40 +17,56 @@ import {
 	COMMIT_ON_PROJECT,
 	CREATE_PROJECT,
 	GET_PROJECT,
-	IProjectCommitment,
 	IProjectDetail,
 	IProjectListItem,
+	LAUNCH_PROJECT,
 	LIST_MY_PROJECT_COMMITMENTS,
 	LIST_PROJECTS,
-	LOAD_PROJECTS_CONTRACT_INFO,
+	LOAD_CONTRACTS_INFO,
 	ProjectStatus,
 	WITHDRAW_ON_PROJECT,
 } from './actions';
-import { getAMMContract } from './contract';
+import {
+	getAMMContract,
+	getPoolFactoryContract,
+	getTokensFactoryContract,
+} from './contract';
 
-export const loadProjectsContractInfo: Epic<
+export const loadContractsInfo: Epic<
 	RootAction,
 	RootAction,
 	RootState,
 	Services
 > = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
-		filter(isActionOf(LOAD_PROJECTS_CONTRACT_INFO.request)),
+		filter(isActionOf(LOAD_CONTRACTS_INFO.request)),
 		mergeMap(async () => {
 			try {
 				const accounts = await web3.eth.requestAccounts();
 				const account = accounts[0];
-				const contract = await getAMMContract(web3);
-				const owner = await contract.methods.owner().call();
+				const amm = await getAMMContract(web3);
+				const owner = await amm.methods.owner().call();
+				const poolsFactory = await getPoolFactoryContract(web3);
+				const tokensFactory = await getTokensFactoryContract(web3);
 
-				return LOAD_PROJECTS_CONTRACT_INFO.success({
-					contract,
-					isOwner: account === owner,
+				return LOAD_CONTRACTS_INFO.success({
 					account,
+					contracts: {
+						amm: {
+							contract: amm,
+							isOwner: account === owner,
+						},
+						tokensFactory: {
+							contract: tokensFactory,
+						},
+						poolsFactory: {
+							contract: poolsFactory,
+						},
+					},
 				});
 			} catch (e) {
 				loggerService.log(e.message);
-				return LOAD_PROJECTS_CONTRACT_INFO.failure(findRpcMessage(e));
+				return LOAD_CONTRACTS_INFO.failure(findRpcMessage(e));
 			}
 		}),
 	);
@@ -63,7 +81,7 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 		filter(isActionOf(LIST_PROJECTS.request)),
 		mergeMap(async () => {
 			try {
-				const contract = state$.value.projects.contract.info.contract;
+				const contract = state$.value.amm.contracts.amm.contract;
 
 				const projectStatuses = (
 					await contract.getPastEvents('ProjectStatusChanged', { fromBlock: 0 })
@@ -86,7 +104,8 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 						partnerAddress: v.partnerAddress,
 						status: projectStatuses[v.id] || ProjectStatus.Opened,
 						$capabilities: {
-							$canAbort: state$.value.projects.contract.info.isOwner,
+							$canAbort: state$.value.amm.contracts.amm.isOwner,
+							$canValidate: false,
 						},
 					};
 				});
@@ -112,7 +131,7 @@ export const createProject: Epic<
 		mergeMap(async (action) => {
 			try {
 				const account = state$.value.ethNetwork.account;
-				const contract = state$.value.projects.contract.info.contract;
+				const contract = state$.value.amm.contracts.amm.contract;
 
 				const {
 					partnerAddress,
@@ -157,7 +176,7 @@ export const abortProject: Epic<RootAction, RootAction, RootState, Services> = (
 		mergeMap(async (action) => {
 			try {
 				const account = state$.value.ethNetwork.account;
-				const contract = state$.value.projects.contract.info.contract;
+				const contract = state$.value.amm.contracts.amm.contract;
 
 				const projectId = action.payload;
 
@@ -183,23 +202,38 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 			try {
 				const projectId = action.payload;
 
-				const { contract, isOwner } = state$.value.projects.contract.info;
+				const { contract, isOwner } = state$.value.amm.contracts.amm;
+				const account = state$.value.amm.account.address;
 
 				const data = await contract.methods.projects(projectId).call();
+
+				const status = +data.status;
+				const maxInvest = +web3.utils.fromWei(data.maxInvest, 'ether');
+				const target = +web3.utils.fromWei(data.target, 'ether');
+				const fund = +web3.utils.fromWei(data.fund, 'ether');
 
 				const project: IProjectDetail = {
 					id: projectId,
 					name: data.name,
 					description: data.description,
 					symbol: data.symbol,
-					target: +web3.utils.fromWei(data.target, 'ether'),
+					target,
 					minInvest: +web3.utils.fromWei(data.minInvest, 'ether'),
-					maxInvest: +web3.utils.fromWei(data.maxInvest, 'ether'),
+					maxInvest,
 					partnerAddress: data.partnerAddress,
-					fund: +web3.utils.fromWei(data.fund, 'ether'),
-					status: +data.status,
+					fund,
+					status,
 					$capabilities: {
-						$canAbort: state$.value.projects.contract.info.isOwner,
+						$canAbort: isOwner,
+						$canValidate:
+							status === ProjectStatus.Completed && account === data.partnerAddress,
+						$canCommit:
+							status < ProjectStatus.Completed &&
+							fund < target &&
+							(state$.value.amm.commitments.items[projectId] || 0) < maxInvest,
+						$canWithdraw:
+							status < ProjectStatus.Completed &&
+							(state$.value.amm.commitments.items[projectId] || 0) > 0,
 					},
 				};
 				logger.log('=== Project found ===\n', JSON.stringify(project, null, 2));
@@ -223,7 +257,7 @@ export const commitOnProject: Epic<
 		mergeMap(async (action) => {
 			try {
 				const account = state$.value.ethNetwork.account;
-				const contract = state$.value.projects.contract.info.contract;
+				const contract = state$.value.amm.contracts.amm.contract;
 
 				const { projectId, amount } = action.payload;
 
@@ -251,7 +285,7 @@ export const withdrawOnProject: Epic<
 		mergeMap(async (action) => {
 			try {
 				const account = state$.value.ethNetwork.account;
-				const contract = state$.value.projects.contract.info.contract;
+				const contract = state$.value.amm.contracts.amm.contract;
 
 				const { projectId } = action.payload;
 
@@ -280,27 +314,67 @@ export const listMyProjectCommitments: Epic<
 				if (!account) {
 					return LIST_MY_PROJECT_COMMITMENTS.success({});
 				}
-				const contract = state$.value.projects.contract.info.contract;
+				const contract = state$.value.amm.contracts.amm.contract;
 
-				const commitments: { [id: string]: number } = (
-					await contract.getPastEvents('Committed', {
-						fromBlock: 0,
-						filter: {
-							projectId: action.payload.projectId,
-							caller: account,
-						},
-					})
-				).reduce((acc, event) => {
-					const { returnValues: v } = event as unknown as Committed;
-					acc[v.id] = (acc[v.id] || 0) + +web3.utils.fromWei(v.amount, 'ether');
-					return acc;
-				}, {} as { [id: string]: number });
+				const commits = await contract.getPastEvents('Committed', {
+					fromBlock: 0,
+					filter: {
+						projectId: action.payload.projectId,
+						caller: account,
+					},
+				});
+				const withdrawals = await contract.getPastEvents('Withdrawed', {
+					fromBlock: 0,
+					filter: {
+						projectId: action.payload.projectId,
+						caller: account,
+					},
+				});
+
+				const orderedEvents = _.sortBy([...commits, ...withdrawals], 'blockNumber');
+				const commitments: { [id: string]: number } = orderedEvents.reduce(
+					(acc, _event) => {
+						const { event, returnValues: v } = _event;
+						acc[v.id] =
+							event === 'Committed'
+								? (acc[v.id] || 0) + +web3.utils.fromWei(v.amount, 'ether')
+								: (acc[v.id] = 0);
+						return acc;
+					},
+					{} as { [id: string]: number },
+				);
 				logger.log('=== commitments ===');
 				logger.table(commitments);
 				return LIST_MY_PROJECT_COMMITMENTS.success(commitments);
 			} catch (e) {
 				loggerService.log(e.message);
 				return LIST_MY_PROJECT_COMMITMENTS.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const launchProject: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3 }) => {
+	return action$.pipe(
+		filter(isActionOf(LAUNCH_PROJECT.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				const contract = state$.value.amm.contracts.amm.contract;
+
+				const projectId = action.payload;
+
+				await contract.methods.launchProject(projectId).send({ from: account });
+
+				return LAUNCH_PROJECT.success();
+			} catch (e) {
+				loggerService.log(e.message);
+				return LAUNCH_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
 	);

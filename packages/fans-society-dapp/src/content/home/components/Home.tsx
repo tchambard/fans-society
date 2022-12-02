@@ -31,11 +31,11 @@ export default () => {
 										component="img"
 										height="400"
 										image="/static/images/cards/crowdfunding.jpg"
-										alt="crowdfunding"
+										alt="ico"
 									/>
 									<CardContent>
 										<Typography gutterBottom variant="h5" component="div">
-											Crowdfunding
+											ICO
 										</Typography>
 										<Typography variant="body2" color="text.secondary">
 											Entertainment projects

@@ -27,7 +27,7 @@ const Project = Loader(
 );
 
 const TokenHome = Loader(
-	lazy(() => import('src/content/token/components/TokenHome')),
+	lazy(() => import('src/content/tokens/components/TokenHome')),
 );
 
 const DashboardHome = Loader(

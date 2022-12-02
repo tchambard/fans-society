@@ -3,7 +3,7 @@
   "chainId": "1337",
   "contracts": {
     "AMM": {
-      "address": "0x0aec7c174554AF8aEc3680BB58431F6618311510",
+      "address": "0x683d9CDD3239E0e01E8dC6315fA50AD92aB71D2d",
       "abi": [
         {
           "inputs": [

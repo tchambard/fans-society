@@ -7,8 +7,8 @@ import { RootAction, RootState } from 'state-types';
 
 import services from '../services/index';
 import { composeEnhancers } from './utils';
-import rootEpic from './root-epic';
-import createRootReducer from './root-reducer';
+import rootEpic from './root/root-epic';
+import createRootReducer from './root/root-reducer';
 
 export const history = createBrowserHistory();
 const routerMiddleware = createRouterMiddleware(history);
