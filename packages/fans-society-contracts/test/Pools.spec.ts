@@ -41,6 +41,7 @@ contract('Pools', (accounts) => {
 		PoolFactory = await deployPoolFactoryInstance(administrator, fsociety);
 
 		await projectTokenFactory.createToken(
+			0,
 			'tokenY',
 			'TKN1',
 			administrator,
@@ -52,6 +53,7 @@ contract('Pools', (accounts) => {
 		);
 
 		await projectTokenFactory.createToken(
+			1,
 			'token2',
 			'TKN2',
 			administrator,

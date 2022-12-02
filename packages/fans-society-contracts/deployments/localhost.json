@@ -3,7 +3,7 @@
   "chainId": "1337",
   "contracts": {
     "AMM": {
-      "address": "0x683d9CDD3239E0e01E8dC6315fA50AD92aB71D2d",
+      "address": "0x22a9B82A6c3D2BFB68F324B2e8367f346Dd6f32a",
       "abi": [
         {
           "inputs": [
@@ -721,7 +721,7 @@
       ]
     },
     "ProjectTokenFactory": {
-      "address": "0xa722bdA6968F50778B973Ae2701e90200C564B49",
+      "address": "0x1343248Cbd4e291C6979e70a138f4c774e902561",
       "abi": [
         {
           "inputs": [],
@@ -731,6 +731,12 @@
         {
           "anonymous": false,
           "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "projectId",
+              "type": "uint256"
+            },
             {
               "indexed": false,
               "internalType": "address",
@@ -755,6 +761,11 @@
         },
         {
           "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_projectId",
+              "type": "uint256"
+            },
             {
               "internalType": "string",
               "name": "_name",

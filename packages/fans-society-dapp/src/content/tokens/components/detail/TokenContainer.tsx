@@ -21,7 +21,7 @@ import {
 	listenWithdrawed,
 } from '../../../../store/amm/listeners';
 import ProjectContainerWrapper from '../../../ContentContainerWrapper';
-import ProjectDetail from './ProjectDetail';
+import ProjectDetail from './TokenDetail';
 
 export default () => {
 	const { projectId } = useParams();

@@ -5,6 +5,7 @@ import {
 	TokensClaimed,
 	Withdrawed,
 } from 'fans-society-contracts/types/web3/contracts/AMM';
+import { TokenCreated } from 'fans-society-contracts/types/web3/contracts/tokens/ProjectTokenFactory';
 import { ClientFactory } from 'src/services/ClientFactory';
 import {
 	IAMMContractInfo,
@@ -14,6 +15,8 @@ import {
 	IProjectListItem,
 	IProjectStatusChangedEvent,
 	IProjectWithdraw,
+	ITokenCreated,
+	ITokensFactoryContractInfo,
 	ProjectStatus,
 } from './actions';
 
@@ -44,6 +47,7 @@ export const listenProjectCreated = (
 			id: returnValues.id,
 			name: returnValues.name,
 			description: returnValues.description,
+			symbol: returnValues.symbol,
 			target: +web3.utils.fromWei(returnValues.target, 'ether'),
 			minInvest: +web3.utils.fromWei(returnValues.minInvest, 'ether'),
 			maxInvest: +web3.utils.fromWei(returnValues.maxInvest, 'ether'),
@@ -113,6 +117,24 @@ export const listenClaimed = (
 	};
 	const emitter = contractInfo.contract.events
 		.TokensClaimed()
+		.on('data', eventHandler);
+	return () => emitter.removeListener('data', eventHandler);
+};
+
+export const listenTokenCreated = (
+	contractInfo: ITokensFactoryContractInfo,
+	onData: (data: ITokenCreated) => void,
+): (() => void) => {
+	const eventHandler = async ({ returnValues }: TokenCreated) => {
+		onData({
+			projectId: returnValues.projectId,
+			address: returnValues.token,
+			name: returnValues.name,
+			symbol: returnValues.symbol,
+		});
+	};
+	const emitter = contractInfo.contract.events
+		.TokenCreated()
 		.on('data', eventHandler);
 	return () => emitter.removeListener('data', eventHandler);
 };

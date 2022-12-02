@@ -14,6 +14,7 @@ import {
 	IProjectDetail,
 	IProjectListCapabilities,
 	IProjectListItem,
+	ITokenListItem,
 	ITokensFactoryContractInfo,
 	LAUNCH_PROJECT,
 	LIST_MY_PROJECT_COMMITMENTS,
@@ -23,6 +24,7 @@ import {
 	PROJECT_STATUS_CHANGED,
 	ProjectStatus,
 	REMOVE_PROJECT_COMMITMENT,
+	TOKEN_ADDED,
 	WITHDRAW_ON_PROJECT,
 } from './actions';
 
@@ -45,6 +47,10 @@ export interface IProjectsState {
 		items: { [id: string]: number };
 		loading: boolean;
 	};
+	tokens: {
+		items: { [id: string]: ITokenListItem };
+		loading: boolean;
+	};
 	currentProject: { item?: IProjectDetail; loading: boolean };
 	txPending: boolean;
 	error?: string;
@@ -56,6 +62,7 @@ const initialState: IProjectsState = {
 	},
 	projects: { items: {}, $capabilities: {}, loading: false },
 	commitments: { items: {}, loading: false },
+	tokens: { items: {}, loading: false },
 	currentProject: { loading: false },
 	txPending: false,
 };
@@ -152,19 +159,35 @@ export default createReducer(initialState)
 			state: IProjectsState,
 			action: ActionType<typeof LIST_PROJECTS.success>,
 		): IProjectsState => {
+			const projects: { [id: string]: IProjectListItem } = {};
+			const tokens: { [id: string]: ITokenListItem } = {};
+			action.payload.forEach((p) => {
+				if (p.status === ProjectStatus.Launched) {
+					tokens[p.id] = {
+						id: p.id,
+						name: p.name,
+						description: p.description,
+						symbol: p.symbol,
+					};
+				} else {
+					projects[p.id] = p;
+				}
+			});
+
 			return {
 				...state,
 				projects: {
 					...state.projects,
-					items:
-						action.payload.reduce((acc, p) => {
-							acc[p.id] = p;
-							return acc;
-						}, {}) || {},
+					items: projects,
 					loading: false,
 					$capabilities: {
 						$canCreate: state.contracts.amm?.isOwner,
 					},
+				},
+				tokens: {
+					...state.tokens,
+					items: tokens,
+					loading: false,
 				},
 			};
 		},
@@ -183,6 +206,40 @@ export default createReducer(initialState)
 					items: {
 						...state.projects.items,
 						[action.payload.id]: action.payload,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[TOKEN_ADDED],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof TOKEN_ADDED>,
+		): IProjectsState => {
+			const projectId = action.payload.projectId;
+			const tokenProject = state.projects.items[projectId];
+
+			return {
+				...state,
+				projects: {
+					...state.projects,
+					items: {
+						...state.projects.items,
+						[projectId]: undefined,
+					},
+				},
+				tokens: {
+					...state.projects,
+					items: {
+						...state.projects.items,
+						[projectId]: {
+							id: projectId,
+							name: action.payload.name,
+							description: tokenProject.description,
+							symbol: action.payload.symbol,
+						},
 					},
 				},
 			};
@@ -417,6 +474,7 @@ export default createReducer(initialState)
 					...state.currentProject,
 					item: {
 						...state.currentProject.item,
+						status: action.payload.status,
 						$capabilities: {
 							$canAbort:
 								state.contracts.amm.isOwner &&
@@ -431,6 +489,7 @@ export default createReducer(initialState)
 							$canWithdraw:
 								action.payload.status < ProjectStatus.Completed &&
 								currentProjectCommitment > 0,
+							$canClaim: action.payload.status === ProjectStatus.Launched && false, // TODO
 						},
 					},
 				};

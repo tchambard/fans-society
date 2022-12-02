@@ -98,6 +98,7 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 						id: v.id,
 						name: v.name,
 						description: v.description,
+						symbol: v.symbol,
 						target: +web3.utils.fromWei(v.target, 'ether'),
 						minInvest: +web3.utils.fromWei(v.minInvest, 'ether'),
 						maxInvest: +web3.utils.fromWei(v.maxInvest, 'ether'),
@@ -217,6 +218,10 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 					name: data.name,
 					description: data.description,
 					symbol: data.symbol,
+					avatarImageUrl:
+						'https://cdn.dribbble.com/users/588874/screenshots/2249528/media/dfc765104b15b69fab7a6363fd523d33.png?compress=1&resize=768x576&vertical=top',
+					coverImageUrl:
+						'http://www.thegrandtest.com/wp-content/uploads/2018/05/Star-Wars-Les-Derniers-Jedi.jpg',
 					target,
 					minInvest: +web3.utils.fromWei(data.minInvest, 'ether'),
 					maxInvest,
