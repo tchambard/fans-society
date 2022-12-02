@@ -1,3 +1,4 @@
 artifacts
 types/*
 !types/.gitkeep
+/deployments/**/solcInputs/
