@@ -26,8 +26,11 @@ const Project = Loader(
 	lazy(() => import('src/content/projects/components/detail/ProjectContainer')),
 );
 
-const TokenHome = Loader(
-	lazy(() => import('src/content/tokens/components/TokenHome')),
+const TokenList = Loader(
+	lazy(() => import('src/content/tokens/components/list/TokenListContainer')),
+);
+const Token = Loader(
+	lazy(() => import('src/content/tokens/components/detail/TokenContainer')),
 );
 
 const DashboardHome = Loader(
@@ -44,6 +47,7 @@ export class Routes {
 	public static PROJECT_DETAIL = `${Routes.PROJECT_LIST}/:projectId`;
 
 	public static TOKEN_LIST = `/tokens`;
+	public static TOKEN_DETAIL = `${Routes.TOKEN_LIST}/:projectId`;
 	public static DASHBOARD = `/dashboard`;
 }
 
@@ -102,7 +106,11 @@ export const routes: RouteObject[] = [
 		children: [
 			{
 				path: Routes.TOKEN_LIST,
-				element: <TokenHome />,
+				element: <TokenList />,
+			},
+			{
+				path: Routes.TOKEN_DETAIL,
+				element: <Token />,
 			},
 		],
 	},

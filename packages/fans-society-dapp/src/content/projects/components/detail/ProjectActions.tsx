@@ -8,7 +8,7 @@ import { IProjectDetailCapabilities } from '../../../../store/amm/actions';
 import ProjectAbortDialog from '../list/ProjectAbortDialog';
 import ProjectCommitDialog from './ProjectCommitDialog';
 import ProjectWithdrawDialog from './ProjectWithdrawDialog';
-import ProjectValidateDialog from '../list/ProjectValidateDialog';
+import ProjectValidateDialog from './ProjectValidateDialog';
 
 interface IProps {
 	projectId: string;

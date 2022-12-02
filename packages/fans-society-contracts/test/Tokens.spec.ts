@@ -32,6 +32,7 @@ contract('Tokens', (accounts) => {
 			it('> should fail with total supply lower than distributed shared', async () => {
 				await expectRevert(
 					projectTokenFactory.createToken(
+						0,
 						'Test',
 						'TEST',
 						administrator,
@@ -48,6 +49,7 @@ contract('Tokens', (accounts) => {
 				const symbol = 'TEST';
 
 				await projectTokenFactory.createToken(
+					0,
 					name,
 					symbol,
 					administrator,
@@ -81,6 +83,7 @@ contract('Tokens', (accounts) => {
 
 		beforeEach(async () => {
 			await projectTokenFactory.createToken(
+				0,
 				'Test',
 				'TEST',
 				administrator,

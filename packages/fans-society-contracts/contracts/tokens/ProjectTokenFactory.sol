@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { Clones } from '@openzeppelin/contracts/proxy/Clones.sol';
+import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
 
-import { IProjectTokenFactory } from './interfaces/IProjectTokenFactory.sol';
-import { ProjectTokenERC20 } from './ProjectTokenERC20.sol';
+import {IProjectTokenFactory} from './interfaces/IProjectTokenFactory.sol';
+import {ProjectTokenERC20} from './ProjectTokenERC20.sol';
 
 contract ProjectTokenFactory is IProjectTokenFactory {
 	address private immutable implementation;
 
-	event TokenCreated(address token, string name, string symbol);
+	event TokenCreated(uint256 projectId, address token, string name, string symbol);
 
 	constructor() {
 		implementation = address(new ProjectTokenERC20());
 	}
 
 	function createToken(
+		uint256 _projectId,
 		string memory _name,
 		string memory _symbol,
 		address _amm,
@@ -30,7 +31,7 @@ contract ProjectTokenFactory is IProjectTokenFactory {
 			_totalSupply,
 			_initialSupply
 		);
-		emit TokenCreated(token, _name, _symbol);
+		emit TokenCreated(_projectId, token, _name, _symbol);
 		return token;
 	}
 }

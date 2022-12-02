@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { Projects } from './Projects.sol';
+import {Projects} from './Projects.sol';
 
-import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import { SafeERC20 } from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
-import { IWETH } from './interfaces/IWETH.sol';
-import { IProjectTokenFactory } from './tokens/interfaces/IProjectTokenFactory.sol';
-import { IPoolFactory } from './pools/interfaces/IPoolFactory.sol';
-import { IPool } from './pools/interfaces/IPool.sol';
-import { PoolHelpers } from './pools/PoolHelpers.sol';
-import { IProjectTokenERC20 } from './tokens/interfaces/IProjectTokenERC20.sol';
+import {IWETH} from './interfaces/IWETH.sol';
+import {IProjectTokenFactory} from './tokens/interfaces/IProjectTokenFactory.sol';
+import {IPoolFactory} from './pools/interfaces/IPoolFactory.sol';
+import {IPool} from './pools/interfaces/IPool.sol';
+import {PoolHelpers} from './pools/PoolHelpers.sol';
+import {IProjectTokenERC20} from './tokens/interfaces/IProjectTokenERC20.sol';
 
 import 'hardhat/console.sol';
 
@@ -47,9 +47,9 @@ contract AMM is Projects {
 		Project memory project = projects[_id];
 
 		(
-			uint40 partnerTokenShares,,
-			uint40 poolTokenShares,
-			uint40 fansSocietyTokenShares
+		uint40 partnerTokenShares,,
+		uint40 poolTokenShares,
+		uint40 fansSocietyTokenShares
 		) = computeTokenShares(project.totalSupply);
 
 		(uint poolFundsShares, uint partnerFundsShares) = computeFundsShares(
@@ -57,6 +57,7 @@ contract AMM is Projects {
 		);
 
 		projects[_id].tokenAddress = IProjectTokenFactory(tokenFactory).createToken(
+			_id,
 			project.name,
 			project.symbol,
 			address(this),
@@ -92,14 +93,14 @@ contract AMM is Projects {
 		);
 
 		// swap with weth
-		IWETH(weth).deposit{ value: poolFundsShares }();
+		IWETH(weth).deposit{value : poolFundsShares}();
 		// transfer weth
 		assert(IWETH(weth).transfer(pool, poolFundsShares));
 
 		// TODO: transfer funds to partner
-		(bool sent,) = payable(project.partnerAddress).call{value:partnerFundsShares}('');
-        require(sent, 'partner distribution failed');
-		
+		(bool sent,) = payable(project.partnerAddress).call{value : partnerFundsShares}('');
+		require(sent, 'partner distribution failed');
+
 		IPool(pool).mintLP(address(this));
 
 		projects[_id].status = ProjectStatus.Launched;
@@ -109,9 +110,9 @@ contract AMM is Projects {
 	function claimProjectTokens(
 		uint256 _projectId
 	)
-		external
-		statusIs(_projectId, ProjectStatus.Launched)
-		isCommited(_projectId)
+	external
+	statusIs(_projectId, ProjectStatus.Launched)
+	isCommited(_projectId)
 	{
 		Project memory project = projects[_projectId];
 
@@ -133,11 +134,11 @@ contract AMM is Projects {
 		if (_tokenX == weth) {
 			require(_amountX == 0 && _amountY > 0 && msg.value > 0, 'invalid amount state');
 
-			IWETH(weth).deposit{ value: msg.value }();
+			IWETH(weth).deposit{value : msg.value}();
 			assert(IWETH(weth).transfer(pool, msg.value));
 
-        	uint quoteAmountY = msg.value * reserveY / reserveX;
-			
+			uint quoteAmountY = msg.value * reserveY / reserveX;
+
 			IProjectTokenERC20(_tokenY).safeTransferFrom(
 				msg.sender,
 				pool,
@@ -147,10 +148,10 @@ contract AMM is Projects {
 		} else if (_tokenY == weth) {
 			require(_amountY == 0 && _amountX > 0 && msg.value > 0, 'invalid amount state');
 
-			IWETH(weth).deposit{ value: msg.value }();
+			IWETH(weth).deposit{value : msg.value}();
 			assert(IWETH(weth).transfer(pool, msg.value));
 
-        	uint quoteAmountX = msg.value * reserveX / reserveY;
+			uint quoteAmountX = msg.value * reserveX / reserveY;
 
 			IProjectTokenERC20(_tokenX).safeTransferFrom(
 				msg.sender,
@@ -194,7 +195,7 @@ contract AMM is Projects {
 		);
 		(uint _amountX, uint _amountY) = IPool(pool).burnLP(msg.sender);
 		(address tokenX,) = PoolHelpers.sortTokens(_tokenX, _tokenY);
-        (amountX, amountY) = address(_tokenX) != address(tokenX) ? (_amountY, _amountX) : (_amountX, _amountY);
+		(amountX, amountY) = address(_tokenX) != address(tokenX) ? (_amountY, _amountX) : (_amountX, _amountY);
 	}
 
 	function swap(address _tokenIn, address _tokenOut, uint _amount) external payable {
@@ -205,7 +206,7 @@ contract AMM is Projects {
 
 		if (_tokenIn == weth) {
 			require(_amount == 0 && msg.value > 0, 'invalid amount state');
-			IWETH(weth).deposit{ value: msg.value }();
+			IWETH(weth).deposit{value : msg.value}();
 			assert(IWETH(weth).transfer(pool, msg.value));
 		} else {
 			require(msg.value == 0 && _amount > 0, 'invalid amount state');
@@ -222,23 +223,29 @@ contract AMM is Projects {
 	function computeTokenShares(
 		uint40 _totalSupply
 	)
-		private
-		pure
-		returns (
-			uint40 partnerTokenShares,
-			uint40 investorsTokenShares,
-			uint40 poolTokenShares,
-			uint40 fansSocietyTokenShares
-		)
+	private
+	pure
+	returns (
+		uint40 partnerTokenShares,
+		uint40 investorsTokenShares,
+		uint40 poolTokenShares,
+		uint40 fansSocietyTokenShares
+	)
 	{
-		partnerTokenShares = (_totalSupply * 200) / 1000; // 20%
-		investorsTokenShares =  (_totalSupply * 490) / 1000; // 49%
-		poolTokenShares = (_totalSupply * 180) / 1000; // 18%
-		fansSocietyTokenShares = (_totalSupply * 130) / 1000; // 13%
+		partnerTokenShares = (_totalSupply * 200) / 1000;
+		// 20%
+		investorsTokenShares = (_totalSupply * 490) / 1000;
+		// 49%
+		poolTokenShares = (_totalSupply * 180) / 1000;
+		// 18%
+		fansSocietyTokenShares = (_totalSupply * 130) / 1000;
+		// 13%
 	}
 
 	function computeFundsShares(uint _funds) private pure returns (uint poolFundsShares, uint partnerFundsShares) {
-		poolFundsShares = (_funds * 100) / 1000; // 10%
-		partnerFundsShares = (_funds * 900) / 1000; // 90%
+		poolFundsShares = (_funds * 100) / 1000;
+		// 10%
+		partnerFundsShares = (_funds * 900) / 1000;
+		// 90%
 	}
 }

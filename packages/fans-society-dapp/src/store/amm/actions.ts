@@ -58,6 +58,7 @@ export interface IProjectDetailCapabilities {
 	$canValidate?: boolean;
 	$canCommit?: boolean;
 	$canWithdraw?: boolean;
+	$canClaim?: boolean;
 }
 
 export enum ProjectStatus {
@@ -71,6 +72,7 @@ export interface IProjectListItem {
 	id: string;
 	name: string;
 	description: string;
+	symbol: string;
 	target: number;
 	minInvest: number;
 	maxInvest: number;
@@ -83,6 +85,8 @@ export interface IProjectDetail {
 	id: string;
 	name: string;
 	description: string;
+	avatarImageUrl: string;
+	coverImageUrl: string;
 	symbol: string;
 	target: number;
 	minInvest: number;
@@ -91,6 +95,20 @@ export interface IProjectDetail {
 	partnerAddress: string;
 	status: ProjectStatus;
 	$capabilities: IProjectDetailCapabilities;
+}
+
+export interface ITokenListItem {
+	id: string;
+	name: string;
+	description: string;
+	symbol: string;
+}
+
+export interface ITokenDetail {
+	id: string;
+	name: string;
+	description: string;
+	symbol: string;
 }
 
 export interface IProjectStatusChangedEvent {
@@ -116,6 +134,13 @@ export interface IProjectClaim {
 	amount: number;
 }
 
+export interface ITokenCreated {
+	projectId: string;
+	address: string;
+	name: string;
+	symbol: string;
+}
+
 export interface IListMyProjectCommitmentsParams {
 	projectId?: string;
 }
@@ -134,6 +159,10 @@ export const LIST_PROJECTS = createAsyncAction(
 
 export const PROJECT_ADDED = createAction('PROJECT_ADDED', (action) => {
 	return (project: IProjectListItem) => action(project);
+});
+
+export const TOKEN_ADDED = createAction('TOKEN_ADDED', (action) => {
+	return (project: ITokenCreated) => action(project);
 });
 
 export const CREATE_PROJECT = createAsyncAction(

@@ -51,9 +51,7 @@ export default ({
 					color={'primary'}
 					onClick={() => {
 						dispatch(LAUNCH_PROJECT.request(projectId));
-
 						setDialogVisible(false);
-						navigate(Routes.PROJECT_LIST);
 					}}
 				>
 					Ok
