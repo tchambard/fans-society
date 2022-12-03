@@ -23,20 +23,22 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		wethTokenAddress = '';
 	}
 
-	const { address: projectTokenFactoryAddress } = await deploy(
-		'ProjectTokenFactory',
-		{
-			from: deployer,
-			log: true,
-			autoMine: true,
-		},
-	);
-
-	const { address: poolFactoryAddress } = await deploy('PoolFactory', {
+	const projectTokenImplementation = await deploy('ProjectTokenERC20', {
+		from: deployer,
+	});
+	const projectTokenFactory = await deploy('ProjectTokenFactory', {
 		from: deployer,
 		log: true,
 		autoMine: true,
-		args: [fansSocietyAddress],
+		args: [projectTokenImplementation.address],
+	});
+
+	const poolImplementation = await deploy('Pool', { from: deployer });
+	const poolFactory = await deploy('PoolFactory', {
+		from: deployer,
+		log: true,
+		autoMine: true,
+		args: [poolImplementation.address, fansSocietyAddress],
 	});
 
 	await deploy('AMM', {
@@ -46,8 +48,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		args: [
 			fansSocietyAddress,
 			wethTokenAddress,
-			projectTokenFactoryAddress,
-			poolFactoryAddress,
+			projectTokenFactory.address,
+			poolFactory.address,
 		],
 	});
 };
