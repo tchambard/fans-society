@@ -1,39 +1,39 @@
-import { useTheme } from '@mui/material';
-
 import { useSelector } from 'react-redux';
 
 import { RootState } from 'state-types';
 
-import SuspenseLoader from 'src/components/SuspenseLoader';
 import { Routes } from 'src/router';
-import ProjectWrapper from '../../../../components/ProjectWrapper/index';
-import ProjectActions from 'src/content/projects/components/detail/ProjectActions';
+import SuspenseLoader from 'src/components/SuspenseLoader';
+import ProjectWrapper from 'src/components/ProjectWrapper';
+import TokenSwap from './TokenSwap';
 
 export default ({}) => {
-	const theme = useTheme();
+	const { currentToken, pools } = useSelector((state: RootState) => state.amm);
 
-	const { currentProject, commitments } = useSelector(
-		(state: RootState) => state.amm,
-	);
-
-	if (!currentProject.item || currentProject.loading) {
+	if (!currentToken.item || currentToken.loading || pools.loading) {
 		return <SuspenseLoader />;
 	}
 
+	const poolAddress = currentToken.poolIds[0];
+	const pool = poolAddress && pools.items[poolAddress];
+
 	return (
 		<ProjectWrapper
-			name={currentProject.item.name}
-			description={currentProject.item.description}
+			name={currentToken.item.name}
+			description={currentToken.item.description}
 			linkBackRoute={Routes.TOKEN_LIST}
-			avatarImageUrl={currentProject.item.avatarImageUrl}
-			coverImageUrl={currentProject.item.coverImageUrl}
-			actions={
-				<ProjectActions
-					projectId={currentProject.item.id}
-					capabilities={currentProject.item.$capabilities}
-				/>
+			avatarImageUrl={currentToken.item.avatarImageUrl}
+			coverImageUrl={currentToken.item.coverImageUrl}
+			content={
+				<>
+					<TokenSwap
+						tokenX={pool?.tokenX.address}
+						tokenY={pool?.tokenY.address}
+						symbolX={pool?.tokenX.symbol}
+						symbolY={pool?.tokenY.symbol}
+					/>
+				</>
 			}
-			content={<>TODO</>}
 		/>
 	);
 };

@@ -98,14 +98,7 @@ export interface IProjectDetail {
 }
 
 export interface ITokenListItem {
-	id: string;
-	name: string;
-	description: string;
-	symbol: string;
-}
-
-export interface ITokenDetail {
-	id: string;
+	projectId: string;
 	name: string;
 	description: string;
 	symbol: string;
@@ -139,6 +132,39 @@ export interface ITokenCreated {
 	address: string;
 	name: string;
 	symbol: string;
+}
+
+export interface ITokenDetail {
+	projectId: string;
+	address: string;
+	symbol: string;
+	name: string;
+	description: string;
+	avatarImageUrl: string;
+	coverImageUrl: string;
+}
+
+export interface IListPoolsParams {
+	token?: string;
+}
+
+export interface IPoolInfo {
+	poolAddress: string;
+	tokenX: {
+		address: string;
+		name: string;
+		symbol: string;
+	};
+	tokenY: {
+		address: string;
+		name: string;
+		symbol: string;
+	};
+}
+
+export interface IListPoolsResult {
+	token?: string;
+	pools: IPoolInfo[];
 }
 
 export interface IListMyProjectCommitmentsParams {
@@ -238,6 +264,18 @@ export const LAUNCH_PROJECT = createAsyncAction(
 	'LAUNCH_PROJECT_SUCCESS',
 	'LAUNCH_PROJECT_FAILURE',
 )<string, void, string>();
+
+export const GET_TOKEN = createAsyncAction(
+	'GET_TOKEN_REQUEST',
+	'GET_TOKEN_SUCCESS',
+	'GET_TOKEN_FAILURE',
+)<string, ITokenDetail, string>();
+
+export const LIST_POOLS = createAsyncAction(
+	'LIST_POOLS_REQUEST',
+	'LIST_POOLS_SUCCESS',
+	'LIST_POOLS_FAILURE',
+)<IListPoolsParams, IListPoolsResult, string>();
 
 export const PROJECT_STATUS_CHANGED = createAction(
 	'PROJECTS_STATUS_CHANGED',

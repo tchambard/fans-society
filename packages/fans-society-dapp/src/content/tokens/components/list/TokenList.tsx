@@ -17,7 +17,6 @@ import * as _ from 'lodash';
 
 import { RootState } from 'state-types';
 
-import PageTitleWrapper from 'src/components/PageTitleWrapper';
 import SuspenseLoader from 'src/components/SuspenseLoader';
 
 export default () => {
@@ -55,9 +54,9 @@ export default () => {
 									<TableBody>
 										{_.map(tokens.items, (token) => {
 											return (
-												<TableRow hover key={token.id}>
+												<TableRow hover key={token.projectId}>
 													<TableCell>
-														<Link to={`/tokens/${token.id}`}>
+														<Link to={`/tokens/${token.projectId}`}>
 															<Typography
 																variant={'body1'}
 																fontWeight={'bold'}

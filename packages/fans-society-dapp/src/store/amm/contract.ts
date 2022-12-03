@@ -20,18 +20,48 @@ export async function getAMMContract(web3: Web3): Promise<contracts.AMM> {
 	) as unknown as contracts.AMM;
 }
 
-export async function getTokensFactoryContract(web3: Web3): Promise<contracts.tokens.ProjectTokenFactory> {
-	const contractInfo = await getContractInfo(web3, imports, 'ProjectTokenFactory');
+export async function getTokensFactoryContract(
+	web3: Web3,
+): Promise<contracts.tokens.ProjectTokenFactory> {
+	const contractInfo = await getContractInfo(
+		web3,
+		imports,
+		'ProjectTokenFactory',
+	);
 	return new web3.eth.Contract(
 		contractInfo.abi,
 		contractInfo.address,
 	) as unknown as contracts.tokens.ProjectTokenFactory;
 }
 
-export async function getPoolFactoryContract(web3: Web3): Promise<contracts.pools.PoolFactory> {
+export async function getTokenContract(
+	web3: Web3,
+	address: string,
+): Promise<contracts.tokens.ProjectTokenERC20> {
+	const contractInfo = await getContractInfo(web3, imports, 'ProjectTokenERC20');
+	return new web3.eth.Contract(
+		contractInfo.abi,
+		address,
+	) as unknown as contracts.tokens.ProjectTokenERC20;
+}
+
+export async function getPoolFactoryContract(
+	web3: Web3,
+): Promise<contracts.pools.PoolFactory> {
 	const contractInfo = await getContractInfo(web3, imports, 'PoolFactory');
 	return new web3.eth.Contract(
 		contractInfo.abi,
 		contractInfo.address,
 	) as unknown as contracts.pools.PoolFactory;
+}
+
+export async function getPoolContract(
+	web3: Web3,
+	address: string,
+): Promise<contracts.pools.Pool> {
+	const contractInfo = await getContractInfo(web3, imports, 'Pool');
+	return new web3.eth.Contract(
+		contractInfo.abi,
+		address,
+	) as unknown as contracts.pools.Pool;
 }

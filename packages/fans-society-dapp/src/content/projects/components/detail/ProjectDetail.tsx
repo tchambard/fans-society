@@ -59,7 +59,7 @@ export default ({}) => {
 			content={
 				<>
 					{currentProject.item.status < ProjectStatus.Launched && (
-						<Box py={2} pl={2} mb={3}>
+						<>
 							<Box>
 								<div style={{ color: theme.palette.text.secondary }}>
 									Minimum invest amount
@@ -99,7 +99,7 @@ export default ({}) => {
 									{commitments.items[currentProject.item.id] || 0} ETH
 								</div>
 							</Box>
-						</Box>
+						</>
 					)}
 					{currentProject.item.status === ProjectStatus.Launched && <div>TODO</div>}
 				</>
