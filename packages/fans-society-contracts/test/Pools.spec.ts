@@ -236,7 +236,7 @@ contract('Pools', (accounts) => {
 					from: user2,
 				});
 
-				const receipt = await poolInstance.swap(tokenX.address, user2, {
+				const receipt = await poolInstance.swap(tokenX.address, {
 					from: user2,
 				});
 
@@ -255,8 +255,7 @@ contract('Pools', (accounts) => {
 					reserveY: amountY.sub(BN(expectedAmountOut)),
 				});
 
-				await expectEvent(receipt, 'Swap', {
-					caller: user2,
+				await expectEvent(receipt, 'PoolSwapped', {
 					tokenIn: tokenX.address,
 					amountIn: amountIn,
 					tokenOut: tokenY.address,

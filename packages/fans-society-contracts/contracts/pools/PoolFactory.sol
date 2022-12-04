@@ -1,30 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { Address } from '@openzeppelin/contracts/utils/Address.sol';
-import { Clones } from '@openzeppelin/contracts/proxy/Clones.sol';
-import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
+import {Address} from '@openzeppelin/contracts/utils/Address.sol';
+import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
-import { IPoolFactory } from './interfaces/IPoolFactory.sol';
-import { Pool } from './Pool.sol';
-import { PoolHelpers } from './PoolHelpers.sol';
-import { IPool } from './interfaces/IPool.sol';
+import {IPoolFactory} from './interfaces/IPoolFactory.sol';
+import {Pool} from './Pool.sol';
+import {PoolHelpers} from './PoolHelpers.sol';
+import {IPool} from './interfaces/IPool.sol';
 
 contract PoolFactory is IPoolFactory, Ownable {
 	address private immutable fansSocietyAddress;
 
-	address private immutable implementation;
+	address private immutable poolImplementationAddress;
 
-	/**
-	 * @dev tokenPools mapping allow to retrieve all pools addresses corresponding to a specific token
-	 */
-	mapping(address => address[]) private tokenPools;
+	event PoolCreated(address indexed pool, address indexed tokenX, address indexed tokenY);
 
-	event PoolCreated(address pool, address tokenX, address token2);
-
-	constructor(address _fansSocietyAddress) {
+	constructor(address _poolImplementationAddress, address _fansSocietyAddress) {
 		fansSocietyAddress = _fansSocietyAddress;
-		implementation = address(new Pool());
+		poolImplementationAddress = _poolImplementationAddress;
 	}
 
 	function createPool(
@@ -32,7 +27,7 @@ contract PoolFactory is IPoolFactory, Ownable {
 		address _tokenX,
 		address _tokenY
 	) public returns (address poolAddress) {
-		(address tokenX, address token2, bytes32 salt) = PoolHelpers.computePoolSalt(
+		(address tokenX, address tokenY, bytes32 salt) = PoolHelpers.computePoolSalt(
 			_tokenX,
 			_tokenY
 		);
@@ -41,21 +36,11 @@ contract PoolFactory is IPoolFactory, Ownable {
 			'not contract'
 		);
 
-		poolAddress = Clones.cloneDeterministic(implementation, salt);
-		Pool(poolAddress).initialize(_amm, fansSocietyAddress, tokenX, token2);
+		poolAddress = Clones.cloneDeterministic(poolImplementationAddress, salt);
+		Pool(poolAddress).initialize(_amm, fansSocietyAddress, tokenX, tokenY);
 
-		tokenPools[tokenX].push(poolAddress);
-		tokenPools[token2].push(poolAddress);
-
-		emit PoolCreated(poolAddress, tokenX, token2);
+		emit PoolCreated(poolAddress, tokenX, tokenY);
 		return (poolAddress);
-	}
-
-	function getTokenPools(
-		address _token
-	) external view returns (address[] memory) {
-		require(tokenPools[_token].length != 0, 'no pool found');
-		return tokenPools[_token];
 	}
 
 	function getPool(
@@ -63,6 +48,6 @@ contract PoolFactory is IPoolFactory, Ownable {
 		address _tokenY
 	) external view returns (address pool) {
 		(, , bytes32 salt) = PoolHelpers.computePoolSalt(_tokenX, _tokenY);
-		return Clones.predictDeterministicAddress(implementation, salt);
+		return Clones.predictDeterministicAddress(poolImplementationAddress, salt);
 	}
 }

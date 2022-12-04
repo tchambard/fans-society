@@ -23,16 +23,18 @@ export interface IDynamicContractImportDefinitions {
 }
 
 export const NETWORKS = {
-	1: 'mainnet',
 	5: 'goerli',
 	1337: 'localhost',
 };
 
-export async function getContractInfo(
+export const WETH_ADDRESSES: any = {
+	goerli: '', // TODO
+};
+
+export async function getNetworkInfo(
 	web3: Web3,
 	importsDefinition: IDynamicContractImportDefinitions,
-	contractName: string,
-): Promise<IContractInfo> {
+) {
 	const networkId = await web3.eth.net.getId();
 	const networkAlias = NETWORKS[networkId];
 	if (!networkAlias) {
@@ -42,6 +44,15 @@ export async function getContractInfo(
 	if (!networkInfo) {
 		throw new Error(`Network ${networkAlias} not supported`);
 	}
+	return networkInfo;
+}
+
+export async function getContractInfo(
+	web3: Web3,
+	importsDefinition: IDynamicContractImportDefinitions,
+	contractName: string,
+): Promise<IContractInfo> {
+	const networkInfo = await getNetworkInfo(web3, importsDefinition);
 	const contractInfo = networkInfo.contracts[contractName];
 	if (!contractInfo) {
 		throw new Error(`Unknown contract ${contractName}`);

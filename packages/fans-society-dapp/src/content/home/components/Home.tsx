@@ -47,7 +47,7 @@ export default () => {
 					</Grid>
 					<Grid item xs={12} md={4}>
 						<Card sx={{ maxWidth: 400 }}>
-							<Link to={Routes.PROJECT_LIST}>
+							<Link to={Routes.TOKEN_LIST}>
 								<CardActionArea>
 									<CardMedia
 										component="img"
@@ -69,7 +69,7 @@ export default () => {
 					</Grid>
 					<Grid item xs={12} md={4}>
 						<Card sx={{ maxWidth: 400 }}>
-							<Link to={Routes.PROJECT_LIST}>
+							<Link to={Routes.DASHBOARD}>
 								<CardActionArea>
 									<CardMedia
 										component="img"

@@ -7,12 +7,12 @@ import {IProjectTokenFactory} from './interfaces/IProjectTokenFactory.sol';
 import {ProjectTokenERC20} from './ProjectTokenERC20.sol';
 
 contract ProjectTokenFactory is IProjectTokenFactory {
-	address private immutable implementation;
+	address private immutable tokenImplementationAddress;
 
 	event TokenCreated(uint256 projectId, address token, string name, string symbol);
 
-	constructor() {
-		implementation = address(new ProjectTokenERC20());
+	constructor(address _tokenImplementationAddress) {
+		tokenImplementationAddress = _tokenImplementationAddress;
 	}
 
 	function createToken(
@@ -23,7 +23,7 @@ contract ProjectTokenFactory is IProjectTokenFactory {
 		uint40 _totalSupply,
 		uint40 _initialSupply
 	) public returns (address) {
-		address token = Clones.clone(implementation);
+		address token = Clones.clone(tokenImplementationAddress);
 		ProjectTokenERC20(token).initialize(
 			_name,
 			_symbol,

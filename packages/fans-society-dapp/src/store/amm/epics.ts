@@ -3,11 +3,7 @@ import { Epic } from 'redux-observable';
 import { filter, mergeMap } from 'rxjs/operators';
 import { isActionOf } from 'typesafe-actions';
 
-import {
-	Committed,
-	ProjectCreated,
-	Withdrawed,
-} from 'fans-society-contracts/types/web3/contracts/AMM';
+import { ProjectCreated } from 'fans-society-contracts/types/web3/contracts/AMM';
 import { RootAction, RootState, Services } from 'state-types';
 
 import { findRpcMessage } from 'src/eth-network/helpers';
@@ -17,27 +13,35 @@ import {
 	COMMIT_ON_PROJECT,
 	CREATE_PROJECT,
 	GET_PROJECT,
+	GET_TOKEN,
 	IProjectDetail,
 	IProjectListItem,
+	ITokenDetail,
 	LAUNCH_PROJECT,
 	LIST_MY_PROJECT_COMMITMENTS,
 	LIST_PROJECTS,
+	LIST_POOLS,
 	LOAD_CONTRACTS_INFO,
 	ProjectStatus,
 	WITHDRAW_ON_PROJECT,
+	IPoolInfo,
+	SWAP,
+	GET_TOKEN_BALANCE,
 } from './actions';
 import {
 	getAMMContract,
 	getPoolFactoryContract,
+	getTokenContract,
 	getTokensFactoryContract,
+	getWethAddress,
 } from './contract';
+import { PoolCreated } from 'fans-society-contracts/types/web3/contracts/pools/PoolFactory';
+import { TokenCreated } from 'fans-society-contracts/types/web3/contracts/tokens/ProjectTokenFactory';
 
-export const loadContractsInfo: Epic<
-	RootAction,
+export const loadContractsInfo: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3, logger }) => {
+	Services> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(LOAD_CONTRACTS_INFO.request)),
 		mergeMap(async () => {
@@ -121,12 +125,10 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 	);
 };
 
-export const createProject: Epic<
-	RootAction,
+export const createProject: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3 }) => {
+	Services> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(CREATE_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -251,12 +253,10 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 	);
 };
 
-export const commitOnProject: Epic<
-	RootAction,
+export const commitOnProject: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3 }) => {
+	Services> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(COMMIT_ON_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -279,12 +279,10 @@ export const commitOnProject: Epic<
 	);
 };
 
-export const withdrawOnProject: Epic<
-	RootAction,
+export const withdrawOnProject: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3 }) => {
+	Services> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(WITHDRAW_ON_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -305,12 +303,10 @@ export const withdrawOnProject: Epic<
 	);
 };
 
-export const listMyProjectCommitments: Epic<
-	RootAction,
+export const listMyProjectCommitments: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3, logger }) => {
+	Services> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(LIST_MY_PROJECT_COMMITMENTS.request)),
 		mergeMap(async (action) => {
@@ -321,21 +317,22 @@ export const listMyProjectCommitments: Epic<
 				}
 				const contract = state$.value.amm.contracts.amm.contract;
 
-				const commits = await contract.getPastEvents('Committed', {
-					fromBlock: 0,
-					filter: {
-						projectId: action.payload.projectId,
-						caller: account,
-					},
-				});
-				const withdrawals = await contract.getPastEvents('Withdrawed', {
-					fromBlock: 0,
-					filter: {
-						projectId: action.payload.projectId,
-						caller: account,
-					},
-				});
-
+				const [commits, withdrawals] = await Promise.all([
+					contract.getPastEvents('Committed', {
+						fromBlock: 0,
+						filter: {
+							projectId: action.payload.projectId,
+							caller: account,
+						},
+					}),
+					contract.getPastEvents('Withdrawed', {
+						fromBlock: 0,
+						filter: {
+							projectId: action.payload.projectId,
+							caller: account,
+						},
+					}),
+				]);
 				const orderedEvents = _.sortBy([...commits, ...withdrawals], 'blockNumber');
 				const commitments: { [id: string]: number } = orderedEvents.reduce(
 					(acc, _event) => {
@@ -359,12 +356,10 @@ export const listMyProjectCommitments: Epic<
 	);
 };
 
-export const launchProject: Epic<
-	RootAction,
+export const launchProject: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3 }) => {
+	Services> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(LAUNCH_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -380,6 +375,181 @@ export const launchProject: Epic<
 			} catch (e) {
 				loggerService.log(e.message);
 				return LAUNCH_PROJECT.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const getToken: Epic<RootAction, RootAction, RootState, Services> = (
+	action$,
+	state$,
+	{ web3, logger },
+) => {
+	return action$.pipe(
+		filter(isActionOf(GET_TOKEN.request)),
+		mergeMap(async (action) => {
+			try {
+				const projectId = action.payload;
+
+				const ammContract = state$.value.amm.contracts.amm.contract;
+				const tokenFactoryContract =
+					state$.value.amm.contracts.tokensFactory.contract;
+
+				const [project, [tokenEvent]] = await Promise.all([
+					ammContract.methods.projects(projectId).call(),
+					tokenFactoryContract.getPastEvents('TokenCreated', {
+						fromBlock: 0,
+						filter: {
+							projectId,
+						},
+					}),
+				]);
+
+				const token: ITokenDetail = {
+					projectId,
+					address: (tokenEvent as unknown as TokenCreated).returnValues.token,
+					name: project.name,
+					description: project.description,
+					symbol: project.symbol,
+					avatarImageUrl:
+						'https://cdn.dribbble.com/users/588874/screenshots/2249528/media/dfc765104b15b69fab7a6363fd523d33.png?compress=1&resize=768x576&vertical=top',
+					coverImageUrl:
+						'http://www.thegrandtest.com/wp-content/uploads/2018/05/Star-Wars-Les-Derniers-Jedi.jpg',
+				};
+				logger.log('=== Token found ===\n', JSON.stringify(token, null, 2));
+				return GET_TOKEN.success(token);
+			} catch (e) {
+				loggerService.log(e.message);
+				return GET_TOKEN.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const listTokenPools: Epic<RootAction,
+	RootAction,
+	RootState,
+	Services> = (action$, state$, { web3, logger }) => {
+	return action$.pipe(
+		filter(isActionOf(LIST_POOLS.request)),
+		mergeMap(async (action) => {
+			try {
+				const { token } = action.payload;
+				const contract = state$.value.amm.contracts.poolsFactory.contract;
+				const wethAddress = await getWethAddress(web3);
+
+				const [poolsEvents, poolsEventsReverse] = await Promise.all([
+					contract.getPastEvents('PoolCreated', {
+						fromBlock: 0,
+						filter: { tokenX: token },
+					}),
+					contract.getPastEvents('PoolCreated', {
+						fromBlock: 0,
+						filter: { tokenY: token },
+					}),
+				]);
+				const pools: IPoolInfo[] = await Promise.all(
+					[...poolsEvents, ...poolsEventsReverse].flatMap(async (event) => {
+						const { returnValues: v } = event as unknown as PoolCreated;
+						const tokenYAddress = v.tokenX === token ? v.tokenY : v.tokenX;
+
+						const contractX = await getTokenContract(web3, token);
+						const contractY = await getTokenContract(web3, tokenYAddress);
+						const [nameX, symbolX, nameY, symbolY] = await Promise.all([
+							contractX.methods.name().call(),
+							contractX.methods.symbol().call(),
+							contractY.methods.name().call(),
+							contractY.methods.symbol().call(),
+						]);
+						return {
+							poolAddress: v.pool,
+							tokenX: {
+								address: token,
+								name: wethAddress === token ? 'Ethereum' : nameX,
+								symbol: wethAddress === token ? 'ETH' : symbolX,
+							},
+							tokenY: {
+								address: tokenYAddress,
+								name: wethAddress === tokenYAddress ? 'Ethereum' : nameY,
+								symbol: wethAddress === tokenYAddress ? 'ETH' : symbolY,
+							},
+						} as IPoolInfo;
+					}),
+				);
+
+				logger.log('=== pools ===');
+				logger.table(pools);
+				return LIST_POOLS.success({ token, pools });
+			} catch (e) {
+				loggerService.log(e.message);
+				return LIST_POOLS.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const swap: Epic<RootAction, RootAction, RootState, Services> = (
+	action$,
+	state$,
+	{ web3 },
+) => {
+	return action$.pipe(
+		filter(isActionOf(SWAP.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				const contract = state$.value.amm.contracts.amm.contract;
+				const wethAddress = await getWethAddress(web3);
+
+				const { tokenIn, tokenOut, amountIn } = action.payload;
+
+				const value =
+					tokenIn === wethAddress
+						? web3.utils.toWei(amountIn.toString(), 'ether')
+						: undefined;
+
+				await contract.methods
+					.swap(tokenIn, tokenOut, value == null ? amountIn : 0)
+					.send({ from: account, value });
+
+				return SWAP.success();
+			} catch (e) {
+				loggerService.log(e.message);
+				return SWAP.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const getTokenBalance: Epic<RootAction,
+	RootAction,
+	RootState,
+	Services> = (action$, state$, { web3, logger }) => {
+	return action$.pipe(
+		filter(isActionOf(GET_TOKEN_BALANCE.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				const tokenAddress = action.payload;
+				const contract = await getTokenContract(web3, tokenAddress);
+				const wethAddress = await getWethAddress(web3);
+				const balance =
+					tokenAddress === wethAddress
+						? web3.utils.fromWei(
+							(await web3.eth.getBalance(account)).toString(),
+							'ether',
+						)
+						: await contract.methods.balanceOf(account).call();
+
+				logger.log('=== Token balance ===', tokenAddress, balance);
+				// here there is a trick: balance of weth address is not correct as we got eth balance
+				return GET_TOKEN_BALANCE.success({
+					address: tokenAddress,
+					balance: +balance,
+				});
+			} catch (e) {
+				loggerService.log(e.message);
+				return GET_TOKEN_BALANCE.failure(findRpcMessage(e));
 			}
 		}),
 	);

@@ -5,20 +5,23 @@ import { SET_CURRENT_ACCOUNT } from 'src/eth-network/actions';
 import {
 	ABORT_PROJECT,
 	ADD_PROJECT_COMMITMENT,
-	CLEAR_PROJECTS_TX_ERROR,
+	CLEAR_TX_ERROR,
 	COMMIT_ON_PROJECT,
 	CREATE_PROJECT,
 	GET_PROJECT,
+	GET_TOKEN,
 	IAMMContractInfo,
 	IPoolsFactoryContractInfo,
 	IProjectDetail,
 	IProjectListCapabilities,
 	IProjectListItem,
+	ITokenDetail,
 	ITokenListItem,
 	ITokensFactoryContractInfo,
 	LAUNCH_PROJECT,
 	LIST_MY_PROJECT_COMMITMENTS,
 	LIST_PROJECTS,
+	LIST_POOLS,
 	LOAD_CONTRACTS_INFO,
 	PROJECT_ADDED,
 	PROJECT_STATUS_CHANGED,
@@ -26,6 +29,9 @@ import {
 	REMOVE_PROJECT_COMMITMENT,
 	TOKEN_ADDED,
 	WITHDRAW_ON_PROJECT,
+	IPoolInfo,
+	SWAP,
+	GET_TOKEN_BALANCE,
 } from './actions';
 
 export interface IProjectsState {
@@ -43,15 +49,23 @@ export interface IProjectsState {
 		$capabilities: IProjectListCapabilities;
 		loading: boolean;
 	};
+	currentProject: { item?: IProjectDetail; loading: boolean };
 	commitments: {
 		items: { [id: string]: number };
 		loading: boolean;
 	};
 	tokens: {
-		items: { [id: string]: ITokenListItem };
+		items: { [address: string]: ITokenListItem };
 		loading: boolean;
 	};
-	currentProject: { item?: IProjectDetail; loading: boolean };
+	currentToken: { item?: ITokenDetail; poolIds: string[]; loading: boolean };
+	pools: {
+		items: { [address: string]: IPoolInfo };
+		loading: boolean;
+	};
+	balances: {
+		[address: string]: { balance: number; loading: boolean };
+	};
 	txPending: boolean;
 	error?: string;
 }
@@ -61,9 +75,12 @@ const initialState: IProjectsState = {
 		loading: false,
 	},
 	projects: { items: {}, $capabilities: {}, loading: false },
+	currentProject: { loading: false },
 	commitments: { items: {}, loading: false },
 	tokens: { items: {}, loading: false },
-	currentProject: { loading: false },
+	currentToken: { loading: false, poolIds: [] },
+	pools: { items: {}, loading: false },
+	balances: {},
 	txPending: false,
 };
 
@@ -164,7 +181,7 @@ export default createReducer(initialState)
 			action.payload.forEach((p) => {
 				if (p.status === ProjectStatus.Launched) {
 					tokens[p.id] = {
-						id: p.id,
+						projectId: p.id,
 						name: p.name,
 						description: p.description,
 						symbol: p.symbol,
@@ -233,9 +250,9 @@ export default createReducer(initialState)
 				tokens: {
 					...state.projects,
 					items: {
-						...state.projects.items,
+						...state.tokens.items,
 						[projectId]: {
-							id: projectId,
+							projectId,
 							name: action.payload.name,
 							description: tokenProject.description,
 							symbol: action.payload.symbol,
@@ -253,6 +270,7 @@ export default createReducer(initialState)
 			LAUNCH_PROJECT.request,
 			COMMIT_ON_PROJECT.request,
 			WITHDRAW_ON_PROJECT.request,
+			SWAP.request,
 		],
 		(state: IProjectsState): IProjectsState => {
 			return {
@@ -269,6 +287,7 @@ export default createReducer(initialState)
 			LAUNCH_PROJECT.failure,
 			COMMIT_ON_PROJECT.failure,
 			WITHDRAW_ON_PROJECT.failure,
+			SWAP.failure,
 		],
 		(
 			state: IProjectsState,
@@ -289,6 +308,7 @@ export default createReducer(initialState)
 			LAUNCH_PROJECT.success,
 			COMMIT_ON_PROJECT.success,
 			WITHDRAW_ON_PROJECT.success,
+			SWAP.success,
 		],
 		(state: IProjectsState): IProjectsState => {
 			return {
@@ -336,7 +356,6 @@ export default createReducer(initialState)
 		): IProjectsState => {
 			return {
 				...state,
-				txPending: false,
 				currentProject: {
 					item: action.payload,
 					loading: false,
@@ -457,6 +476,165 @@ export default createReducer(initialState)
 		},
 	)
 
+	.handleAction([GET_TOKEN.request], (state: IProjectsState): IProjectsState => {
+		return {
+			...state,
+			currentToken: {
+				item: undefined,
+				loading: true,
+				poolIds: [],
+			},
+		};
+	})
+
+	.handleAction(
+		[GET_TOKEN.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof GET_TOKEN.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				currentToken: {
+					...state.currentToken,
+					loading: false,
+				},
+				error: action.payload,
+			};
+		},
+	)
+
+	.handleAction(
+		[GET_TOKEN.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof GET_TOKEN.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				currentToken: {
+					...state.currentToken,
+					item: action.payload,
+					loading: false,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[GET_TOKEN_BALANCE.request],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof GET_TOKEN_BALANCE.request>,
+		): IProjectsState => {
+			return {
+				...state,
+				balances: {
+					...state.balances,
+					[action.payload]: {
+						...state.balances[action.payload],
+						loading: true,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[GET_TOKEN_BALANCE.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof GET_TOKEN_BALANCE.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				balances: {
+					...state.balances,
+					[action.payload]: {
+						balance: undefined,
+						loading: false,
+					},
+				},
+				error: action.payload,
+			};
+		},
+	)
+
+	.handleAction(
+		[GET_TOKEN_BALANCE.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof GET_TOKEN_BALANCE.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				balances: {
+					...state.balances,
+					[action.payload.address]: {
+						balance: action.payload.balance,
+						loading: false,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_POOLS.request],
+		(state: IProjectsState): IProjectsState => {
+			return {
+				...state,
+				pools: {
+					items: {},
+					loading: true,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_POOLS.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof LIST_POOLS.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				pools: {
+					...state.pools,
+					loading: false,
+				},
+				error: action.payload,
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_POOLS.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof LIST_POOLS.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				pools: {
+					...state.pools,
+					items: action.payload.pools.reduce((acc, pool) => {
+						if (
+							action.payload.token != null &&
+							action.payload.token === state.currentToken.item?.address
+						) {
+							state.currentToken.poolIds.push(pool.poolAddress);
+						}
+						acc[pool.poolAddress] = pool;
+						return acc;
+					}, {} as { [address: string]: IPoolInfo }),
+					loading: false,
+				},
+			};
+		},
+	)
+
 	.handleAction(
 		[PROJECT_STATUS_CHANGED],
 		(
@@ -512,26 +690,14 @@ export default createReducer(initialState)
 		},
 	)
 
-	.handleAction(
-		[CLEAR_PROJECTS_TX_ERROR],
-		(
-			state: IProjectsState,
-			action: ActionType<typeof CLEAR_PROJECTS_TX_ERROR>,
-		): IProjectsState => {
-			return {
-				...state,
-				error: undefined,
-			};
-		},
-	)
+	.handleAction([CLEAR_TX_ERROR], (state: IProjectsState): IProjectsState => {
+		return {
+			...state,
+			error: undefined,
+		};
+	})
 
-	.handleAction(
-		[SET_CURRENT_ACCOUNT],
-		(
-			state: IProjectsState,
-			action: ActionType<typeof SET_CURRENT_ACCOUNT>,
-		): IProjectsState => {
-			// reset state will force reload of data
-			return initialState;
-		},
-	);
+	.handleAction([SET_CURRENT_ACCOUNT], (): IProjectsState => {
+		// reset state will force reload of data
+		return initialState;
+	});

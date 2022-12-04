@@ -6,7 +6,7 @@ import SuspenseLoader from 'src/components/SuspenseLoader/index';
 import { RootState } from 'state-types';
 
 import {
-	CLEAR_PROJECTS_TX_ERROR,
+	CLEAR_TX_ERROR,
 	LIST_PROJECTS,
 	LOAD_CONTRACTS_INFO,
 	PROJECT_ADDED,
@@ -65,7 +65,7 @@ export default ({ children }: IProjectContainerWrapperProps) => {
 		event?: React.SyntheticEvent | Event,
 		reason?: string,
 	) => {
-		dispatch(CLEAR_PROJECTS_TX_ERROR());
+		dispatch(CLEAR_TX_ERROR());
 	};
 
 	return (

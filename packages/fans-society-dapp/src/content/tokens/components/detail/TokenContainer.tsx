@@ -1,26 +1,11 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router';
 
 import { RootState } from 'state-types';
 
-import { useParams } from 'react-router';
-import {
-	ADD_PROJECT_COMMITMENT,
-	CLAIMED,
-	COMMITED,
-	GET_PROJECT,
-	LIST_MY_PROJECT_COMMITMENTS,
-	PROJECT_STATUS_CHANGED,
-	REMOVE_PROJECT_COMMITMENT,
-	WITHDRAWED,
-} from '../../../../store/amm/actions';
-import {
-	listenClaimed,
-	listenCommitted,
-	listenProjectStatusChanged,
-	listenWithdrawed,
-} from '../../../../store/amm/listeners';
-import ProjectContainerWrapper from '../../../ContentContainerWrapper';
+import ContentContainerWrapper from 'src/content/ContentContainerWrapper';
+import { GET_TOKEN, LIST_POOLS } from 'src/store/amm/actions';
 import ProjectDetail from './TokenDetail';
 
 export default () => {
@@ -30,55 +15,30 @@ export default () => {
 
 	const { account } = useSelector((state: RootState) => state.ethNetwork);
 
-	const { currentProject, contracts } = useSelector(
+	const { currentToken, contracts } = useSelector(
 		(state: RootState) => state.amm,
 	);
 
 	useEffect(() => {
-		let destroyListeners: (() => void)[];
-		if (contracts.amm?.contract) {
+		if (contracts.amm?.contract && contracts.tokensFactory?.contract) {
 			if (
-				currentProject.loading == false &&
-				currentProject.item?.id !== projectId
+				currentToken.loading == false &&
+				currentToken.item?.projectId !== projectId
 			) {
-				dispatch(GET_PROJECT.request(projectId));
-				dispatch(LIST_MY_PROJECT_COMMITMENTS.request({ projectId }));
-			} else {
-				if (currentProject.item != null) {
-					destroyListeners = [
-						listenProjectStatusChanged(
-							contracts.amm,
-							(data) => dispatch(PROJECT_STATUS_CHANGED(data)),
-							projectId,
-						),
-						listenCommitted(contracts.amm, (data) => {
-							dispatch(COMMITED(data));
-							dispatch(GET_PROJECT.request(projectId));
-							if (data.address === account) {
-								dispatch(ADD_PROJECT_COMMITMENT(data));
-							}
-						}),
-						listenWithdrawed(contracts.amm, (data) => {
-							dispatch(WITHDRAWED(data));
-							dispatch(GET_PROJECT.request(projectId));
-							if (data.address === account) {
-								dispatch(REMOVE_PROJECT_COMMITMENT(data));
-							}
-						}),
-						listenClaimed(contracts.amm, (data) => {
-							dispatch(CLAIMED(data));
-							dispatch(GET_PROJECT.request(projectId));
-						}),
-					];
-				}
+				dispatch(GET_TOKEN.request(projectId));
 			}
 		}
-		return () => destroyListeners?.forEach((listener) => listener());
-	}, [contracts.amm, currentProject.item?.id]);
+	}, [contracts.amm, contracts.tokensFactory, currentToken.item?.projectId]);
+
+	useEffect(() => {
+		if (currentToken.item?.address) {
+			dispatch(LIST_POOLS.request({ token: currentToken.item.address }));
+		}
+	}, [currentToken.item?.address]);
 
 	return (
-		<ProjectContainerWrapper>
+		<ContentContainerWrapper>
 			<ProjectDetail />
-		</ProjectContainerWrapper>
+		</ContentContainerWrapper>
 	);
 };

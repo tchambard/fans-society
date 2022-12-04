@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { Initializable } from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
-import { SafeERC20 } from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import { Math } from '@openzeppelin/contracts/utils/math/Math.sol';
+import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
 
-import { IPool } from './interfaces/IPool.sol';
-import { LPTokenERC20 } from './LPTokenERC20.sol';
+import {IPool} from './interfaces/IPool.sol';
+import {LPTokenERC20} from './LPTokenERC20.sol';
 
 import 'hardhat/console.sol';
 
@@ -23,8 +23,7 @@ contract Pool is Initializable, LPTokenERC20 {
 
 	event LPMinted(address indexed provider, uint amountX, uint amountY);
 	event LPBurnt(address indexed provider, uint amountX, uint amountY);
-	event Swap(
-		address indexed caller,
+	event PoolSwapped(
 		address tokenIn,
 		uint amountIn,
 		address tokenOut,
@@ -45,9 +44,9 @@ contract Pool is Initializable, LPTokenERC20 {
 	}
 
 	function getReserves(address _tokenX)
-		public
-		view
-		returns (uint256 _reserveX, uint256 _reserveY)
+	public
+	view
+	returns (uint256 _reserveX, uint256 _reserveY)
 	{
 		require(_tokenX == tokenX || _tokenX == tokenY, 'invalid token address');
 		(_reserveX, _reserveY) = _tokenX == tokenX ? (reserveX, reserveY) : (reserveY, reserveX);
@@ -121,35 +120,37 @@ contract Pool is Initializable, LPTokenERC20 {
 		emit LPBurnt(provider, amountX, amountY);
 	}
 
-	function swap(address _tokenIn, address _recipient) external returns (uint amountOut) {
+	function swap(address _tokenIn) external returns (address tokenIn, uint amountIn, address tokenOut, uint amountOut) {
 		require(_tokenIn == tokenX || _tokenIn == tokenY, 'bad token');
 
 		(
-			address tokenIn,
-			address tokenOut,
-			uint reserveIn,
-			uint reserveOut
+		address tokenIn,
+		address tokenOut,
+		uint reserveIn,
+		uint reserveOut
 		) = _tokenIn == tokenX
-				? (tokenX, tokenY, reserveX, reserveY)
-				: (tokenY, tokenX, reserveY, reserveX);
+		? (tokenX, tokenY, reserveX, reserveY)
+		: (tokenY, tokenX, reserveY, reserveX);
 
 		uint balanceIn = IERC20(tokenIn).balanceOf(address(this));
 
 		uint amountIn = balanceIn - reserveIn;
 		require(amountIn > 0, 'not enough input');
 
-		uint amountInWithFees = (amountIn * 990) / 1000; // 1% fees for fans society
+		uint amountInWithFees = (amountIn * 990) / 1000;
+		// 1% fees for fans society
 		amountOut = (reserveOut * amountInWithFees) / (reserveIn + amountInWithFees);
 		require(amountOut < reserveOut, 'not enough liquidity for swap');
 
-		SafeERC20.safeTransfer(IERC20(tokenOut), _recipient, amountOut);
+		SafeERC20.safeTransfer(IERC20(tokenOut), msg.sender, amountOut);
 
 		_updateReserves(
 			IERC20(tokenX).balanceOf(address(this)),
 			IERC20(tokenY).balanceOf(address(this))
 		);
 
-		emit Swap(_recipient, tokenIn, amountIn, tokenOut, amountOut);
+		emit PoolSwapped(tokenIn, amountIn, tokenOut, amountOut);
+		return (tokenIn, amountIn, tokenOut, amountOut);
 	}
 
 	function _updateReserves(uint _balanceX, uint _balanceY) private {

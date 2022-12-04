@@ -98,14 +98,7 @@ export interface IProjectDetail {
 }
 
 export interface ITokenListItem {
-	id: string;
-	name: string;
-	description: string;
-	symbol: string;
-}
-
-export interface ITokenDetail {
-	id: string;
+	projectId: string;
 	name: string;
 	description: string;
 	symbol: string;
@@ -141,8 +134,57 @@ export interface ITokenCreated {
 	symbol: string;
 }
 
+export interface ITokenDetail {
+	projectId: string;
+	address: string;
+	symbol: string;
+	name: string;
+	description: string;
+	avatarImageUrl: string;
+	coverImageUrl: string;
+}
+
+export interface IListPoolsParams {
+	token?: string;
+}
+
+export interface IToken {
+	address: string;
+	name: string;
+	symbol: string;
+}
+
+export interface IPoolInfo {
+	poolAddress: string;
+	tokenX: IToken;
+	tokenY: IToken;
+}
+
+export interface IListPoolsResult {
+	token?: string;
+	pools: IPoolInfo[];
+}
+
 export interface IListMyProjectCommitmentsParams {
 	projectId?: string;
+}
+
+export interface ISwapParams {
+	tokenIn: string;
+	tokenOut: string;
+	amountIn: number;
+}
+
+export interface ISwapEvent {
+	tokenIn: string;
+	amountIn: number;
+	tokenOut: string;
+	amountOut: number;
+}
+
+export interface ITokenBalanceResult {
+	address: string;
+	balance: number;
 }
 
 export const LOAD_CONTRACTS_INFO = createAsyncAction(
@@ -233,12 +275,6 @@ export const REMOVE_PROJECT_COMMITMENT = createAction(
 	},
 );
 
-export const LAUNCH_PROJECT = createAsyncAction(
-	'LAUNCH_PROJECT_REQUEST',
-	'LAUNCH_PROJECT_SUCCESS',
-	'LAUNCH_PROJECT_FAILURE',
-)<string, void, string>();
-
 export const PROJECT_STATUS_CHANGED = createAction(
 	'PROJECTS_STATUS_CHANGED',
 	(action) => {
@@ -246,9 +282,36 @@ export const PROJECT_STATUS_CHANGED = createAction(
 	},
 );
 
-export const CLEAR_PROJECTS_TX_ERROR = createAction(
-	'CLEAR_PROJECTS_TX_ERROR',
-	(action) => {
-		return () => action();
-	},
-);
+export const LAUNCH_PROJECT = createAsyncAction(
+	'LAUNCH_PROJECT_REQUEST',
+	'LAUNCH_PROJECT_SUCCESS',
+	'LAUNCH_PROJECT_FAILURE',
+)<string, void, string>();
+
+export const GET_TOKEN = createAsyncAction(
+	'GET_TOKEN_REQUEST',
+	'GET_TOKEN_SUCCESS',
+	'GET_TOKEN_FAILURE',
+)<string, ITokenDetail, string>();
+
+export const LIST_POOLS = createAsyncAction(
+	'LIST_POOLS_REQUEST',
+	'LIST_POOLS_SUCCESS',
+	'LIST_POOLS_FAILURE',
+)<IListPoolsParams, IListPoolsResult, string>();
+
+export const SWAP = createAsyncAction(
+	'SWAP_REQUEST',
+	'SWAP_SUCCESS',
+	'SWAP_FAILURE',
+)<ISwapParams, void, string>();
+
+export const GET_TOKEN_BALANCE = createAsyncAction(
+	'GET_TOKEN_BALANCE_REQUEST',
+	'GET_TOKEN_BALANCE_SUCCESS',
+	'GET_TOKEN_BALANCE_FAILURE',
+)<string, ITokenBalanceResult, string>();
+
+export const CLEAR_TX_ERROR = createAction('CLEAR_TX_ERROR', (action) => {
+	return () => action();
+});

@@ -657,7 +657,6 @@ contract('AMM', (accounts) => {
 
 								// get ETH balance
 								const fanETHBalanceBefore = await web3.eth.getBalance(fans[10]);
-
 								const ethValue = web3.utils.toWei('0.00001');
 								const receipt = await amm.swap(
 									wethToken.address,
@@ -710,6 +709,13 @@ contract('AMM', (accounts) => {
 								const fanETHBalanceBefore = await web3.eth.getBalance(fans[1]);
 
 								const amount = 200;
+								const reserves = await poolInstance.getReserves(erc20Instance.address);
+								const expectedETHAmountOut = await computeAmountInWithFees(
+									amount,
+									reserves[0],
+									reserves[1],
+								);
+
 								const receipt = await amm.swap(
 									erc20Instance.address,
 									wethToken.address,
@@ -719,15 +725,8 @@ contract('AMM', (accounts) => {
 									},
 								);
 
-								const reserves = await poolInstance.getReserves(erc20Instance.address);
-
 								// assert fan's ETH balance
 								const fanETHBalanceAfter = BN(await web3.eth.getBalance(fans[1]));
-								const expectedETHAmountOut = await computeAmountInWithFees(
-									amount,
-									reserves[1],
-									reserves[0],
-								);
 
 								const expectedNewETHBalance = BN(fanETHBalanceBefore)
 									.add(BN(expectedETHAmountOut.toString()))

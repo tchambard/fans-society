@@ -3,10 +3,10 @@ import { PoolFactoryInstance } from '../types/truffle/contracts/pools/PoolFactor
 import { AMMInstance } from '../types/truffle/contracts/AMM';
 import { WETHTokenInstance } from '../types/truffle/contracts/common/WETHToken';
 import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
-import { IWETH } from '../types/web3/contracts/interfaces';
 
-const ProjectTokenFactory = artifacts.require('ProjectTokenFactory');
 const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
+const ProjectTokenFactory = artifacts.require('ProjectTokenFactory');
+const Pool = artifacts.require('Pool');
 const PoolFactory = artifacts.require('PoolFactory');
 const WETHTokenFactory = artifacts.require('WETHToken');
 const AMM = artifacts.require('AMM');
@@ -19,8 +19,8 @@ export interface IToken {
 
 export interface IPool {
 	pool: string;
-	token1: string;
-	token2: string;
+	tokenX: string;
+	tokenY: string;
 }
 
 export interface ITokenTransfer {
@@ -85,10 +85,14 @@ export async function deployWethInstance(
 		from: contractOwnerAddress,
 	});
 }
+
 export async function deployProjectTokenFactoryInstance(
 	contractOwnerAddress: string,
 ): Promise<ProjectTokenFactoryInstance> {
-	return ProjectTokenFactory.new({
+	const tokenImplementation = await ProjectTokenERC20.new({
+		from: contractOwnerAddress,
+	});
+	return ProjectTokenFactory.new(tokenImplementation.address, {
 		from: contractOwnerAddress,
 	});
 }
@@ -97,7 +101,8 @@ export async function deployPoolFactoryInstance(
 	contractOwnerAddress: string,
 	fansSocietyAddress: string,
 ): Promise<PoolFactoryInstance> {
-	return PoolFactory.new(fansSocietyAddress, {
+	const poolImplementation = await Pool.new({ from: contractOwnerAddress });
+	return PoolFactory.new(poolImplementation.address, fansSocietyAddress, {
 		from: contractOwnerAddress,
 	});
 }
@@ -124,8 +129,8 @@ export async function getPoolsCreatedFromPastEvents(
 	return (await PoolFactory.getPastEvents('PoolCreated', { fromBlock: 0 })).map(
 		({ returnValues }) => ({
 			pool: returnValues.pool,
-			token1: returnValues.token1,
-			token2: returnValues.token2,
+			tokenX: returnValues.tokenX,
+			tokenY: returnValues.tokenY,
 		}),
 	);
 }

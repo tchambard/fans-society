@@ -9,7 +9,6 @@ import {
 	Container,
 	Grid,
 	IconButton,
-	LinearProgress,
 	Tooltip,
 	Typography,
 } from '@mui/material';
@@ -54,7 +53,7 @@ interface IProjectWrapperProps {
 	coverImageUrl: string;
 	avatarImageUrl: string;
 	content: ReactNode;
-	actions: ReactNode;
+	actions?: ReactNode;
 }
 
 export default ({
@@ -93,13 +92,14 @@ export default ({
 					</Box>
 					<CardCover>
 						<CardMedia image={coverImageUrl} component="img" />
-						<ActionsWrapper>{actions}</ActionsWrapper>
+						{actions ? <ActionsWrapper>{actions}</ActionsWrapper> : undefined}
 					</CardCover>
 					<AvatarWrapper>
 						<Avatar variant="rounded" alt={name} src={avatarImageUrl} />
 					</AvatarWrapper>
-
-					{content}
+					<Box py={2} pl={2} mb={3}>
+						{content}
+					</Box>
 				</Grid>
 			</Grid>
 		</Container>
