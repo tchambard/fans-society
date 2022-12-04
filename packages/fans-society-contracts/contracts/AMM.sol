@@ -28,6 +28,13 @@ contract AMM is Projects {
 		address indexed caller,
 		uint256 amount
 	);
+	event Swapped(
+		address indexed caller,
+		address tokenIn,
+		uint amountIn,
+		address tokenOut,
+		uint amountOut
+	);
 
 	constructor(
 		address _fansSocietyAddress,
@@ -217,7 +224,15 @@ contract AMM is Projects {
 			);
 		}
 
-		IPool(pool).swap(_tokenIn, msg.sender);
+		(address tokenIn, uint amountIn, address tokenOut, uint amountOut) = IPool(pool).swap(_tokenIn);
+		if (_tokenOut == weth) {
+			IWETH(weth).withdraw(amountOut);
+			(bool success,) = msg.sender.call{value : amountOut}('');
+			require(success, 'withdraw ETH failed');
+		} else {
+			SafeERC20.safeTransfer(IERC20(tokenOut), msg.sender, amountOut);
+		}
+		emit Swapped(msg.sender, tokenIn, amountIn, tokenOut, amountOut);
 	}
 
 	function computeTokenShares(
@@ -247,5 +262,9 @@ contract AMM is Projects {
 		// 10%
 		partnerFundsShares = (_funds * 900) / 1000;
 		// 90%
+	}
+
+	receive() external payable {
+		require(msg.sender == weth, 'only receive from weth contract');
 	}
 }
