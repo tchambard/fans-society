@@ -2,6 +2,7 @@ import {
 	Committed,
 	ProjectCreated,
 	ProjectStatusChanged,
+	Swapped,
 	TokensClaimed,
 	Withdrawed,
 } from 'fans-society-contracts/types/web3/contracts/AMM';
@@ -9,16 +10,17 @@ import { TokenCreated } from 'fans-society-contracts/types/web3/contracts/tokens
 import { ClientFactory } from 'src/services/ClientFactory';
 import {
 	IAMMContractInfo,
-	IContractsInfo,
 	IProjectClaim,
 	IProjectCommitment,
 	IProjectListItem,
 	IProjectStatusChangedEvent,
 	IProjectWithdraw,
+	ISwapEvent,
 	ITokenCreated,
 	ITokensFactoryContractInfo,
 	ProjectStatus,
 } from './actions';
+import { getWethAddress } from './contract';
 
 export const listenProjectStatusChanged = (
 	contractInfo: IAMMContractInfo,
@@ -135,6 +137,33 @@ export const listenTokenCreated = (
 	};
 	const emitter = contractInfo.contract.events
 		.TokenCreated()
+		.on('data', eventHandler);
+	return () => emitter.removeListener('data', eventHandler);
+};
+
+export const listenSwap = async (
+	account: string,
+	contractInfo: IAMMContractInfo,
+	onData: (data: ISwapEvent) => void,
+): Promise<() => void> => {
+	const web3 = ClientFactory.web3();
+	const eventHandler = async ({ returnValues }: Swapped) => {
+		const wethAddress = await getWethAddress(web3);
+		onData({
+			tokenIn: returnValues.tokenIn,
+			amountIn:
+				returnValues.tokenIn === wethAddress
+					? +web3.utils.fromWei(returnValues.amountIn, 'ether')
+					: +returnValues.amountIn,
+			tokenOut: returnValues.tokenOut,
+			amountOut:
+				returnValues.tokenOut === wethAddress
+					? +web3.utils.fromWei(returnValues.amountOut, 'ether')
+					: +returnValues.amountOut,
+		});
+	};
+	const emitter = contractInfo.contract.events
+		.Swapped({ filter: { caller: account } })
 		.on('data', eventHandler);
 	return () => emitter.removeListener('data', eventHandler);
 };

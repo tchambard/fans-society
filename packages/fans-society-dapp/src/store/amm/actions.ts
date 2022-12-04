@@ -148,18 +148,16 @@ export interface IListPoolsParams {
 	token?: string;
 }
 
+export interface IToken {
+	address: string;
+	name: string;
+	symbol: string;
+}
+
 export interface IPoolInfo {
 	poolAddress: string;
-	tokenX: {
-		address: string;
-		name: string;
-		symbol: string;
-	};
-	tokenY: {
-		address: string;
-		name: string;
-		symbol: string;
-	};
+	tokenX: IToken;
+	tokenY: IToken;
 }
 
 export interface IListPoolsResult {
@@ -169,6 +167,24 @@ export interface IListPoolsResult {
 
 export interface IListMyProjectCommitmentsParams {
 	projectId?: string;
+}
+
+export interface ISwapParams {
+	tokenIn: string;
+	tokenOut: string;
+	amountIn: number;
+}
+
+export interface ISwapEvent {
+	tokenIn: string;
+	amountIn: number;
+	tokenOut: string;
+	amountOut: number;
+}
+
+export interface ITokenBalanceResult {
+	address: string;
+	balance: number;
 }
 
 export const LOAD_CONTRACTS_INFO = createAsyncAction(
@@ -259,6 +275,13 @@ export const REMOVE_PROJECT_COMMITMENT = createAction(
 	},
 );
 
+export const PROJECT_STATUS_CHANGED = createAction(
+	'PROJECTS_STATUS_CHANGED',
+	(action) => {
+		return (data: IProjectStatusChangedEvent) => action(data);
+	},
+);
+
 export const LAUNCH_PROJECT = createAsyncAction(
 	'LAUNCH_PROJECT_REQUEST',
 	'LAUNCH_PROJECT_SUCCESS',
@@ -277,16 +300,18 @@ export const LIST_POOLS = createAsyncAction(
 	'LIST_POOLS_FAILURE',
 )<IListPoolsParams, IListPoolsResult, string>();
 
-export const PROJECT_STATUS_CHANGED = createAction(
-	'PROJECTS_STATUS_CHANGED',
-	(action) => {
-		return (data: IProjectStatusChangedEvent) => action(data);
-	},
-);
+export const SWAP = createAsyncAction(
+	'SWAP_REQUEST',
+	'SWAP_SUCCESS',
+	'SWAP_FAILURE',
+)<ISwapParams, void, string>();
 
-export const CLEAR_PROJECTS_TX_ERROR = createAction(
-	'CLEAR_PROJECTS_TX_ERROR',
-	(action) => {
-		return () => action();
-	},
-);
+export const GET_TOKEN_BALANCE = createAsyncAction(
+	'GET_TOKEN_BALANCE_REQUEST',
+	'GET_TOKEN_BALANCE_SUCCESS',
+	'GET_TOKEN_BALANCE_FAILURE',
+)<string, ITokenBalanceResult, string>();
+
+export const CLEAR_TX_ERROR = createAction('CLEAR_TX_ERROR', (action) => {
+	return () => action();
+});

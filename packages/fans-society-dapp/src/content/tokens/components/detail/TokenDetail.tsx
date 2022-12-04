@@ -26,12 +26,7 @@ export default ({}) => {
 			coverImageUrl={currentToken.item.coverImageUrl}
 			content={
 				<>
-					<TokenSwap
-						tokenX={pool?.tokenX.address}
-						tokenY={pool?.tokenY.address}
-						symbolX={pool?.tokenX.symbol}
-						symbolY={pool?.tokenY.symbol}
-					/>
+					<TokenSwap pool={pool} />
 				</>
 			}
 		/>

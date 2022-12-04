@@ -25,22 +25,23 @@ import {
 	ProjectStatus,
 	WITHDRAW_ON_PROJECT,
 	IPoolInfo,
+	SWAP,
+	GET_TOKEN_BALANCE,
 } from './actions';
 import {
 	getAMMContract,
 	getPoolFactoryContract,
 	getTokenContract,
 	getTokensFactoryContract,
+	getWethAddress,
 } from './contract';
 import { PoolCreated } from 'fans-society-contracts/types/web3/contracts/pools/PoolFactory';
 import { TokenCreated } from 'fans-society-contracts/types/web3/contracts/tokens/ProjectTokenFactory';
 
-export const loadContractsInfo: Epic<
-	RootAction,
+export const loadContractsInfo: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3, logger }) => {
+	Services> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(LOAD_CONTRACTS_INFO.request)),
 		mergeMap(async () => {
@@ -124,12 +125,10 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 	);
 };
 
-export const createProject: Epic<
-	RootAction,
+export const createProject: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3 }) => {
+	Services> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(CREATE_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -254,12 +253,10 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 	);
 };
 
-export const commitOnProject: Epic<
-	RootAction,
+export const commitOnProject: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3 }) => {
+	Services> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(COMMIT_ON_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -282,12 +279,10 @@ export const commitOnProject: Epic<
 	);
 };
 
-export const withdrawOnProject: Epic<
-	RootAction,
+export const withdrawOnProject: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3 }) => {
+	Services> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(WITHDRAW_ON_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -308,12 +303,10 @@ export const withdrawOnProject: Epic<
 	);
 };
 
-export const listMyProjectCommitments: Epic<
-	RootAction,
+export const listMyProjectCommitments: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3, logger }) => {
+	Services> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(LIST_MY_PROJECT_COMMITMENTS.request)),
 		mergeMap(async (action) => {
@@ -363,12 +356,10 @@ export const listMyProjectCommitments: Epic<
 	);
 };
 
-export const launchProject: Epic<
-	RootAction,
+export const launchProject: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3 }) => {
+	Services> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(LAUNCH_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -435,18 +426,17 @@ export const getToken: Epic<RootAction, RootAction, RootState, Services> = (
 	);
 };
 
-export const listTokenPools: Epic<
-	RootAction,
+export const listTokenPools: Epic<RootAction,
 	RootAction,
 	RootState,
-	Services
-> = (action$, state$, { web3, logger }) => {
+	Services> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(LIST_POOLS.request)),
 		mergeMap(async (action) => {
 			try {
 				const { token } = action.payload;
 				const contract = state$.value.amm.contracts.poolsFactory.contract;
+				const wethAddress = await getWethAddress(web3);
 
 				const [poolsEvents, poolsEventsReverse] = await Promise.all([
 					contract.getPastEvents('PoolCreated', {
@@ -458,7 +448,6 @@ export const listTokenPools: Epic<
 						filter: { tokenY: token },
 					}),
 				]);
-
 				const pools: IPoolInfo[] = await Promise.all(
 					[...poolsEvents, ...poolsEventsReverse].flatMap(async (event) => {
 						const { returnValues: v } = event as unknown as PoolCreated;
@@ -476,13 +465,13 @@ export const listTokenPools: Epic<
 							poolAddress: v.pool,
 							tokenX: {
 								address: token,
-								name: nameX,
-								symbol: symbolX,
+								name: wethAddress === token ? 'Ethereum' : nameX,
+								symbol: wethAddress === token ? 'ETH' : symbolX,
 							},
 							tokenY: {
 								address: tokenYAddress,
-								name: nameY,
-								symbol: symbolY,
+								name: wethAddress === tokenYAddress ? 'Ethereum' : nameY,
+								symbol: wethAddress === tokenYAddress ? 'ETH' : symbolY,
 							},
 						} as IPoolInfo;
 					}),
@@ -494,6 +483,73 @@ export const listTokenPools: Epic<
 			} catch (e) {
 				loggerService.log(e.message);
 				return LIST_POOLS.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const swap: Epic<RootAction, RootAction, RootState, Services> = (
+	action$,
+	state$,
+	{ web3 },
+) => {
+	return action$.pipe(
+		filter(isActionOf(SWAP.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				const contract = state$.value.amm.contracts.amm.contract;
+				const wethAddress = await getWethAddress(web3);
+
+				const { tokenIn, tokenOut, amountIn } = action.payload;
+
+				const value =
+					tokenIn === wethAddress
+						? web3.utils.toWei(amountIn.toString(), 'ether')
+						: undefined;
+
+				await contract.methods
+					.swap(tokenIn, tokenOut, value == null ? amountIn : 0)
+					.send({ from: account, value });
+
+				return SWAP.success();
+			} catch (e) {
+				loggerService.log(e.message);
+				return SWAP.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const getTokenBalance: Epic<RootAction,
+	RootAction,
+	RootState,
+	Services> = (action$, state$, { web3, logger }) => {
+	return action$.pipe(
+		filter(isActionOf(GET_TOKEN_BALANCE.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				const tokenAddress = action.payload;
+				const contract = await getTokenContract(web3, tokenAddress);
+				const wethAddress = await getWethAddress(web3);
+				const balance =
+					tokenAddress === wethAddress
+						? web3.utils.fromWei(
+							(await web3.eth.getBalance(account)).toString(),
+							'ether',
+						)
+						: await contract.methods.balanceOf(account).call();
+
+				logger.log('=== Token balance ===', tokenAddress, balance);
+				// here there is a trick: balance of weth address is not correct as we got eth balance
+				return GET_TOKEN_BALANCE.success({
+					address: tokenAddress,
+					balance: +balance,
+				});
+			} catch (e) {
+				loggerService.log(e.message);
+				return GET_TOKEN_BALANCE.failure(findRpcMessage(e));
 			}
 		}),
 	);

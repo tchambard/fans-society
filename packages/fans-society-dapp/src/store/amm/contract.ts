@@ -3,7 +3,10 @@ import Web3 from 'web3';
 import { contracts } from 'fans-society-contracts';
 import {
 	getContractInfo,
+	getNetworkInfo,
+	IContractInfo,
 	IDynamicContractImportDefinitions,
+	WETH_ADDRESSES,
 } from 'src/eth-network/helpers';
 
 const imports: IDynamicContractImportDefinitions = {
@@ -64,4 +67,16 @@ export async function getPoolContract(
 		contractInfo.abi,
 		address,
 	) as unknown as contracts.pools.Pool;
+}
+
+export async function getWethAddress(web3: Web3): Promise<string> {
+	const networkInfo = await getNetworkInfo(web3, imports);
+	if (WETH_ADDRESSES[networkInfo.name]) {
+		return WETH_ADDRESSES[networkInfo.name];
+	}
+	const contractInfo = networkInfo.contracts.WETHToken;
+	if (!contractInfo) {
+		throw new Error(`Unknown contract WETHToken`);
+	}
+	return contractInfo.address;
 }

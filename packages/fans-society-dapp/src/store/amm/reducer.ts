@@ -5,7 +5,7 @@ import { SET_CURRENT_ACCOUNT } from 'src/eth-network/actions';
 import {
 	ABORT_PROJECT,
 	ADD_PROJECT_COMMITMENT,
-	CLEAR_PROJECTS_TX_ERROR,
+	CLEAR_TX_ERROR,
 	COMMIT_ON_PROJECT,
 	CREATE_PROJECT,
 	GET_PROJECT,
@@ -30,6 +30,8 @@ import {
 	TOKEN_ADDED,
 	WITHDRAW_ON_PROJECT,
 	IPoolInfo,
+	SWAP,
+	GET_TOKEN_BALANCE,
 } from './actions';
 
 export interface IProjectsState {
@@ -61,6 +63,9 @@ export interface IProjectsState {
 		items: { [address: string]: IPoolInfo };
 		loading: boolean;
 	};
+	balances: {
+		[address: string]: { balance: number; loading: boolean };
+	};
 	txPending: boolean;
 	error?: string;
 }
@@ -75,6 +80,7 @@ const initialState: IProjectsState = {
 	tokens: { items: {}, loading: false },
 	currentToken: { loading: false, poolIds: [] },
 	pools: { items: {}, loading: false },
+	balances: {},
 	txPending: false,
 };
 
@@ -264,6 +270,7 @@ export default createReducer(initialState)
 			LAUNCH_PROJECT.request,
 			COMMIT_ON_PROJECT.request,
 			WITHDRAW_ON_PROJECT.request,
+			SWAP.request,
 		],
 		(state: IProjectsState): IProjectsState => {
 			return {
@@ -280,6 +287,7 @@ export default createReducer(initialState)
 			LAUNCH_PROJECT.failure,
 			COMMIT_ON_PROJECT.failure,
 			WITHDRAW_ON_PROJECT.failure,
+			SWAP.failure,
 		],
 		(
 			state: IProjectsState,
@@ -300,6 +308,7 @@ export default createReducer(initialState)
 			LAUNCH_PROJECT.success,
 			COMMIT_ON_PROJECT.success,
 			WITHDRAW_ON_PROJECT.success,
+			SWAP.success,
 		],
 		(state: IProjectsState): IProjectsState => {
 			return {
@@ -347,7 +356,6 @@ export default createReducer(initialState)
 		): IProjectsState => {
 			return {
 				...state,
-				txPending: false,
 				currentProject: {
 					item: action.payload,
 					loading: false,
@@ -504,11 +512,68 @@ export default createReducer(initialState)
 		): IProjectsState => {
 			return {
 				...state,
-				txPending: false,
 				currentToken: {
 					...state.currentToken,
 					item: action.payload,
 					loading: false,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[GET_TOKEN_BALANCE.request],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof GET_TOKEN_BALANCE.request>,
+		): IProjectsState => {
+			return {
+				...state,
+				balances: {
+					...state.balances,
+					[action.payload]: {
+						...state.balances[action.payload],
+						loading: true,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[GET_TOKEN_BALANCE.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof GET_TOKEN_BALANCE.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				balances: {
+					...state.balances,
+					[action.payload]: {
+						balance: undefined,
+						loading: false,
+					},
+				},
+				error: action.payload,
+			};
+		},
+	)
+
+	.handleAction(
+		[GET_TOKEN_BALANCE.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof GET_TOKEN_BALANCE.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				balances: {
+					...state.balances,
+					[action.payload.address]: {
+						balance: action.payload.balance,
+						loading: false,
+					},
 				},
 			};
 		},
@@ -625,15 +690,12 @@ export default createReducer(initialState)
 		},
 	)
 
-	.handleAction(
-		[CLEAR_PROJECTS_TX_ERROR],
-		(state: IProjectsState): IProjectsState => {
-			return {
-				...state,
-				error: undefined,
-			};
-		},
-	)
+	.handleAction([CLEAR_TX_ERROR], (state: IProjectsState): IProjectsState => {
+		return {
+			...state,
+			error: undefined,
+		};
+	})
 
 	.handleAction([SET_CURRENT_ACCOUNT], (): IProjectsState => {
 		// reset state will force reload of data
