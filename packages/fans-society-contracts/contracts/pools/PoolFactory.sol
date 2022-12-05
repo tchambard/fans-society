@@ -1,21 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import {Address} from '@openzeppelin/contracts/utils/Address.sol';
-import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import { Address } from '@openzeppelin/contracts/utils/Address.sol';
+import { Clones } from '@openzeppelin/contracts/proxy/Clones.sol';
+import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 
-import {IPoolFactory} from './interfaces/IPoolFactory.sol';
-import {Pool} from './Pool.sol';
-import {PoolHelpers} from './PoolHelpers.sol';
-import {IPool} from './interfaces/IPool.sol';
+import { IPoolFactory } from './interfaces/IPoolFactory.sol';
+import { Pool } from './Pool.sol';
+import { PoolHelpers } from './PoolHelpers.sol';
+import { IPool } from './interfaces/IPool.sol';
 
 contract PoolFactory is IPoolFactory, Ownable {
 	address private immutable fansSocietyAddress;
 
 	address private immutable poolImplementationAddress;
 
-	event PoolCreated(address indexed pool, address indexed tokenX, address indexed tokenY);
+	event PoolCreated(
+		address indexed pool,
+		address indexed tokenX,
+		address indexed tokenY
+	);
 
 	constructor(address _poolImplementationAddress, address _fansSocietyAddress) {
 		fansSocietyAddress = _fansSocietyAddress;
@@ -43,10 +47,11 @@ contract PoolFactory is IPoolFactory, Ownable {
 		return (poolAddress);
 	}
 
-	function getPool(
-		address _tokenX,
-		address _tokenY
-	) external view returns (address pool) {
+	function getPool(address _tokenX, address _tokenY)
+		external
+		view
+		returns (address pool)
+	{
 		(, , bytes32 salt) = PoolHelpers.computePoolSalt(_tokenX, _tokenY);
 		return Clones.predictDeterministicAddress(poolImplementationAddress, salt);
 	}

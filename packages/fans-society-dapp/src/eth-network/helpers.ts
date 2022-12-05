@@ -28,7 +28,7 @@ export const NETWORKS = {
 };
 
 export const WETH_ADDRESSES: any = {
-	goerli: '', // TODO
+	goerli: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
 };
 
 export async function getNetworkInfo(
@@ -61,14 +61,22 @@ export async function getContractInfo(
 }
 
 export function findRpcMessage(error: Error): string {
-	const rpcError = error.message.match(/{(.*)}/g);
-	const rpcMsg = rpcError?.length && JSON.parse(rpcError[0]);
-	return (
-		rpcMsg?.value.data.message.replace(
-			'VM Exception while processing transaction: revert ',
-			'',
-		) || error.message
-	);
+	let result: string;
+	[
+		'VM Exception while processing transaction: revert ',
+		'execution reverted: ',
+	].forEach((searchText) => {
+		const rpcError = error.message.match(/{(.*)}/g);
+		let rpcMsg = rpcError?.length && JSON.parse(rpcError[0]);
+		if (rpcMsg) {
+			result = rpcMsg?.value.data.message.replace(searchText, '') || error.message;
+		} else {
+			rpcMsg = error.message.match(new RegExp(`"${searchText}(.*)"`, 'g'));
+			const message = rpcMsg?.[0].replace(searchText, '');
+			result = message?.substring(1, message.length - 1) || error.message;
+		}
+	});
+	return result || error.message;
 }
 
 export function useNetwork(account: string | undefined): void {

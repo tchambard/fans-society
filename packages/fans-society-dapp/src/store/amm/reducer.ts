@@ -7,10 +7,13 @@ import {
 	ADD_PROJECT_COMMITMENT,
 	CLEAR_TX_ERROR,
 	COMMIT_ON_PROJECT,
+	COMPUTE_SWAP_OUT,
 	CREATE_PROJECT,
 	GET_PROJECT,
 	GET_TOKEN,
+	GET_TOKEN_BALANCE,
 	IAMMContractInfo,
+	IPoolInfo,
 	IPoolsFactoryContractInfo,
 	IProjectDetail,
 	IProjectListCapabilities,
@@ -20,18 +23,16 @@ import {
 	ITokensFactoryContractInfo,
 	LAUNCH_PROJECT,
 	LIST_MY_PROJECT_COMMITMENTS,
-	LIST_PROJECTS,
 	LIST_POOLS,
+	LIST_PROJECTS,
 	LOAD_CONTRACTS_INFO,
 	PROJECT_ADDED,
 	PROJECT_STATUS_CHANGED,
 	ProjectStatus,
 	REMOVE_PROJECT_COMMITMENT,
+	SWAP,
 	TOKEN_ADDED,
 	WITHDRAW_ON_PROJECT,
-	IPoolInfo,
-	SWAP,
-	GET_TOKEN_BALANCE,
 } from './actions';
 
 export interface IProjectsState {
@@ -65,6 +66,14 @@ export interface IProjectsState {
 	};
 	balances: {
 		[address: string]: { balance: number; loading: boolean };
+	};
+	swapInfo?: {
+		result?: {
+			tokenOut: string;
+			amountOut: string;
+			priceOut: string;
+		};
+		error?: string;
 	};
 	txPending: boolean;
 	error?: string;
@@ -573,6 +582,40 @@ export default createReducer(initialState)
 					[action.payload.address]: {
 						balance: action.payload.balance,
 						loading: false,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[COMPUTE_SWAP_OUT.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof COMPUTE_SWAP_OUT.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				swapInfo: {
+					error: action.payload,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[COMPUTE_SWAP_OUT.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof COMPUTE_SWAP_OUT.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				swapInfo: {
+					result: {
+						tokenOut: action.payload.tokenOut,
+						amountOut: action.payload.amountOut,
+						priceOut: action.payload.priceOut,
 					},
 				},
 			};

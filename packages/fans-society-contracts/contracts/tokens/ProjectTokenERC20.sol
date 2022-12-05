@@ -28,8 +28,8 @@ contract ProjectTokenERC20 is
 		string memory _name,
 		string memory _symbol,
 		address _amm,
-		uint40 _totalSupply,
-		uint40 _initialSupply
+		uint112 _totalSupply,
+		uint112 _initialSupply
 	) public virtual initializer {
 		require(_totalSupply >= _initialSupply, 'total supply too small');
 		amm = _amm;
@@ -47,15 +47,16 @@ contract ProjectTokenERC20 is
 	function __ProjectTokenERC20_init(
 		string memory _name,
 		string memory _symbol,
-		uint40 _initialSupply
+		uint112 _initialSupply
 	) internal onlyInitializing {
 		__ERC20_init_unchained(_name, _symbol);
 		__ProjectTokenERC20_init_unchained(_initialSupply);
 	}
 
-	function __ProjectTokenERC20_init_unchained(
-		uint40 _initialSupply
-	) internal onlyInitializing {
+	function __ProjectTokenERC20_init_unchained(uint112 _initialSupply)
+		internal
+		onlyInitializing
+	{
 		_mint(amm, _initialSupply);
 	}
 

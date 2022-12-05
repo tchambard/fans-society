@@ -595,55 +595,56 @@ contract('AMM', (accounts) => {
 						});
 
 						describe('> swap', () => {
-							const computeAmountInWithFees = async (
-								amountIn: number,
-								reserveIn: BN,
-								reserveOut: BN,
-							): Promise<number> => {
-								const amountInWithFees = BN((amountIn * 99) / 100);
-								// same math as fees calculation on Pool contract side
-								return reserveOut
-									.mul(amountInWithFees)
-									.div(reserveIn.add(amountInWithFees))
-									.toNumber();
-							};
-
-							it('> should fail if tokenIn is weth and msg value is missing', async () => {
+							it('> should fail if tokenIn is weth and output amount is equal to zero', async () => {
 								await expectRevert(
-									amm.swap(wethToken.address, erc20Instance.address, 0, {
+									amm.swap(poolInstance.address, wethToken.address, 0, {
 										from: fans[0],
 									}),
-									'invalid amount state',
+									'Not enough output',
 								);
 							});
 
-							it('> should fail if tokenIn is ERC20 and amount is equal to zero', async () => {
+							it('> should fail if tokenIn is ERC20 and output amount is equal to zero', async () => {
 								await expectRevert(
-									amm.swap(erc20Instance.address, wethToken.address, 0, {
+									amm.swap(poolInstance.address, erc20Instance.address, 0, {
 										from: fans[0],
 										value: web3.utils.toWei('0.00001'),
 									}),
-									'invalid amount state',
+									'Not enough output',
 								);
 							});
 
-							it('> should fail if tokenIn is weth and amount is not equal to zero', async () => {
+							it('> should fail if tokenIn is weth and msg.value is not sufficient', async () => {
 								await expectRevert(
-									amm.swap(wethToken.address, erc20Instance.address, 100, {
+									amm.swap(poolInstance.address, wethToken.address, BN('10000000'), {
 										from: fans[0],
 										value: web3.utils.toWei('0.00001'),
 									}),
-									'invalid amount state',
+									'not enough eth',
 								);
 							});
 
 							it('> should fail if tokenIn is ERC20 and msg value is provided', async () => {
 								await expectRevert(
-									amm.swap(erc20Instance.address, wethToken.address, 100, {
+									amm.swap(poolInstance.address, erc20Instance.address, 100, {
 										from: fans[0],
 										value: web3.utils.toWei('0.00001'),
 									}),
-									'invalid amount state',
+									'not expected eth',
+								);
+							});
+
+							it('> should fail if tokenIn is ERC20 and balance is not sufficient', async () => {
+								await expectRevert(
+									amm.swap(
+										poolInstance.address,
+										erc20Instance.address,
+										BN('100000000000000000'),
+										{
+											from: fans[0],
+										},
+									),
+									'ERC20: transfer amount exceeds balance',
 								);
 							});
 
@@ -658,34 +659,43 @@ contract('AMM', (accounts) => {
 								// get ETH balance
 								const fanETHBalanceBefore = await web3.eth.getBalance(fans[10]);
 								const ethValue = web3.utils.toWei('0.00001');
-								const receipt = await amm.swap(
+								const { _reserveX, _reserveY } = (await poolInstance.getReserves(
 									wethToken.address,
-									erc20Instance.address,
-									0,
+								)) as any;
+
+								const computedOutputAmount = await poolInstance.computeMaxOutputAmount(
+									ethValue,
+									_reserveX,
+									_reserveY,
+								);
+								const receipt = await amm.swap(
+									poolInstance.address,
+									wethToken.address,
+									computedOutputAmount,
 									{
 										from: fans[10],
 										value: ethValue,
 									},
 								);
 
-								const reserves = await poolInstance.getReserves(wethToken.address);
-
 								// assert fan's ERC20 balance
 								const fanERC20BalanceAfter = (
 									await erc20Instance.balanceOf(fans[10])
 								).toNumber();
-								const expectedAmountOut = await computeAmountInWithFees(
-									+ethValue,
-									reserves[0],
-									reserves[1],
+
+								const computedAmountIn = await poolInstance.computeRequiredInputAmount(
+									computedOutputAmount,
+									_reserveX,
+									_reserveY,
 								);
-								assert.equal(fanERC20BalanceAfter, expectedAmountOut);
+								assert.equal(fanERC20BalanceAfter, computedOutputAmount.toNumber());
 
 								// assert fan's ETH balance
 								const fanETHBalanceAfter = BN(await web3.eth.getBalance(fans[10]));
 								const expectedNewETHBalance = BN(fanETHBalanceBefore)
 									// value
 									.sub(BN(ethValue))
+									.add(BN(ethValue).sub(computedAmountIn))
 									// gas
 									.sub(BN(receipt.receipt.gasUsed * receipt.receipt.effectiveGasPrice));
 
@@ -708,18 +718,21 @@ contract('AMM', (accounts) => {
 								// get ETH balance
 								const fanETHBalanceBefore = await web3.eth.getBalance(fans[1]);
 
-								const amount = 200;
-								const reserves = await poolInstance.getReserves(erc20Instance.address);
-								const expectedETHAmountOut = await computeAmountInWithFees(
-									amount,
-									reserves[0],
-									reserves[1],
+								const { _reserveX, _reserveY } = (await poolInstance.getReserves(
+									erc20Instance.address,
+								)) as any;
+
+								const inputAmount = 2000;
+								const computedOutputAmount = await poolInstance.computeMaxOutputAmount(
+									inputAmount,
+									_reserveX,
+									_reserveY,
 								);
 
 								const receipt = await amm.swap(
+									poolInstance.address,
 									erc20Instance.address,
-									wethToken.address,
-									amount,
+									computedOutputAmount,
 									{
 										from: fans[1],
 									},
@@ -729,7 +742,7 @@ contract('AMM', (accounts) => {
 								const fanETHBalanceAfter = BN(await web3.eth.getBalance(fans[1]));
 
 								const expectedNewETHBalance = BN(fanETHBalanceBefore)
-									.add(BN(expectedETHAmountOut.toString()))
+									.add(BN(computedOutputAmount.toString()))
 									// gas
 									.sub(BN(receipt.receipt.gasUsed * receipt.receipt.effectiveGasPrice));
 
@@ -743,7 +756,7 @@ contract('AMM', (accounts) => {
 									await erc20Instance.balanceOf(fans[1])
 								).toNumber();
 
-								assert.equal(fanERC20BalanceAfter, fanERC20BalanceBefore - amount);
+								assert.equal(fanERC20BalanceAfter, fanERC20BalanceBefore - inputAmount);
 							});
 						});
 					});
