@@ -13,10 +13,11 @@ import { LoadingButton } from '@mui/lab';
 import SendIcon from '@mui/icons-material/Send';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
-import CachedIcon from '@mui/icons-material/Cached';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 
 import { RootState } from 'state-types';
 import {
+	COMPUTE_SWAP_OUT,
 	GET_TOKEN_BALANCE,
 	IPoolInfo,
 	IToken,
@@ -25,8 +26,8 @@ import {
 import { listenSwap } from '../../../../store/amm/listeners';
 
 interface ITokenSwapForm {
-	amount: number;
-	expected: number;
+	amountIn: string;
+	amountOut: string;
 }
 
 interface IProps {
@@ -37,7 +38,7 @@ export default ({ pool }: IProps) => {
 	const theme = useTheme();
 	const dispatch = useDispatch();
 
-	const { account, contracts, balances } = useSelector(
+	const { account, contracts, balances, swapInfo } = useSelector(
 		(state: RootState) => state.amm,
 	);
 
@@ -46,8 +47,8 @@ export default ({ pool }: IProps) => {
 	const [tokenOut, setTokenOut] = useState<IToken>();
 
 	const [values, setValues] = useState<ITokenSwapForm>({
-		amount: 0,
-		expected: 0,
+		amountIn: '',
+		amountOut: '',
 	});
 
 	useEffect(() => {
@@ -59,9 +60,35 @@ export default ({ pool }: IProps) => {
 		}
 	}, []);
 
+	useEffect(() => {
+		if (swapInfo?.result) {
+			const form: ITokenSwapForm =
+				swapInfo?.result?.tokenOut === tokenOut?.address
+					? {
+							...values,
+							amountOut: swapInfo?.result?.amountOut || '',
+					  }
+					: {
+							...values,
+							amountIn: swapInfo?.result?.amountOut || '',
+					  };
+			setValues(form);
+		}
+	}, [swapInfo?.result]);
+
 	const handleChange =
 		(prop: keyof ITokenSwapForm) => (event: ChangeEvent<HTMLInputElement>) => {
 			setValues({ ...values, [prop]: event.target.value });
+
+			const tokenInChanged = prop === 'amountIn';
+			dispatch(
+				COMPUTE_SWAP_OUT.request({
+					poolAddress: pool.poolAddress,
+					tokenIn: tokenInChanged ? tokenIn.address : tokenOut.address,
+					tokenOut: tokenInChanged ? tokenOut.address : tokenIn.address,
+					amountIn: event.target.value,
+				}),
+			);
 		};
 
 	const onSwap = async () => {
@@ -77,9 +104,11 @@ export default ({ pool }: IProps) => {
 		);
 		dispatch(
 			SWAP.request({
+				poolAddress: pool.poolAddress,
 				tokenIn: tokenIn.address,
+				amountIn: values.amountIn.toString(),
 				tokenOut: tokenOut.address,
-				amountIn: values.amount,
+				amountOut: values.amountOut.toString(),
 			}),
 		);
 	};
@@ -90,9 +119,9 @@ export default ({ pool }: IProps) => {
 			<Grid item xs={12} md={12}>
 				<Box sx={{ p: 2, ml: 12, mr: 12, display: 'grid' }}>
 					<OutlinedInput
-						id="amount"
-						value={values.amount}
-						onChange={handleChange('amount')}
+						id={'amount'}
+						value={values.amountIn}
+						onChange={handleChange('amountIn')}
 						endAdornment={
 							<InputAdornment position="end">{tokenIn?.symbol}</InputAdornment>
 						}
@@ -100,9 +129,10 @@ export default ({ pool }: IProps) => {
 						inputProps={{
 							'aria-label': 'Input',
 						}}
+						autoComplete={'off'}
 					/>
 					<Box
-						id="amount-helper-text"
+						id={'amount-helper-text'}
 						sx={{
 							display: 'flex',
 							justifyContent: 'space-between',
@@ -126,26 +156,36 @@ export default ({ pool }: IProps) => {
 							onClick={() => {
 								setTokenOut(tokenIn);
 								setTokenIn(tokenOut);
-								setValues({ amount: values.expected, expected: values.amount });
+								setValues({ ...values, amountIn: values.amountOut });
+								dispatch(
+									COMPUTE_SWAP_OUT.request({
+										poolAddress: pool.poolAddress,
+										tokenIn: tokenOut.address,
+										tokenOut: tokenIn.address,
+										amountIn: values.amountOut,
+									}),
+								);
 							}}
 						>
-							<CachedIcon fontSize={'small'} />
+							<SwapVertIcon fontSize={'small'} />
 						</IconButton>
 					</Box>
 					<br />
 					<OutlinedInput
-						id="amount"
-						value={values.expected}
+						id={'amount'}
+						value={values.amountOut}
+						onChange={handleChange('amountOut')}
 						endAdornment={
 							<InputAdornment position="end">{tokenOut?.symbol}</InputAdornment>
 						}
-						aria-describedby="expected-helper-text"
+						aria-describedby={'expected-helper-text'}
 						inputProps={{
 							'aria-label': 'Input',
 						}}
+						autoComplete={'off'}
 					/>
 					<Box
-						id="expected-helper-text"
+						id={'expected-helper-text'}
 						sx={{
 							display: 'flex',
 							justifyContent: 'space-between',
@@ -166,7 +206,18 @@ export default ({ pool }: IProps) => {
 							have been transferred
 						</Alert>
 					)}
+					{swapInfo?.error != null && (
+						<Alert severity={'error'}>{swapInfo?.error}</Alert>
+					)}
 					<br />
+					{swapInfo?.result?.priceOut && (
+						<Box sx={{ display: 'flex' }}>
+							<Typography>
+								Price: {swapInfo.result.priceOut} {tokenOut?.symbol} per{' '}
+								{tokenIn?.symbol}
+							</Typography>
+						</Box>
+					)}
 					<LoadingButton
 						loading={txPending}
 						loadingPosition={'end'}

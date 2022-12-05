@@ -170,9 +170,24 @@ export interface IListMyProjectCommitmentsParams {
 }
 
 export interface ISwapParams {
+	poolAddress: string;
+	tokenIn: string;
+	amountIn: string;
+	tokenOut: string;
+	amountOut: string;
+}
+
+export interface IComputeSwapOutParams {
+	poolAddress: string;
 	tokenIn: string;
 	tokenOut: string;
-	amountIn: number;
+	amountIn: string;
+}
+
+export interface IComputeSwapOutResult {
+	tokenOut: string;
+	amountOut: string;
+	priceOut: string;
 }
 
 export interface ISwapEvent {
@@ -299,6 +314,12 @@ export const LIST_POOLS = createAsyncAction(
 	'LIST_POOLS_SUCCESS',
 	'LIST_POOLS_FAILURE',
 )<IListPoolsParams, IListPoolsResult, string>();
+
+export const COMPUTE_SWAP_OUT = createAsyncAction(
+	'COMPUTE_SWAP_OUT_REQUEST',
+	'COMPUTE_SWAP_OUT_SUCCESS',
+	'COMPUTE_SWAP_OUT_FAILURE',
+)<IComputeSwapOutParams, IComputeSwapOutResult, string>();
 
 export const SWAP = createAsyncAction(
 	'SWAP_REQUEST',

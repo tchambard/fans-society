@@ -27,9 +27,11 @@ import {
 	IPoolInfo,
 	SWAP,
 	GET_TOKEN_BALANCE,
+	COMPUTE_SWAP_OUT,
 } from './actions';
 import {
 	getAMMContract,
+	getPoolContract,
 	getPoolFactoryContract,
 	getTokenContract,
 	getTokensFactoryContract,
@@ -38,10 +40,12 @@ import {
 import { PoolCreated } from 'fans-society-contracts/types/web3/contracts/pools/PoolFactory';
 import { TokenCreated } from 'fans-society-contracts/types/web3/contracts/tokens/ProjectTokenFactory';
 
-export const loadContractsInfo: Epic<RootAction,
+export const loadContractsInfo: Epic<
+	RootAction,
 	RootAction,
 	RootState,
-	Services> = (action$, state$, { web3, logger }) => {
+	Services
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(LOAD_CONTRACTS_INFO.request)),
 		mergeMap(async () => {
@@ -125,10 +129,12 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 	);
 };
 
-export const createProject: Epic<RootAction,
+export const createProject: Epic<
+	RootAction,
 	RootAction,
 	RootState,
-	Services> = (action$, state$, { web3 }) => {
+	Services
+> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(CREATE_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -253,10 +259,12 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 	);
 };
 
-export const commitOnProject: Epic<RootAction,
+export const commitOnProject: Epic<
+	RootAction,
 	RootAction,
 	RootState,
-	Services> = (action$, state$, { web3 }) => {
+	Services
+> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(COMMIT_ON_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -279,10 +287,12 @@ export const commitOnProject: Epic<RootAction,
 	);
 };
 
-export const withdrawOnProject: Epic<RootAction,
+export const withdrawOnProject: Epic<
+	RootAction,
 	RootAction,
 	RootState,
-	Services> = (action$, state$, { web3 }) => {
+	Services
+> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(WITHDRAW_ON_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -303,10 +313,12 @@ export const withdrawOnProject: Epic<RootAction,
 	);
 };
 
-export const listMyProjectCommitments: Epic<RootAction,
+export const listMyProjectCommitments: Epic<
+	RootAction,
 	RootAction,
 	RootState,
-	Services> = (action$, state$, { web3, logger }) => {
+	Services
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(LIST_MY_PROJECT_COMMITMENTS.request)),
 		mergeMap(async (action) => {
@@ -356,10 +368,12 @@ export const listMyProjectCommitments: Epic<RootAction,
 	);
 };
 
-export const launchProject: Epic<RootAction,
+export const launchProject: Epic<
+	RootAction,
 	RootAction,
 	RootState,
-	Services> = (action$, state$, { web3 }) => {
+	Services
+> = (action$, state$, { web3 }) => {
 	return action$.pipe(
 		filter(isActionOf(LAUNCH_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -426,10 +440,12 @@ export const getToken: Epic<RootAction, RootAction, RootState, Services> = (
 	);
 };
 
-export const listTokenPools: Epic<RootAction,
+export const listTokenPools: Epic<
+	RootAction,
 	RootAction,
 	RootState,
-	Services> = (action$, state$, { web3, logger }) => {
+	Services
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(LIST_POOLS.request)),
 		mergeMap(async (action) => {
@@ -488,6 +504,58 @@ export const listTokenPools: Epic<RootAction,
 	);
 };
 
+export const computeAmountOut: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3 }) => {
+	return action$.pipe(
+		filter(isActionOf(COMPUTE_SWAP_OUT.request)),
+		mergeMap(async (action) => {
+			try {
+				const wethAddress = await getWethAddress(web3);
+
+				const { poolAddress, tokenIn, tokenOut, amountIn } = action.payload;
+
+				const _amountIn =
+					tokenIn === wethAddress ? web3.utils.toWei(amountIn, 'ether') : amountIn;
+
+				const contract = await getPoolContract(web3, poolAddress);
+
+				const { _reserveX, _reserveY } = await contract.methods
+					.getReserves(tokenIn)
+					.call();
+
+				const [_amountOut, _priceOut] = await Promise.all([
+					contract.methods
+						.computeMaxOutputAmount(_amountIn, _reserveX, _reserveY)
+						.call(),
+					contract.methods.computePriceOut(tokenIn, _amountIn).call(),
+				]);
+
+				const amountOut =
+					tokenOut === wethAddress
+						? web3.utils.fromWei(_amountOut, 'ether')
+						: _amountOut;
+				const priceOut =
+					tokenOut === wethAddress
+						? web3.utils.fromWei(_priceOut, 'ether')
+						: _priceOut;
+
+				return COMPUTE_SWAP_OUT.success({
+					tokenOut,
+					amountOut,
+					priceOut,
+				});
+			} catch (e) {
+				loggerService.log(e.message);
+				return COMPUTE_SWAP_OUT.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
 export const swap: Epic<RootAction, RootAction, RootState, Services> = (
 	action$,
 	state$,
@@ -501,15 +569,19 @@ export const swap: Epic<RootAction, RootAction, RootState, Services> = (
 				const contract = state$.value.amm.contracts.amm.contract;
 				const wethAddress = await getWethAddress(web3);
 
-				const { tokenIn, tokenOut, amountIn } = action.payload;
+				const { poolAddress, tokenIn, amountIn, tokenOut, amountOut } =
+					action.payload;
 
-				const value =
-					tokenIn === wethAddress
-						? web3.utils.toWei(amountIn.toString(), 'ether')
-						: undefined;
+				let value: string;
+				let _amountOut = amountOut;
+				if (tokenIn === wethAddress) {
+					value = web3.utils.toWei(amountIn, 'ether');
+				} else if (tokenOut === wethAddress) {
+					_amountOut = web3.utils.toWei(amountOut, 'ether');
+				}
 
 				await contract.methods
-					.swap(tokenIn, tokenOut, value == null ? amountIn : 0)
+					.swap(poolAddress, tokenIn, _amountOut)
 					.send({ from: account, value });
 
 				return SWAP.success();
@@ -521,10 +593,12 @@ export const swap: Epic<RootAction, RootAction, RootState, Services> = (
 	);
 };
 
-export const getTokenBalance: Epic<RootAction,
+export const getTokenBalance: Epic<
+	RootAction,
 	RootAction,
 	RootState,
-	Services> = (action$, state$, { web3, logger }) => {
+	Services
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(GET_TOKEN_BALANCE.request)),
 		mergeMap(async (action) => {
@@ -533,13 +607,15 @@ export const getTokenBalance: Epic<RootAction,
 				const tokenAddress = action.payload;
 				const contract = await getTokenContract(web3, tokenAddress);
 				const wethAddress = await getWethAddress(web3);
-				const balance =
-					tokenAddress === wethAddress
-						? web3.utils.fromWei(
-							(await web3.eth.getBalance(account)).toString(),
-							'ether',
-						)
-						: await contract.methods.balanceOf(account).call();
+				let balance;
+				if (tokenAddress === wethAddress) {
+					balance = web3.utils.fromWei(
+						(await web3.eth.getBalance(account)).toString(),
+						'ether',
+					);
+				} else {
+					balance = await contract.methods.balanceOf(account).call();
+				}
 
 				logger.log('=== Token balance ===', tokenAddress, balance);
 				// here there is a trick: balance of weth address is not correct as we got eth balance
