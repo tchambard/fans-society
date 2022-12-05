@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
+import { Initializable } from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import { SafeERC20 } from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import { Math } from '@openzeppelin/contracts/utils/math/Math.sol';
 
-import {IPool} from './interfaces/IPool.sol';
-import {LPTokenERC20} from './LPTokenERC20.sol';
+import { IPool } from './interfaces/IPool.sol';
+import { LPTokenERC20 } from './LPTokenERC20.sol';
 
 import 'hardhat/console.sol';
 
@@ -16,20 +16,20 @@ contract Pool is Initializable, LPTokenERC20 {
 	address private tokenX;
 	address private tokenY;
 
-	uint private reserveX;
-	uint private reserveY;
+	uint256 private reserveX;
+	uint256 private reserveY;
 
-	uint private k; // k = x * y
+	uint256 private k; // k = x * y
 
-	event LPMinted(address indexed provider, uint amountX, uint amountY);
-	event LPBurnt(address indexed provider, uint amountX, uint amountY);
+	event LPMinted(address indexed provider, uint256 amountX, uint256 amountY);
+	event LPBurnt(address indexed provider, uint256 amountX, uint256 amountY);
 	event PoolSwapped(
 		address tokenIn,
-		uint amountIn,
+		uint256 amountIn,
 		address tokenOut,
-		uint amountOut
+		uint256 amountOut
 	);
-	event ReservesUpdated(uint reserveX, uint reserveY);
+	event ReservesUpdated(uint256 reserveX, uint256 reserveY);
 
 	function initialize(
 		address _amm,
@@ -43,22 +43,33 @@ contract Pool is Initializable, LPTokenERC20 {
 		tokenY = _tokenY;
 	}
 
-	function getReserves(address _tokenX)
-	public
-	view
-	returns (uint256 _reserveX, uint256 _reserveY)
+	function getReserves(address _tokenIn)
+		public
+		view
+		returns (
+			address _tokenX,
+			address _tokenY,
+			uint256 _reserveX,
+			uint256 _reserveY
+		)
 	{
-		require(_tokenX == tokenX || _tokenX == tokenY, 'invalid token address');
-		(_reserveX, _reserveY) = _tokenX == tokenX ? (reserveX, reserveY) : (reserveY, reserveX);
+		require(_tokenIn == tokenX || _tokenIn == tokenY, 'invalid token address');
+		(_tokenX, _tokenY, _reserveX, _reserveY) = _tokenIn == tokenX
+			? (tokenX, tokenY, reserveX, reserveY)
+			: (tokenY, tokenX, reserveY, reserveX);
 	}
 
-	function mintLP(address provider) external returns (uint liquidity) {
-		(uint _reserveX, uint _reserveY) = (reserveX, reserveY);
+	function mintLP(address provider)
+		external
+		onlyAmm
+		returns (uint256 liquidity)
+	{
+		(uint256 _reserveX, uint256 _reserveY) = (reserveX, reserveY);
 
-		uint balanceX = IERC20(tokenX).balanceOf(address(this));
-		uint balanceY = IERC20(tokenY).balanceOf(address(this));
-		uint amountX = balanceX - _reserveX;
-		uint amountY = balanceY - _reserveY;
+		uint256 balanceX = IERC20(tokenX).balanceOf(address(this));
+		uint256 balanceY = IERC20(tokenY).balanceOf(address(this));
+		uint256 amountX = balanceX - _reserveX;
+		uint256 amountY = balanceY - _reserveY;
 
 		if (_reserveX > 0 || _reserveY > 0) {
 			require(_reserveX * amountY == _reserveY * amountX, 'x / y != dx / dy');
@@ -66,7 +77,7 @@ contract Pool is Initializable, LPTokenERC20 {
 
 		_mintFansSocietyFees(_reserveX, _reserveY);
 
-		uint _totalSupply = totalSupply();
+		uint256 _totalSupply = totalSupply();
 		if (_totalSupply == 0) {
 			liquidity = Math.sqrt(amountX * amountY);
 		} else {
@@ -86,24 +97,26 @@ contract Pool is Initializable, LPTokenERC20 {
 		emit LPMinted(provider, amountX, amountY);
 	}
 
-	function burnLP(
-		address provider
-	) external returns (uint amountX, uint amountY) {
-		(uint _reserveX, uint _reserveY) = (reserveX, reserveY);
+	function burnLP(address provider)
+		external
+		onlyAmm
+		returns (uint256 amountX, uint256 amountY)
+	{
+		(uint256 _reserveX, uint256 _reserveY) = (reserveX, reserveY);
 		(address _tokenX, address _tokenY) = (tokenX, tokenY);
 
-		uint balanceX = IERC20(_tokenX).balanceOf(address(this));
-		uint balanceY = IERC20(_tokenY).balanceOf(address(this));
-		uint liquidity = balanceOf(address(this));
+		uint256 balanceX = IERC20(_tokenX).balanceOf(address(this));
+		uint256 balanceY = IERC20(_tokenY).balanceOf(address(this));
+		uint256 liquidity = balanceOf(address(this));
 
 		_mintFansSocietyFees(_reserveX, _reserveY);
 
-		uint _totalSupply = totalSupply();
+		uint256 _totalSupply = totalSupply();
 
 		amountX = (liquidity * balanceX) / _totalSupply;
 		amountY = (liquidity * balanceY) / _totalSupply;
 
-		require(amountX > 0 && amountY > 0, 'not enough liquidity to remove');
+		require(amountX > 0 && amountY > 0, 'Not enough liquidity to remove');
 
 		_burn(address(this), liquidity);
 
@@ -120,54 +133,91 @@ contract Pool is Initializable, LPTokenERC20 {
 		emit LPBurnt(provider, amountX, amountY);
 	}
 
-	function swap(address _tokenIn) external returns (address tokenIn, uint amountIn, address tokenOut, uint amountOut) {
+	function swap(
+		address _tokenIn,
+		uint256 _amountIn,
+		address _recipient
+	) external onlyAmm returns (uint256 amountOut) {
 		require(_tokenIn == tokenX || _tokenIn == tokenY, 'bad token');
 
 		(
-		address tokenIn,
-		address tokenOut,
-		uint reserveIn,
-		uint reserveOut
+			address __tokenIn,
+			address __tokenOut,
+			uint256 reserveIn,
+			uint256 reserveOut
 		) = _tokenIn == tokenX
-		? (tokenX, tokenY, reserveX, reserveY)
-		: (tokenY, tokenX, reserveY, reserveX);
+				? (tokenX, tokenY, reserveX, reserveY)
+				: (tokenY, tokenX, reserveY, reserveX);
 
-		uint balanceIn = IERC20(tokenIn).balanceOf(address(this));
+		uint256 balanceIn = IERC20(__tokenIn).balanceOf(address(this));
 
-		uint amountIn = balanceIn - reserveIn;
-		require(amountIn > 0, 'not enough input');
+		require(balanceIn - reserveIn == _amountIn, 'invalid input amount');
 
-		uint amountInWithFees = (amountIn * 990) / 1000;
-		// 1% fees for fans society
-		amountOut = (reserveOut * amountInWithFees) / (reserveIn + amountInWithFees);
-		require(amountOut < reserveOut, 'not enough liquidity for swap');
-
-		SafeERC20.safeTransfer(IERC20(tokenOut), msg.sender, amountOut);
+		amountOut = computeMaxOutputAmount(_amountIn, reserveIn, reserveOut);
+		SafeERC20.safeTransfer(IERC20(__tokenOut), _recipient, amountOut);
 
 		_updateReserves(
 			IERC20(tokenX).balanceOf(address(this)),
 			IERC20(tokenY).balanceOf(address(this))
 		);
-
-		emit PoolSwapped(tokenIn, amountIn, tokenOut, amountOut);
-		return (tokenIn, amountIn, tokenOut, amountOut);
 	}
 
-	function _updateReserves(uint _balanceX, uint _balanceY) private {
+	function computePriceOut(address _tokenIn, uint256 _amountIn)
+		external
+		view
+		returns (uint256)
+	{
+		(uint256 reserveIn, uint256 reserveOut) = _tokenIn == tokenX
+			? (reserveX, reserveY)
+			: (reserveY, reserveX);
+		require(_amountIn > 0, 'Not enough input');
+		require(reserveIn > 0 && reserveOut > 0, 'Not enough liquidity');
+		return (_amountIn * reserveOut) / reserveIn;
+	}
+
+	function computeMaxOutputAmount(
+		uint256 _amountIn,
+		uint256 _reserveIn,
+		uint256 _reserveOut
+	) public pure returns (uint256 amountOut) {
+		require(_amountIn > 0, 'Not enough input');
+		require(_reserveIn > 0 && _reserveIn > 0, 'Not enough liquidity');
+		// 1% fees
+		uint256 amountInWithFees = _amountIn * 990;
+		amountOut =
+			(_reserveOut * amountInWithFees) /
+			((_reserveIn * 1000) + amountInWithFees);
+	}
+
+	function computeRequiredInputAmount(
+		uint256 _amountOut,
+		uint256 _reserveIn,
+		uint256 _reserveOut
+	) external pure returns (uint256 amountIn) {
+		require(_amountOut > 0, 'Not enough output');
+		require(_reserveIn > 0 && _reserveIn > 0, 'Not enough liquidity');
+		// 1% fees
+		amountIn =
+			1 +
+			(_reserveIn * _amountOut * 1000) /
+			((_reserveOut - _amountOut) * 990);
+	}
+
+	function _updateReserves(uint256 _balanceX, uint256 _balanceY) private {
 		reserveX = _balanceX;
 		reserveY = _balanceY;
 		emit ReservesUpdated(reserveX, reserveY);
 	}
 
-	function _mintFansSocietyFees(uint _reserveX, uint _reserveY) private {
-		uint _k = k;
+	function _mintFansSocietyFees(uint256 _reserveX, uint256 _reserveY) private {
+		uint256 _k = k;
 		if (_k != 0) {
-			uint rootK = Math.sqrt(_reserveX * _reserveY);
-			uint rootKLast = Math.sqrt(_k);
+			uint256 rootK = Math.sqrt(_reserveX * _reserveY);
+			uint256 rootKLast = Math.sqrt(_k);
 			if (rootK > rootKLast) {
-				uint numerator = totalSupply() * (rootK - rootKLast) * 8;
-				uint denominator = rootK * 17 + rootKLast * 8;
-				uint liquidity = numerator / denominator;
+				uint256 numerator = totalSupply() * (rootK - rootKLast) * 8;
+				uint256 denominator = rootK * 17 + rootKLast * 8;
+				uint256 liquidity = numerator / denominator;
 				if (liquidity > 0) _mint(fansSocietyAddress, liquidity);
 			}
 		}

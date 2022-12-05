@@ -2,10 +2,10 @@
 
 pragma solidity 0.8.17;
 
-import { Initializable } from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
-import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import { ERC20Wrapper } from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol';
-import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
+import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {ERC20Wrapper} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 contract Projects is Ownable {
 	enum ProjectStatus {
@@ -24,7 +24,7 @@ contract Projects is Ownable {
 		uint target;
 		uint minInvest;
 		uint maxInvest;
-		uint32 totalSupply;
+		uint112 totalSupply;
 		ProjectStatus status;
 		address partnerAddress;
 		address tokenAddress;
@@ -44,7 +44,7 @@ contract Projects is Ownable {
 		uint target,
 		uint minInvest,
 		uint maxInvest,
-		uint32 totalSupply,
+		uint112 totalSupply,
 		address indexed partnerAddress
 	);
 
@@ -82,23 +82,23 @@ contract Projects is Ownable {
 		uint _target,
 		uint _minInvest,
 		uint _maxInvest,
-		uint32 _totalSupply
+		uint112 _totalSupply
 	) external onlyOwner {
 		count++;
 
 		projects[count] = Project({
-			id: count,
-			name: _name,
-			symbol: _symbol,
-			description: _description,
-			fund: 0,
-			target: _target,
-			minInvest: _minInvest,
-			maxInvest: _maxInvest,
-			totalSupply: _totalSupply,
-			status: ProjectStatus.Opened,
-			partnerAddress: _partnerAddress,
-			tokenAddress: address(0)
+		id : count,
+		name : _name,
+		symbol : _symbol,
+		description : _description,
+		fund : 0,
+		target : _target,
+		minInvest : _minInvest,
+		maxInvest : _maxInvest,
+		totalSupply : _totalSupply,
+		status : ProjectStatus.Opened,
+		partnerAddress : _partnerAddress,
+		tokenAddress : address(0)
 		});
 
 		emit ProjectCreated(
@@ -154,7 +154,7 @@ contract Projects is Ownable {
 
 		commitments[_id][msg.sender] = 0;
 
-		(bool sent, ) = msg.sender.call{ value: commitment }('');
+		(bool sent,) = msg.sender.call{value : commitment}('');
 		require(sent, 'withdraw failed');
 
 		emit Withdrawed(_id, msg.sender, commitment);

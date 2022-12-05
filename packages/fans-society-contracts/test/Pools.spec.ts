@@ -19,7 +19,7 @@ const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
 const Pool = artifacts.require('Pool');
 
 contract('Pools', (accounts) => {
-	const administrator = accounts[0];
+	const amm = accounts[0];
 	const fsociety = accounts[1];
 	const user1 = accounts[2];
 	const user2 = accounts[3];
@@ -37,18 +37,18 @@ contract('Pools', (accounts) => {
 	let tokenY: ProjectTokenERC20Instance;
 
 	beforeEach(async () => {
-		projectTokenFactory = await deployProjectTokenFactoryInstance(administrator);
-		PoolFactory = await deployPoolFactoryInstance(administrator, fsociety);
+		projectTokenFactory = await deployProjectTokenFactoryInstance(amm);
+		PoolFactory = await deployPoolFactoryInstance(amm, fsociety);
 
 		await projectTokenFactory.createToken(
 			0,
 			'tokenY',
 			'TKN1',
-			administrator,
+			amm,
 			tX_totalSupply,
 			tX_initialSupply,
 			{
-				from: administrator,
+				from: amm,
 			},
 		);
 
@@ -56,11 +56,11 @@ contract('Pools', (accounts) => {
 			1,
 			'token2',
 			'TKN2',
-			administrator,
+			amm,
 			tY_totalSupply,
 			tY_initialSupply,
 			{
-				from: administrator,
+				from: amm,
 			},
 		);
 
@@ -81,8 +81,8 @@ contract('Pools', (accounts) => {
 		let poolInstance: PoolInstance;
 
 		beforeEach(async () => {
-			await PoolFactory.createPool(administrator, tokenX.address, tokenY.address, {
-				from: administrator,
+			await PoolFactory.createPool(amm, tokenX.address, tokenY.address, {
+				from: amm,
 			});
 			const poolCreatedEvent = _.last(
 				await getPoolsCreatedFromPastEvents(PoolFactory),
@@ -101,7 +101,7 @@ contract('Pools', (accounts) => {
 				await tokenY.transfer(poolInstance.address, amountY, { from: user1 });
 
 				// then ask for LP tokens
-				const receipt = await poolInstance.mintLP(user1, { from: user1 });
+				const receipt = await poolInstance.mintLP(user1, { from: amm });
 
 				const expectedLiquidity = BN(2000);
 
@@ -138,9 +138,11 @@ contract('Pools', (accounts) => {
 					(await tokenY.balanceOf(poolInstance.address)).toNumber(),
 					amountY,
 				);
-				const reserves = await poolInstance.getReserves(tokenX.address);
-				assert.equal(reserves[0].toNumber(), amountX);
-				assert.equal(reserves[1].toNumber(), amountY);
+				const { _reserveX, _reserveY } = (await poolInstance.getReserves(
+					tokenX.address,
+				)) as any;
+				assert.equal(_reserveX.toNumber(), amountX);
+				assert.equal(_reserveY.toNumber(), amountY);
 			});
 		});
 
@@ -152,7 +154,7 @@ contract('Pools', (accounts) => {
 			beforeEach(async () => {
 				await tokenX.transfer(poolInstance.address, amountX, { from: user1 });
 				await tokenY.transfer(poolInstance.address, amountY, { from: user1 });
-				await poolInstance.mintLP(user1, { from: user1 });
+				await poolInstance.mintLP(user1, { from: amm });
 			});
 
 			it('> burnLP', async () => {
@@ -167,7 +169,7 @@ contract('Pools', (accounts) => {
 				});
 
 				// then ask to get back its tokens
-				const receipt = await poolInstance.burnLP(user1, { from: user1 });
+				const receipt = await poolInstance.burnLP(user1, { from: amm });
 
 				await expectEvent(receipt, 'Transfer', {
 					from: poolInstance.address,
@@ -224,9 +226,11 @@ contract('Pools', (accounts) => {
 				assert.equal((await tokenX.balanceOf(user1)).toNumber(), 4000);
 				assert.equal((await tokenY.balanceOf(user1)).toNumber(), 4000);
 
-				const reserves = await poolInstance.getReserves(tokenX.address);
-				assert.equal(reserves[0].toNumber(), 1000);
-				assert.equal(reserves[1].toNumber(), 1000);
+				const { _reserveX, _reserveY } = (await poolInstance.getReserves(
+					tokenX.address,
+				)) as any;
+				assert.equal(_reserveX.toNumber(), 1000);
+				assert.equal(_reserveY.toNumber(), 1000);
 			});
 
 			it('> swap with input on tokenX', async () => {
@@ -236,9 +240,7 @@ contract('Pools', (accounts) => {
 					from: user2,
 				});
 
-				const receipt = await poolInstance.swap(tokenX.address, {
-					from: user2,
-				});
+				const receipt = await poolInstance.swap(tokenX.address, amountIn, user2);
 
 				const tokenYTransferEvent = _.last(
 					await getTokenTransfersFromPastEvents(tokenY),
@@ -255,17 +257,12 @@ contract('Pools', (accounts) => {
 					reserveY: amountY.sub(BN(expectedAmountOut)),
 				});
 
-				await expectEvent(receipt, 'PoolSwapped', {
-					tokenIn: tokenX.address,
-					amountIn: amountIn,
-					tokenOut: tokenY.address,
-					amountOut: BN(expectedAmountOut),
-				});
-
-				const reserves = await poolInstance.getReserves(tokenX.address);
-				assert.equal(reserves[0].toNumber(), amountX.add(amountIn).toNumber());
+				const { _reserveX, _reserveY } = (await poolInstance.getReserves(
+					tokenX.address,
+				)) as any;
+				assert.equal(_reserveX.toNumber(), amountX.add(amountIn).toNumber());
 				assert.equal(
-					reserves[1].toNumber(),
+					_reserveY.toNumber(),
 					amountY.sub(BN(expectedAmountOut)).toNumber(),
 				);
 				assert.equal(
