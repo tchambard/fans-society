@@ -33,8 +33,8 @@ const Token = Loader(
 	lazy(() => import('src/content/tokens/components/detail/TokenContainer')),
 );
 
-const DashboardHome = Loader(
-	lazy(() => import('src/content/dashboard/components/DashboardHome')),
+const Dashboard = Loader(
+	lazy(() => import('src/content/dashboard/components/DashboardContainer')),
 );
 
 const Status404 = Loader(lazy(() => import('src/content/not-found')));
@@ -51,7 +51,7 @@ export class Routes {
 	public static DASHBOARD = `/dashboard`;
 }
 
-export function buildRoute(route: string, params?: any) {
+export function buildRoute(route: string, params?: any, hash?: any) {
 	return _.reduce(
 		params,
 		(_route, value, key) => {
@@ -120,7 +120,7 @@ export const routes: RouteObject[] = [
 		children: [
 			{
 				path: Routes.DASHBOARD,
-				element: <DashboardHome />,
+				element: <Dashboard />,
 			},
 		],
 	},

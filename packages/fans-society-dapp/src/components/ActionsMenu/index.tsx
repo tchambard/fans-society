@@ -25,7 +25,7 @@ export interface IActionMenuItem {
 		| 'error'
 		| 'info'
 		| 'warning';
-	icon: any;
+	icon?: any;
 	hidden?: boolean;
 	description?: string;
 	onClick?: () => void;
@@ -51,7 +51,7 @@ export default ({ items, mode }: IProps) => {
 	return (
 		<>
 			{upSm ? (
-				<Stack direction="row" spacing={2}>
+				<Stack direction="row" spacing={2} justifyContent={'flex-end'}>
 					{_.map(items, (item) => {
 						if (!item.hidden) {
 							return (
@@ -156,17 +156,19 @@ export default ({ items, mode }: IProps) => {
 									return (
 										<MenuItem key={item.title}>
 											<Link to={item.url} onClick={item.onClick}>
-												<ListItemIcon
-													sx={{
-														'&:hover': {
-															background: theme.colors[item.color].lighter,
-														},
-														color: theme.palette[item.color].main,
-													}}
-													color={'inherit'}
-												>
-													{item.icon}
-												</ListItemIcon>
+												{item.icon && (
+													<ListItemIcon
+														sx={{
+															'&:hover': {
+																background: theme.colors[item.color].lighter,
+															},
+															color: theme.palette[item.color].main,
+														}}
+														color={'inherit'}
+													>
+														{item.icon}
+													</ListItemIcon>
+												)}
 												{item.title}
 											</Link>
 										</MenuItem>
