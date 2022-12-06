@@ -15,13 +15,21 @@ export default ({ token }: IProps) => {
 			title: 'Swap',
 			description: 'Exchange token',
 			color: 'primary',
-			url: buildRoute(Routes.TOKEN_DETAIL, { projectId: token.projectId }),
+			url: buildRoute(
+				Routes.TOKEN_DETAIL,
+				{ projectId: token.projectId },
+				{ tab: 'swap' },
+			),
 		},
 		{
-			title: 'Pool',
+			title: 'Farm',
 			description: 'Yield farming',
 			color: 'warning',
-			url: buildRoute(Routes.TOKEN_DETAIL, { projectId: token.projectId }),
+			url: buildRoute(
+				Routes.TOKEN_DETAIL,
+				{ projectId: token.projectId },
+				{ tab: 'pool' },
+			),
 		},
 	];
 

@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+import * as qs from 'qs';
 import { ChangeEvent, useState } from 'react';
 import { useSelector } from 'react-redux';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -14,8 +16,9 @@ import TokenSwap from './TokenSwap';
 export default ({}) => {
 	const theme = useTheme();
 
+	const tabHash = qs.parse(window.location.hash.substring(1))?.tab?.toString();
 	const { currentToken, pools } = useSelector((state: RootState) => state.amm);
-	const [currentTab, setCurrentTab] = useState<string>('swap');
+	const [currentTab, setCurrentTab] = useState<string>(tabHash || 'swap');
 
 	if (!currentToken.item || currentToken.loading || pools.loading) {
 		return <SuspenseLoader />;
@@ -23,7 +26,7 @@ export default ({}) => {
 
 	const tabs = [
 		{ value: 'swap', label: 'Swap' },
-		{ value: 'liquidity', label: 'Liquidity' },
+		{ value: 'pool', label: 'Liquidity' },
 	];
 
 	const handleTabsChange = (event: ChangeEvent<{}>, value: string): void => {
@@ -88,7 +91,7 @@ export default ({}) => {
 							</Grid>
 						)}
 
-						{currentTab === 'liquidity' && (
+						{currentTab === 'pool' && (
 							<Grid item xs={12}>
 								<></>
 							</Grid>

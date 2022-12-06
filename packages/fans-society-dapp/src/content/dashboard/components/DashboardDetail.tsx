@@ -41,7 +41,7 @@ export default ({}) => {
 					<Typography
 						sx={{ fontSize: '1.5em', lineHeight: 2, width: '33%', flexShrink: 0 }}
 					>
-						My entertainment tokens
+						Tokens
 					</Typography>
 				</AccordionSummary>
 				<AccordionDetails
@@ -62,7 +62,7 @@ export default ({}) => {
 					<Typography
 						sx={{ fontSize: '1.5em', lineHeight: 2, width: '33%', flexShrink: 0 }}
 					>
-						My pending claims
+						Pending projects ICO claims
 					</Typography>
 				</AccordionSummary>
 				<AccordionDetails
@@ -83,7 +83,7 @@ export default ({}) => {
 					<Typography
 						sx={{ fontSize: '1.5em', lineHeight: 2, width: '33%', flexShrink: 0 }}
 					>
-						Liquidity
+						Yield farming
 					</Typography>
 				</AccordionSummary>
 				<AccordionDetails
