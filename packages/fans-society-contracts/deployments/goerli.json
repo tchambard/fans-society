@@ -3,7 +3,7 @@
   "chainId": "5",
   "contracts": {
     "ProjectTokenERC20": {
-      "address": "0xbf11b53fBD50C4241F0307f41100044068D93b23",
+      "address": "0x2d13dc8f752f4f0880Dc16EF5b1f609A90155915",
       "abi": [
         {
           "anonymous": false,
@@ -397,7 +397,7 @@
       ]
     },
     "ProjectTokenFactory": {
-      "address": "0xc58D32D13f1b1C9874695727e84E17DeB190580D",
+      "address": "0x21E2f6A83a21A8C7296843742BD885257a3Be3a6",
       "abi": [
         {
           "inputs": [
@@ -488,7 +488,7 @@
       ]
     },
     "Pool": {
-      "address": "0x757067Df95690A22802020aD59f9521d3943Cb4d",
+      "address": "0x32D032aa4E09B7E9478eb3E7e18A18a9AF2d3B2F",
       "abi": [
         {
           "anonymous": false,
@@ -1146,7 +1146,7 @@
       ]
     },
     "PoolFactory": {
-      "address": "0x9913Fb771AA1734B169f3CC80459f4B9DF7d45a4",
+      "address": "0x6dd5453Ef9FdB17B6DE37eFc5DC201E39931DF5c",
       "abi": [
         {
           "inputs": [
@@ -1297,7 +1297,7 @@
       ]
     },
     "AMM": {
-      "address": "0x1E46Ba6FeCB63a8C9FfC86DB212b8D1543f71637",
+      "address": "0x3a9c4a328Ac6B24A200a36b5B95e7fE015b6Fa4d",
       "abi": [
         {
           "inputs": [
@@ -1379,52 +1379,72 @@
               "type": "uint256"
             },
             {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "symbol",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "avatarCid",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "coverCid",
+                  "type": "string"
+                }
+              ],
               "indexed": false,
-              "internalType": "string",
-              "name": "name",
-              "type": "string"
+              "internalType": "struct Projects.ProjectInfo",
+              "name": "info",
+              "type": "tuple"
             },
             {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "target",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minInvest",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxInvest",
+                  "type": "uint256"
+                }
+              ],
               "indexed": false,
-              "internalType": "string",
-              "name": "symbol",
-              "type": "string"
-            },
-            {
-              "indexed": false,
-              "internalType": "string",
-              "name": "description",
-              "type": "string"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "target",
-              "type": "uint256"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "minInvest",
-              "type": "uint256"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "maxInvest",
-              "type": "uint256"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint112",
-              "name": "totalSupply",
-              "type": "uint112"
+              "internalType": "struct Projects.ProjectICO",
+              "name": "ico",
+              "type": "tuple"
             },
             {
               "indexed": true,
               "internalType": "address",
               "name": "partnerAddress",
               "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint112",
+              "name": "totalSupply",
+              "type": "uint112"
             }
           ],
           "name": "ProjectCreated",
@@ -1649,39 +1669,63 @@
         {
           "inputs": [
             {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "symbol",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "avatarCid",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "coverCid",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct Projects.ProjectInfo",
+              "name": "_info",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "target",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minInvest",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxInvest",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Projects.ProjectICO",
+              "name": "_ico",
+              "type": "tuple"
+            },
+            {
               "internalType": "address",
               "name": "_partnerAddress",
               "type": "address"
-            },
-            {
-              "internalType": "string",
-              "name": "_name",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "_symbol",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "_description",
-              "type": "string"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_target",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_minInvest",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_maxInvest",
-              "type": "uint256"
             },
             {
               "internalType": "uint112",
@@ -1731,21 +1775,6 @@
           "name": "projects",
           "outputs": [
             {
-              "internalType": "string",
-              "name": "name",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "symbol",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "description",
-              "type": "string"
-            },
-            {
               "internalType": "uint256",
               "name": "id",
               "type": "uint256"
@@ -1756,24 +1785,63 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
-              "name": "target",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "minInvest",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "maxInvest",
-              "type": "uint256"
-            },
-            {
               "internalType": "uint112",
               "name": "totalSupply",
               "type": "uint112"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "symbol",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "avatarCid",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "coverCid",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct Projects.ProjectInfo",
+              "name": "info",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "target",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minInvest",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxInvest",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Projects.ProjectICO",
+              "name": "ico",
+              "type": "tuple"
             },
             {
               "internalType": "enum Projects.ProjectStatus",
