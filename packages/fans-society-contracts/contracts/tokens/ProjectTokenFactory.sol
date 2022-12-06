@@ -10,7 +10,7 @@ contract ProjectTokenFactory is IProjectTokenFactory {
 	address private immutable tokenImplementationAddress;
 
 	event TokenCreated(
-		uint256 projectId,
+		uint256 indexed projectId,
 		address token,
 		string name,
 		string symbol

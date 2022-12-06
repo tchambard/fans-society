@@ -3,7 +3,7 @@
   "chainId": "1337",
   "contracts": {
     "WETHToken": {
-      "address": "0x6D712CB50297b97b79dE784d10F487C00d7f8c2C",
+      "address": "0x245e77E56b1514D77910c9303e4b44dDb44B788c",
       "abi": [
         {
           "anonymous": false,
@@ -292,7 +292,7 @@
       ]
     },
     "ProjectTokenERC20": {
-      "address": "0x04F339eC4D75Cf2833069e6e61b60eF56461CD7C",
+      "address": "0xE2b5bDE7e80f89975f7229d78aD9259b2723d11F",
       "abi": [
         {
           "anonymous": false,
@@ -686,7 +686,7 @@
       ]
     },
     "ProjectTokenFactory": {
-      "address": "0x3de00f44ce68FC56DB0e0E33aD4015C6e78eCB39",
+      "address": "0xC6c5Ab5039373b0CBa7d0116d9ba7fb9831C3f42",
       "abi": [
         {
           "inputs": [
@@ -703,7 +703,7 @@
           "anonymous": false,
           "inputs": [
             {
-              "indexed": false,
+              "indexed": true,
               "internalType": "uint256",
               "name": "projectId",
               "type": "uint256"
@@ -777,7 +777,7 @@
       ]
     },
     "Pool": {
-      "address": "0x89372b32b8AF3F1272e2efb3088616318D2834cA",
+      "address": "0x4ea0Be853219be8C9cE27200Bdeee36881612FF2",
       "abi": [
         {
           "anonymous": false,
@@ -1435,7 +1435,7 @@
       ]
     },
     "PoolFactory": {
-      "address": "0xB1c05b498Cb58568B2470369FEB98B00702063dA",
+      "address": "0x46d4674578a2daBbD0CEAB0500c6c7867999db34",
       "abi": [
         {
           "inputs": [
@@ -1586,7 +1586,7 @@
       ]
     },
     "AMM": {
-      "address": "0x92A00fc48Ad3dD4A8b5266a8F467a52Ac784fC83",
+      "address": "0x9155497EAE31D432C0b13dBCc0615a37f55a2c87",
       "abi": [
         {
           "inputs": [

@@ -65,7 +65,7 @@ export interface IProjectsState {
 		loading: boolean;
 	};
 	balances: {
-		[address: string]: { balance: number; loading: boolean };
+		[address: string]: { balance: string; loading: boolean };
 	};
 	swapInfo?: {
 		result?: {
