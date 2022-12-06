@@ -3,7 +3,7 @@
   "chainId": "1337",
   "contracts": {
     "AMM": {
-      "address": "0x1eB5C49630E08e95Ba7f139BcF4B9BA171C9a8C7",
+      "address": "0xeE1eb820BeeCED56657bA74fa8D70748D7A6756C",
       "abi": [
         {
           "inputs": [
@@ -85,52 +85,72 @@
               "type": "uint256"
             },
             {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "symbol",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "avatarCid",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "coverCid",
+                  "type": "string"
+                }
+              ],
               "indexed": false,
-              "internalType": "string",
-              "name": "name",
-              "type": "string"
+              "internalType": "struct Projects.ProjectInfo",
+              "name": "info",
+              "type": "tuple"
             },
             {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "target",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minInvest",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxInvest",
+                  "type": "uint256"
+                }
+              ],
               "indexed": false,
-              "internalType": "string",
-              "name": "symbol",
-              "type": "string"
-            },
-            {
-              "indexed": false,
-              "internalType": "string",
-              "name": "description",
-              "type": "string"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "target",
-              "type": "uint256"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "minInvest",
-              "type": "uint256"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "maxInvest",
-              "type": "uint256"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint112",
-              "name": "totalSupply",
-              "type": "uint112"
+              "internalType": "struct Projects.ProjectICO",
+              "name": "ico",
+              "type": "tuple"
             },
             {
               "indexed": true,
               "internalType": "address",
               "name": "partnerAddress",
               "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint112",
+              "name": "totalSupply",
+              "type": "uint112"
             }
           ],
           "name": "ProjectCreated",
@@ -355,39 +375,63 @@
         {
           "inputs": [
             {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "symbol",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "avatarCid",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "coverCid",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct Projects.ProjectInfo",
+              "name": "_info",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "target",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minInvest",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxInvest",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Projects.ProjectICO",
+              "name": "_ico",
+              "type": "tuple"
+            },
+            {
               "internalType": "address",
               "name": "_partnerAddress",
               "type": "address"
-            },
-            {
-              "internalType": "string",
-              "name": "_name",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "_symbol",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "_description",
-              "type": "string"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_target",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_minInvest",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_maxInvest",
-              "type": "uint256"
             },
             {
               "internalType": "uint112",
@@ -437,21 +481,6 @@
           "name": "projects",
           "outputs": [
             {
-              "internalType": "string",
-              "name": "name",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "symbol",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "description",
-              "type": "string"
-            },
-            {
               "internalType": "uint256",
               "name": "id",
               "type": "uint256"
@@ -462,24 +491,63 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
-              "name": "target",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "minInvest",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "maxInvest",
-              "type": "uint256"
-            },
-            {
               "internalType": "uint112",
               "name": "totalSupply",
               "type": "uint112"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "symbol",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "avatarCid",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "coverCid",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct Projects.ProjectInfo",
+              "name": "info",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "target",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minInvest",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxInvest",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Projects.ProjectICO",
+              "name": "ico",
+              "type": "tuple"
             },
             {
               "internalType": "enum Projects.ProjectStatus",
@@ -1255,7 +1323,7 @@
       ]
     },
     "PoolFactory": {
-      "address": "0xd977422c9eE9B646f64A4C4389a6C98ad356d8C4",
+      "address": "0x7036124464A2d2447516309169322c8498ac51e3",
       "abi": [
         {
           "inputs": [

@@ -29,6 +29,8 @@ export interface ICreateProjectParams {
 	name: string;
 	symbol: string;
 	description: string;
+	avatarCid: string;
+	coverCid: string;
 	target: string;
 	minInvest: string;
 	maxInvest: string;
@@ -71,8 +73,10 @@ export enum ProjectStatus {
 export interface IProjectListItem {
 	id: string;
 	name: string;
-	description: string;
 	symbol: string;
+	description: string;
+	avatarCid: string;
+	coverCid: string;
 	target: number;
 	minInvest: number;
 	maxInvest: number;
@@ -84,10 +88,10 @@ export interface IProjectListItem {
 export interface IProjectDetail {
 	id: string;
 	name: string;
-	description: string;
-	avatarImageUrl: string;
-	coverImageUrl: string;
 	symbol: string;
+	description: string;
+	avatarCid: string;
+	coverCid: string;
 	target: number;
 	minInvest: number;
 	maxInvest: number;
@@ -140,8 +144,8 @@ export interface ITokenDetail {
 	symbol: string;
 	name: string;
 	description: string;
-	avatarImageUrl: string;
-	coverImageUrl: string;
+	avatarCid: string;
+	coverCid: string;
 }
 
 export interface IListPoolsParams {

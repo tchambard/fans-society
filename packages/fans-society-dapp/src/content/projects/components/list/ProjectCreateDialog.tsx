@@ -11,10 +11,14 @@ import {
 import { useState } from 'react';
 import { FormContainer, TextFieldElement } from 'react-hook-form-mui';
 import { useDispatch, useSelector } from 'react-redux';
+import Web3Uploader from 'src/components/Web3Uploader';
 
 import { RootState } from 'state-types';
 
-import { CREATE_PROJECT, ICreateProjectParams } from '../../../../store/amm/actions';
+import {
+	CREATE_PROJECT,
+	ICreateProjectParams,
+} from '../../../../store/amm/actions';
 
 interface IProjectCreateDialogProps {
 	dialogVisible: boolean;
@@ -22,13 +26,15 @@ interface IProjectCreateDialogProps {
 }
 
 export default ({
-					dialogVisible,
-					setDialogVisible,
-				}: IProjectCreateDialogProps) => {
+	dialogVisible,
+	setDialogVisible,
+}: IProjectCreateDialogProps) => {
 	const dispatch = useDispatch();
 
 	const { txPending } = useSelector((state: RootState) => state.amm);
 	const [formData, setFormData] = useState<Partial<ICreateProjectParams>>({});
+	const [coverCid, setCoverCid] = useState<string>();
+	const [avatarCid, setAvatarCid] = useState<string>();
 
 	return (
 		<Dialog
@@ -44,7 +50,7 @@ export default ({
 					defaultValues={formData}
 					onSuccess={(data: ICreateProjectParams) => {
 						setFormData(data);
-						dispatch(CREATE_PROJECT.request(data));
+						dispatch(CREATE_PROJECT.request({ ...data, coverCid, avatarCid }));
 						setDialogVisible(false);
 					}}
 				>
@@ -55,28 +61,44 @@ export default ({
 							label={'Partner address'}
 							required={true}
 						/>
-						<br/>
+						<br />
 						<TextFieldElement
 							type={'text'}
 							name={'name'}
 							label={'Name'}
 							required={true}
 						/>
-						<br/>
+						<br />
 						<TextFieldElement
 							type={'text'}
 							name={'symbol'}
 							label={'Symbol'}
 							required={true}
 						/>
-						<br/>
+						<br />
 						<TextFieldElement
 							type={'text'}
 							name={'description'}
 							label={'Description'}
 							required={true}
 						/>
-						<br/>
+						<br />
+						<Web3Uploader
+							id={'cover-image-uploader'}
+							label={'Cover image'}
+							placeholder={'Select a file for project cover'}
+							required={true}
+							onUploaded={({ cid }) => setCoverCid(cid)}
+						/>
+						<br />
+						<Web3Uploader
+							id={'avatar-image-uploader'}
+							label={'Avatar image'}
+							placeholder={'Select a file for project avatar'}
+							required={true}
+							onUploaded={({ cid }) => setAvatarCid(cid)}
+						/>
+						<br />
 						<TextFieldElement
 							type={'number'}
 							name={'target'}
@@ -84,7 +106,7 @@ export default ({
 							required={true}
 							placeholder={'ETH value'}
 						/>
-						<br/>
+						<br />
 						<TextFieldElement
 							type={'number'}
 							name={'minInvest'}
@@ -92,7 +114,7 @@ export default ({
 							required={true}
 							placeholder={'ETH value'}
 						/>
-						<br/>
+						<br />
 						<TextFieldElement
 							type={'number'}
 							name={'maxInvest'}
@@ -100,7 +122,7 @@ export default ({
 							required={true}
 							placeholder={'ETH value'}
 						/>
-						<br/>
+						<br />
 						<TextFieldElement
 							type={'number'}
 							name={'totalSupply'}
@@ -108,13 +130,13 @@ export default ({
 							required={true}
 							placeholder={'Please enter a number of tokens'}
 						/>
-						<br/>
+						<br />
 						<LoadingButton
 							loading={txPending}
 							loadingPosition={'end'}
 							variant={'contained'}
 							color={'primary'}
-							endIcon={<SendIcon/>}
+							endIcon={<SendIcon />}
 							type={'submit'}
 						>
 							Submit

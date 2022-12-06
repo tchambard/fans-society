@@ -35,8 +35,8 @@ export default ({}) => {
 			name={currentToken.item.name}
 			description={currentToken.item.description}
 			linkBackRoute={Routes.TOKEN_LIST}
-			avatarImageUrl={currentToken.item.avatarImageUrl}
-			coverImageUrl={currentToken.item.coverImageUrl}
+			avatarCid={currentToken.item.avatarCid}
+			coverCid={currentToken.item.coverCid}
 			content={
 				<>
 					<Grid

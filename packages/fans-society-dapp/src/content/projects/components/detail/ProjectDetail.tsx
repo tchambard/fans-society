@@ -48,8 +48,8 @@ export default ({}) => {
 			name={currentProject.item.name}
 			description={currentProject.item.description}
 			linkBackRoute={Routes.PROJECT_LIST}
-			avatarImageUrl={currentProject.item.avatarImageUrl}
-			coverImageUrl={currentProject.item.coverImageUrl}
+			avatarCid={currentProject.item.avatarCid}
+			coverCid={currentProject.item.coverCid}
 			actions={
 				<ProjectActions
 					projectId={currentProject.item.id}

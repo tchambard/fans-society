@@ -47,12 +47,14 @@ export const listenProjectCreated = (
 	const eventHandler = async ({ returnValues }: ProjectCreated) => {
 		onData({
 			id: returnValues.id,
-			name: returnValues.name,
-			description: returnValues.description,
-			symbol: returnValues.symbol,
-			target: +web3.utils.fromWei(returnValues.target, 'ether'),
-			minInvest: +web3.utils.fromWei(returnValues.minInvest, 'ether'),
-			maxInvest: +web3.utils.fromWei(returnValues.maxInvest, 'ether'),
+			name: returnValues.info[0],
+			symbol: returnValues.info[1],
+			description: returnValues.info[2],
+			avatarCid: returnValues.info[3],
+			coverCid: returnValues.info[4],
+			target: +web3.utils.fromWei(returnValues.ico[0], 'ether'),
+			minInvest: +web3.utils.fromWei(returnValues.ico[1], 'ether'),
+			maxInvest: +web3.utils.fromWei(returnValues.ico[2], 'ether'),
 			partnerAddress: returnValues.partnerAddress,
 			status: ProjectStatus.Opened,
 			$capabilities: {

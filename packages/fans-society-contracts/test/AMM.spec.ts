@@ -28,7 +28,7 @@ enum ProjectStatus {
 	Launched,
 }
 
-contract('AMM', (accounts) => {
+contract.only('AMM', (accounts) => {
 	const administrator = accounts[0];
 	const fsociety = accounts[1];
 	const partnerAddress = accounts[2];
@@ -69,38 +69,42 @@ contract('AMM', (accounts) => {
 	context('# no project exist', () => {
 		it('> createProject should succeed when called with contract owner address', async () => {
 			const receipt = await amm.createProject(
+				{
+					name,
+					symbol,
+					description,
+					avatarCid: '',
+					coverCid: '',
+				},
+				{
+					target,
+					minInvest,
+					maxInvest,
+				},
 				partnerAddress,
-				name,
-				symbol,
-				description,
-				target,
-				minInvest,
-				maxInvest,
 				BN(totalSupply),
 				{ from: administrator },
 			);
 
 			await expectEvent(receipt, 'ProjectCreated', {
 				id: BN(1),
-				name,
-				symbol,
-				description,
-				target,
-				minInvest,
-				maxInvest,
-				totalSupply: BN(totalSupply),
+				info: [name, symbol, description, '', ''],
+				ico: [target, minInvest, maxInvest],
 				partnerAddress,
+				totalSupply: BN(totalSupply),
 			});
 
 			const createdProject = await amm.projects(1);
 			assert.equal(createdProject['id'].toNumber(), 1);
-			assert.equal(createdProject['name'], name);
-			assert.equal(createdProject['symbol'], symbol);
-			assert.equal(createdProject['description'], description);
+			assert.equal(createdProject['info']['name'], name);
+			assert.equal(createdProject['info']['symbol'], symbol);
+			assert.equal(createdProject['info']['description'], description);
+			assert.equal(createdProject['info']['avatarCid'], '');
+			assert.equal(createdProject['info']['coverCid'], '');
+			assert.equal(createdProject['ico']['target'], target);
+			assert.equal(createdProject['ico']['minInvest'], minInvest);
+			assert.equal(createdProject['ico']['maxInvest'], maxInvest);
 			assert.equal(createdProject['fund'], 0);
-			assert.equal(createdProject['target'], target);
-			assert.equal(createdProject['minInvest'], minInvest);
-			assert.equal(createdProject['maxInvest'], maxInvest);
 			assert.equal(createdProject['totalSupply'].toNumber(), totalSupply);
 			assert.equal(createdProject['status'].toNumber(), 0);
 			assert.equal(createdProject['partnerAddress'], partnerAddress);
@@ -113,14 +117,20 @@ contract('AMM', (accounts) => {
 
 		beforeEach(async () => {
 			await amm.createProject(
+				{
+					name,
+					symbol,
+					description,
+					avatarCid: '',
+					coverCid: '',
+				},
+				{
+					target,
+					minInvest,
+					maxInvest,
+				},
 				partnerAddress,
-				name,
-				symbol,
-				description,
-				BN(target),
-				BN(minInvest),
-				BN(maxInvest),
-				BN(totalSupply),
+				totalSupply,
 				{ from: administrator },
 			);
 			const createdProject = await amm.projects(1);
