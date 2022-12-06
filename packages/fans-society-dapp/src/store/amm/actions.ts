@@ -206,6 +206,14 @@ export interface ITokenBalanceResult {
 	balance: string;
 }
 
+export interface ITokenWithBalance {
+	projectId: string;
+	address: string;
+	name: string;
+	symbol: string;
+	balance: string;
+}
+
 export const LOAD_CONTRACTS_INFO = createAsyncAction(
 	'LOAD_CONTRACTS_INFO_REQUEST',
 	'LOAD_CONTRACTS_INFO_SUCCESS',
@@ -336,6 +344,12 @@ export const GET_TOKEN_BALANCE = createAsyncAction(
 	'GET_TOKEN_BALANCE_SUCCESS',
 	'GET_TOKEN_BALANCE_FAILURE',
 )<string, ITokenBalanceResult, string>();
+
+export const LIST_TOKENS_WITH_BALANCE = createAsyncAction(
+	'LIST_TOKENS_WITH_BALANCE_REQUEST',
+	'LIST_TOKENS_WITH_BALANCE_SUCCESS',
+	'LIST_TOKENS_WITH_BALANCE_FAILURE',
+)<void, ITokenWithBalance[], string>();
 
 export const CLEAR_TX_ERROR = createAction('CLEAR_TX_ERROR', (action) => {
 	return () => action();

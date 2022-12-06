@@ -33,6 +33,8 @@ import {
 	SWAP,
 	TOKEN_ADDED,
 	WITHDRAW_ON_PROJECT,
+	ITokenWithBalance,
+	LIST_TOKENS_WITH_BALANCE,
 } from './actions';
 
 export interface IProjectsState {
@@ -75,6 +77,9 @@ export interface IProjectsState {
 		};
 		error?: string;
 	};
+	dashboard: {
+		tokens: { items: ITokenWithBalance[]; loading: boolean };
+	};
 	txPending: boolean;
 	error?: string;
 }
@@ -90,6 +95,9 @@ const initialState: IProjectsState = {
 	currentToken: { loading: false, poolIds: [] },
 	pools: { items: {}, loading: false },
 	balances: {},
+	dashboard: {
+		tokens: { items: [], loading: false },
+	},
 	txPending: false,
 };
 
@@ -727,6 +735,61 @@ export default createReducer(initialState)
 							...state.projects.items[action.payload.id],
 							status: action.payload.status,
 						},
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_TOKENS_WITH_BALANCE.request],
+		(state: IProjectsState): IProjectsState => {
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					tokens: {
+						items: [],
+						loading: true,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_TOKENS_WITH_BALANCE.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof LIST_TOKENS_WITH_BALANCE.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					tokens: {
+						...state.dashboard.tokens,
+						loading: false,
+					},
+				},
+				error: action.payload,
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_TOKENS_WITH_BALANCE.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof LIST_TOKENS_WITH_BALANCE.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					tokens: {
+						items: action.payload,
+						loading: false,
 					},
 				},
 			};

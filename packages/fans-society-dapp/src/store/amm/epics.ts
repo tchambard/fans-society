@@ -28,6 +28,8 @@ import {
 	SWAP,
 	GET_TOKEN_BALANCE,
 	COMPUTE_SWAP_OUT,
+	LIST_TOKENS_WITH_BALANCE,
+	ITokenWithBalance,
 } from './actions';
 import {
 	getAMMContract,
@@ -505,7 +507,7 @@ export const listTokenPools: Epic<
 	);
 };
 
-export const computeAmountOut: Epic<
+export const computeSwapAmountOut: Epic<
 	RootAction,
 	RootAction,
 	RootState,
@@ -622,6 +624,53 @@ export const getTokenBalance: Epic<
 			} catch (e) {
 				loggerService.log(e.message);
 				return GET_TOKEN_BALANCE.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const listAllTokensBalances: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3, logger }) => {
+	return action$.pipe(
+		filter(isActionOf(LIST_TOKENS_WITH_BALANCE.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				const tokenFactory = state$.value.amm.contracts.tokensFactory.contract;
+
+				const tokenCreatedEvents = (await tokenFactory.getPastEvents(
+					'TokenCreated',
+					{
+						fromBlock: 0,
+					},
+				)) as unknown as TokenCreated[];
+
+				const tokens: ITokenWithBalance[] = await Promise.all(
+					tokenCreatedEvents.flatMap(async ({ returnValues }) => {
+						const tokenContract = await getTokenContract(web3, returnValues.token);
+						const balance = web3.utils.fromWei(
+							(await tokenContract.methods.balanceOf(account).call()).toString(),
+							'ether',
+						);
+						return {
+							projectId: returnValues.projectId,
+							address: returnValues.token,
+							name: returnValues.name,
+							symbol: returnValues.symbol,
+							balance,
+						} as ITokenWithBalance;
+					}),
+				);
+				logger.log('=== tokens with balances ===');
+				logger.table(tokens);
+				return LIST_TOKENS_WITH_BALANCE.success(tokens);
+			} catch (e) {
+				loggerService.log(e.message);
+				return LIST_TOKENS_WITH_BALANCE.failure(findRpcMessage(e));
 			}
 		}),
 	);
