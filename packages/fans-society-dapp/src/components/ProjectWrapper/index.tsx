@@ -50,18 +50,22 @@ interface IProjectWrapperProps {
 	name: string;
 	description: string;
 	linkBackRoute: string;
-	coverImageUrl: string;
-	avatarImageUrl: string;
+	coverCid: string;
+	avatarCid: string;
 	content: ReactNode;
 	actions?: ReactNode;
+}
+
+function web3Url(cid: string) {
+	return `https://${cid}.ipfs.w3s.link`;
 }
 
 export default ({
 	name,
 	description,
 	linkBackRoute,
-	coverImageUrl,
-	avatarImageUrl,
+	coverCid,
+	avatarCid,
 	actions,
 	content,
 }: IProjectWrapperProps) => {
@@ -91,11 +95,11 @@ export default ({
 						</Box>
 					</Box>
 					<CardCover>
-						<CardMedia image={coverImageUrl} component="img" />
+						<CardMedia image={web3Url(coverCid)} component="img" />
 						{actions ? <ActionsWrapper>{actions}</ActionsWrapper> : undefined}
 					</CardCover>
 					<AvatarWrapper>
-						<Avatar variant="rounded" alt={name} src={avatarImageUrl} />
+						<Avatar variant="rounded" alt={name} src={web3Url(avatarCid)} />
 					</AvatarWrapper>
 					<Box py={2} pl={2} mb={3}>
 						{content}

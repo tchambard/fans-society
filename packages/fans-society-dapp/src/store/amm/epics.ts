@@ -104,12 +104,14 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 					const { returnValues: v } = event as unknown as ProjectCreated;
 					return {
 						id: v.id,
-						name: v.name,
-						description: v.description,
-						symbol: v.symbol,
-						target: +web3.utils.fromWei(v.target, 'ether'),
-						minInvest: +web3.utils.fromWei(v.minInvest, 'ether'),
-						maxInvest: +web3.utils.fromWei(v.maxInvest, 'ether'),
+						name: v.info[0],
+						symbol: v.info[1],
+						description: v.info[2],
+						avatarCid: v.info[3],
+						coverCid: v.info[4],
+						target: +web3.utils.fromWei(v.ico[0], 'ether'),
+						minInvest: +web3.utils.fromWei(v.ico[1], 'ether'),
+						maxInvest: +web3.utils.fromWei(v.ico[2], 'ether'),
 						partnerAddress: v.partnerAddress,
 						status: projectStatuses[v.id] || ProjectStatus.Opened,
 						$capabilities: {
@@ -147,6 +149,8 @@ export const createProject: Epic<
 					name,
 					symbol,
 					description,
+					avatarCid,
+					coverCid,
 					target,
 					minInvest,
 					maxInvest,
@@ -155,13 +159,13 @@ export const createProject: Epic<
 
 				await contract.methods
 					.createProject(
+						[name, symbol, description, avatarCid, coverCid],
+						[
+							web3.utils.toWei(target, 'ether'),
+							web3.utils.toWei(minInvest, 'ether'),
+							web3.utils.toWei(maxInvest, 'ether'),
+						],
 						partnerAddress,
-						name,
-						symbol,
-						description,
-						web3.utils.toWei(target, 'ether'),
-						web3.utils.toWei(minInvest, 'ether'),
-						web3.utils.toWei(maxInvest, 'ether'),
 						totalSupply,
 					)
 					.send({ from: account });
@@ -217,21 +221,20 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 				const data = await contract.methods.projects(projectId).call();
 
 				const status = +data.status;
-				const maxInvest = +web3.utils.fromWei(data.maxInvest, 'ether');
-				const target = +web3.utils.fromWei(data.target, 'ether');
+				const target = +web3.utils.fromWei(data.ico[0], 'ether');
+				const minInvest = +web3.utils.fromWei(data.ico[1], 'ether');
+				const maxInvest = +web3.utils.fromWei(data.ico[2], 'ether');
 				const fund = +web3.utils.fromWei(data.fund, 'ether');
 
 				const project: IProjectDetail = {
 					id: projectId,
-					name: data.name,
-					description: data.description,
-					symbol: data.symbol,
-					avatarImageUrl:
-						'https://cdn.dribbble.com/users/588874/screenshots/2249528/media/dfc765104b15b69fab7a6363fd523d33.png?compress=1&resize=768x576&vertical=top',
-					coverImageUrl:
-						'http://www.thegrandtest.com/wp-content/uploads/2018/05/Star-Wars-Les-Derniers-Jedi.jpg',
+					name: data.info[0],
+					symbol: data.info[1],
+					description: data.info[2],
+					avatarCid: data.info[3],
+					coverCid: data.info[4],
 					target,
-					minInvest: +web3.utils.fromWei(data.minInvest, 'ether'),
+					minInvest,
 					maxInvest,
 					partnerAddress: data.partnerAddress,
 					fund,
@@ -422,13 +425,11 @@ export const getToken: Epic<RootAction, RootAction, RootState, Services> = (
 				const token: ITokenDetail = {
 					projectId,
 					address: (tokenEvent as unknown as TokenCreated).returnValues.token,
-					name: project.name,
-					description: project.description,
-					symbol: project.symbol,
-					avatarImageUrl:
-						'https://cdn.dribbble.com/users/588874/screenshots/2249528/media/dfc765104b15b69fab7a6363fd523d33.png?compress=1&resize=768x576&vertical=top',
-					coverImageUrl:
-						'http://www.thegrandtest.com/wp-content/uploads/2018/05/Star-Wars-Les-Derniers-Jedi.jpg',
+					name: project.info[0],
+					symbol: project.info[1],
+					description: project.info[2],
+					avatarCid: project.info[3],
+					coverCid: project.info[4],
 				};
 				logger.log('=== Token found ===\n', JSON.stringify(token, null, 2));
 				return GET_TOKEN.success(token);

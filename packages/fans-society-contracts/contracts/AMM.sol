@@ -68,8 +68,8 @@ contract AMM is Projects {
 
 		projects[_id].tokenAddress = IProjectTokenFactory(tokenFactory).createToken(
 			_id,
-			project.name,
-			project.symbol,
+			project.info.name,
+			project.info.symbol,
 			address(this),
 			project.totalSupply,
 			partnerTokenShares + poolTokenShares + fansSocietyTokenShares
