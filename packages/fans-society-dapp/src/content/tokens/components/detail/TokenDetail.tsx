@@ -1,4 +1,8 @@
+import { ChangeEvent, useState } from 'react';
 import { useSelector } from 'react-redux';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import Grid from '@mui/material/Grid';
+import { IconButton, Link, Tab, Tabs, Tooltip, useTheme } from '@mui/material';
 
 import { RootState } from 'state-types';
 
@@ -6,11 +10,10 @@ import { Routes } from 'src/router';
 import SuspenseLoader from 'src/components/SuspenseLoader';
 import ProjectWrapper from 'src/components/ProjectWrapper';
 import TokenSwap from './TokenSwap';
-import { ChangeEvent, useState } from 'react';
-import Grid from '@mui/material/Grid';
-import { Tab, Tabs } from '@mui/material';
 
 export default ({}) => {
+	const theme = useTheme();
+
 	const { currentToken, pools } = useSelector((state: RootState) => state.amm);
 	const [currentTab, setCurrentTab] = useState<string>('swap');
 
@@ -37,6 +40,23 @@ export default ({}) => {
 			linkBackRoute={Routes.TOKEN_LIST}
 			avatarCid={currentToken.item.avatarCid}
 			coverCid={currentToken.item.coverCid}
+			actions={
+				<Tooltip placement={'top'} title={'Copy token address'}>
+					<IconButton
+						sx={{
+							'&:hover': {
+								background: theme.colors.primary.lighter,
+							},
+							color: theme.palette.primary.main,
+						}}
+						color={'inherit'}
+						size={'small'}
+						onClick={() => navigator.clipboard.writeText(currentToken.item.address)}
+					>
+						<ContentCopyIcon fontSize={'medium'} />
+					</IconButton>
+				</Tooltip>
+			}
 			content={
 				<>
 					<Grid

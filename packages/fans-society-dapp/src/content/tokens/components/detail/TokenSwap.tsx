@@ -80,15 +80,17 @@ export default ({ pool }: IProps) => {
 		(prop: keyof ITokenSwapForm) => (event: ChangeEvent<HTMLInputElement>) => {
 			setValues({ ...values, [prop]: event.target.value });
 
-			const tokenInChanged = prop === 'amountIn';
-			dispatch(
-				COMPUTE_SWAP_OUT.request({
-					poolAddress: pool.poolAddress,
-					tokenIn: tokenInChanged ? tokenIn.address : tokenOut.address,
-					tokenOut: tokenInChanged ? tokenOut.address : tokenIn.address,
-					amountIn: event.target.value,
-				}),
-			);
+			if (event.target.value.length) {
+				const tokenInChanged = prop === 'amountIn';
+				dispatch(
+					COMPUTE_SWAP_OUT.request({
+						poolAddress: pool.poolAddress,
+						tokenIn: tokenInChanged ? tokenIn.address : tokenOut.address,
+						tokenOut: tokenInChanged ? tokenOut.address : tokenIn.address,
+						amountIn: event.target.value,
+					}),
+				);
+			}
 		};
 
 	const onSwap = async () => {
@@ -157,14 +159,16 @@ export default ({ pool }: IProps) => {
 								setTokenOut(tokenIn);
 								setTokenIn(tokenOut);
 								setValues({ ...values, amountIn: values.amountOut });
-								dispatch(
-									COMPUTE_SWAP_OUT.request({
-										poolAddress: pool.poolAddress,
-										tokenIn: tokenOut.address,
-										tokenOut: tokenIn.address,
-										amountIn: values.amountOut,
-									}),
-								);
+								if (values.amountOut?.length) {
+									dispatch(
+										COMPUTE_SWAP_OUT.request({
+											poolAddress: pool.poolAddress,
+											tokenIn: tokenOut.address,
+											tokenOut: tokenIn.address,
+											amountIn: values.amountOut,
+										}),
+									);
+								}
 							}}
 						>
 							<SwapVertIcon fontSize={'small'} />
