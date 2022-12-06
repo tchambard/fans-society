@@ -519,9 +519,7 @@ export const computeAmountOut: Epic<
 
 				const { poolAddress, tokenIn, tokenOut, amountIn } = action.payload;
 
-				const _amountIn =
-					tokenIn === wethAddress ? web3.utils.toWei(amountIn, 'ether') : amountIn;
-
+				const _amountIn = web3.utils.toWei(amountIn, 'ether');
 				const contract = await getPoolContract(web3, poolAddress);
 
 				const { _reserveX, _reserveY } = await contract.methods
@@ -535,14 +533,8 @@ export const computeAmountOut: Epic<
 					contract.methods.computePriceOut(tokenIn, _amountIn).call(),
 				]);
 
-				const amountOut =
-					tokenOut === wethAddress
-						? web3.utils.fromWei(_amountOut, 'ether')
-						: _amountOut;
-				const priceOut =
-					tokenOut === wethAddress
-						? web3.utils.fromWei(_priceOut, 'ether')
-						: _priceOut;
+				const amountOut = web3.utils.fromWei(_amountOut, 'ether');
+				const priceOut = web3.utils.fromWei(_priceOut, 'ether');
 
 				return COMPUTE_SWAP_OUT.success({
 					tokenOut,
@@ -615,14 +607,17 @@ export const getTokenBalance: Epic<
 						'ether',
 					);
 				} else {
-					balance = await contract.methods.balanceOf(account).call();
+					balance = web3.utils.fromWei(
+						(await contract.methods.balanceOf(account).call()).toString(),
+						'ether',
+					);
 				}
 
 				logger.log('=== Token balance ===', tokenAddress, balance);
 				// here there is a trick: balance of weth address is not correct as we got eth balance
 				return GET_TOKEN_BALANCE.success({
 					address: tokenAddress,
-					balance: +balance,
+					balance,
 				});
 			} catch (e) {
 				loggerService.log(e.message);

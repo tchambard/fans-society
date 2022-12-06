@@ -150,18 +150,11 @@ export const listenSwap = async (
 ): Promise<() => void> => {
 	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: Swapped) => {
-		const wethAddress = await getWethAddress(web3);
 		onData({
 			tokenIn: returnValues.tokenIn,
-			amountIn:
-				returnValues.tokenIn === wethAddress
-					? +web3.utils.fromWei(returnValues.amountIn, 'ether')
-					: +returnValues.amountIn,
+			amountIn: web3.utils.fromWei(returnValues.amountIn, 'ether'),
 			tokenOut: returnValues.tokenOut,
-			amountOut:
-				returnValues.tokenOut === wethAddress
-					? +web3.utils.fromWei(returnValues.amountOut, 'ether')
-					: +returnValues.amountOut,
+			amountOut: web3.utils.fromWei(returnValues.amountOut, 'ether'),
 		});
 	};
 	const emitter = contractInfo.contract.events

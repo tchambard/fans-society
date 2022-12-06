@@ -196,14 +196,14 @@ export interface IComputeSwapOutResult {
 
 export interface ISwapEvent {
 	tokenIn: string;
-	amountIn: number;
+	amountIn: string;
 	tokenOut: string;
-	amountOut: number;
+	amountOut: string;
 }
 
 export interface ITokenBalanceResult {
 	address: string;
-	balance: number;
+	balance: string;
 }
 
 export const LOAD_CONTRACTS_INFO = createAsyncAction(

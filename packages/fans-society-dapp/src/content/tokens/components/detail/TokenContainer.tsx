@@ -31,7 +31,10 @@ export default () => {
 	}, [contracts.amm, contracts.tokensFactory, currentToken.item?.projectId]);
 
 	useEffect(() => {
-		if (currentToken.item?.address) {
+		if (
+			currentToken.item?.projectId === projectId &&
+			currentToken.item?.address
+		) {
 			dispatch(LIST_POOLS.request({ token: currentToken.item.address }));
 		}
 	}, [currentToken.item?.address]);

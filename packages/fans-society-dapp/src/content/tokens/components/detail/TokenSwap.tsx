@@ -42,7 +42,7 @@ export default ({ pool }: IProps) => {
 		(state: RootState) => state.amm,
 	);
 
-	const [swapped, setSwapped] = useState<{ amount: number; symbol: string }>();
+	const [swapped, setSwapped] = useState<{ amount: string; symbol: string }>();
 	const [tokenIn, setTokenIn] = useState<IToken>();
 	const [tokenOut, setTokenOut] = useState<IToken>();
 
