@@ -35,6 +35,9 @@ import {
 	ITokenWithBalance,
 	LIST_PROJECTS_DETAILS_WITH_COMMITMENTS,
 	CLAIM_ON_PROJECT,
+	COMPUTE_POOL_PRICE,
+	ADD_POOL_LIQUIDITY,
+	REMOVE_POOL_LIQUIDITY,
 } from './actions';
 import {
 	getAMMContract,
@@ -48,6 +51,8 @@ import { PoolCreated } from 'fans-society-contracts/types/web3/contracts/pools/P
 import { TokenCreated } from 'fans-society-contracts/types/web3/contracts/tokens/ProjectTokenFactory';
 import { contracts } from 'fans-society-contracts';
 import Web3 from 'web3';
+import { CollectionsOutlined } from '@mui/icons-material';
+import { BN } from 'bn.js';
 
 export const loadContractsInfo: Epic<
 	RootAction,
@@ -272,7 +277,12 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 
 				const { contract, isOwner } = state$.value.amm.contracts.amm;
 				const account = state$.value.amm.account.address;
-
+				console.log('ProjectId', projectId);
+				console.log('state$.value.amm.commitments', state$.value.amm.commitments);
+				console.log(
+					'state$.value.amm.commitments.items[projectId]',
+					state$.value.amm.commitments.items[projectId],
+				);
 				const project = await _getProject(
 					web3,
 					contract,
@@ -633,12 +643,10 @@ export const swap: Epic<RootAction, RootAction, RootState, Services> = (
 					action.payload;
 
 				let value: string;
-				let _amountOut = amountOut;
 				if (tokenIn === wethAddress) {
 					value = web3.utils.toWei(amountIn, 'ether');
-				} else if (tokenOut === wethAddress) {
-					_amountOut = web3.utils.toWei(amountOut, 'ether');
 				}
+				const _amountOut = web3.utils.toWei(amountOut, 'ether');
 
 				await contract.methods
 					.swap(poolAddress, tokenIn, _amountOut)
@@ -648,6 +656,107 @@ export const swap: Epic<RootAction, RootAction, RootState, Services> = (
 			} catch (e) {
 				loggerService.log(e.message);
 				return SWAP.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const computePoolPrice: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3 }) => {
+	return action$.pipe(
+		filter(isActionOf(COMPUTE_POOL_PRICE.request)),
+		mergeMap(async (action) => {
+			try {
+				const { poolAddress, tokenX, tokenY, amountX } = action.payload;
+
+				const _amountX = web3.utils.toWei(amountX, 'ether');
+				const contract = await getPoolContract(web3, poolAddress);
+
+				const priceY = await contract.methods
+					.computePriceOut(tokenX, _amountX)
+					.call();
+
+				return COMPUTE_POOL_PRICE.success({
+					tokenY,
+					priceY: web3.utils.fromWei(priceY, 'ether'),
+				});
+			} catch (e) {
+				loggerService.log(e.message);
+				return COMPUTE_POOL_PRICE.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const addPoolLiquidity: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3 }) => {
+	return action$.pipe(
+		filter(isActionOf(ADD_POOL_LIQUIDITY.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				const contract = state$.value.amm.contracts.amm.contract;
+				const wethAddress = await getWethAddress(web3);
+
+				const { tokenX, amountX, tokenY, amountY } = action.payload;
+
+				let value: string;
+				if (tokenX === wethAddress) {
+					value = web3.utils.toWei(amountX, 'ether');
+				} else if (tokenY === wethAddress) {
+					value = web3.utils.toWei(amountY, 'ether');
+				}
+				const _amountX =
+					tokenX === wethAddress ? '0' : web3.utils.toWei(amountX, 'ether');
+				const _amountY =
+					tokenX === wethAddress ? web3.utils.toWei(amountY, 'ether') : '0';
+
+				await contract.methods
+					.addPoolLiquidity(tokenX, tokenY, _amountX, _amountY)
+					.send({ from: account, value });
+
+				return ADD_POOL_LIQUIDITY.success();
+			} catch (e) {
+				loggerService.log(e.message);
+				return ADD_POOL_LIQUIDITY.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const removePoolLiquidity: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3 }) => {
+	return action$.pipe(
+		filter(isActionOf(REMOVE_POOL_LIQUIDITY.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				const contract = state$.value.amm.contracts.amm.contract;
+
+				const { tokenX, tokenY, amountLP } = action.payload;
+
+				const _amountLP = web3.utils.toWei(amountLP, 'ether');
+
+				await contract.methods
+					.removePoolLiquidity(tokenX, tokenY, _amountLP)
+					.send({ from: account });
+
+				return REMOVE_POOL_LIQUIDITY.success();
+			} catch (e) {
+				loggerService.log(e.message);
+				return REMOVE_POOL_LIQUIDITY.failure(findRpcMessage(e));
 			}
 		}),
 	);

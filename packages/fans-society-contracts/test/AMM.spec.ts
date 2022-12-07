@@ -28,7 +28,7 @@ enum ProjectStatus {
 	Launched,
 }
 
-contract.only('AMM', (accounts) => {
+contract('AMM', (accounts) => {
 	const administrator = accounts[0];
 	const fsociety = accounts[1];
 	const partnerAddress = accounts[2];

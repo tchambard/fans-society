@@ -6,10 +6,16 @@ import {
 	TokensClaimed,
 	Withdrawed,
 } from 'fans-society-contracts/types/web3/contracts/AMM';
+import {
+	LPBurnt,
+	LPMinted,
+} from 'fans-society-contracts/types/web3/contracts/pools/Pool';
 import { TokenCreated } from 'fans-society-contracts/types/web3/contracts/tokens/ProjectTokenFactory';
 import { ClientFactory } from 'src/services/ClientFactory';
 import {
 	IAMMContractInfo,
+	ILPMintedEvent,
+	IPoolsFactoryContractInfo,
 	IProjectClaim,
 	IProjectCommitment,
 	IProjectListItem,
@@ -20,6 +26,7 @@ import {
 	ITokensFactoryContractInfo,
 	ProjectStatus,
 } from './actions';
+import { getPoolContract } from './contract';
 
 export const listenProjectStatusChanged = (
 	contractInfo: IAMMContractInfo,
@@ -163,6 +170,50 @@ export const listenSwap = async (
 	};
 	const emitter = contractInfo.contract.events
 		.Swapped({ filter: { caller: account } })
+		.on('data', eventHandler);
+	return () => emitter.removeListener('data', eventHandler);
+};
+
+export const listenLPMinted = async (
+	account: string,
+	poolAddress,
+	onData: (data: ILPMintedEvent) => void,
+): Promise<() => void> => {
+	const web3 = ClientFactory.web3();
+	const poolContract = await getPoolContract(web3, poolAddress);
+	const eventHandler = async ({ returnValues }: LPMinted) => {
+		onData({
+			tokenX: returnValues.tokenX,
+			amountX: web3.utils.fromWei(returnValues.amountX, 'ether'),
+			tokenY: returnValues.tokenY,
+			amountY: web3.utils.fromWei(returnValues.amountY, 'ether'),
+			liquidity: web3.utils.fromWei(returnValues.liquidity, 'ether'),
+		});
+	};
+	const emitter = poolContract.events
+		.LPMinted({ filter: { provider: account } })
+		.on('data', eventHandler);
+	return () => emitter.removeListener('data', eventHandler);
+};
+
+export const listenLPBurnt = async (
+	account: string,
+	poolAddress,
+	onData: (data: ILPMintedEvent) => void,
+): Promise<() => void> => {
+	const web3 = ClientFactory.web3();
+	const poolContract = await getPoolContract(web3, poolAddress);
+	const eventHandler = async ({ returnValues }: LPBurnt) => {
+		onData({
+			tokenX: returnValues.tokenX,
+			amountX: web3.utils.fromWei(returnValues.amountX, 'ether'),
+			tokenY: returnValues.tokenY,
+			amountY: web3.utils.fromWei(returnValues.amountY, 'ether'),
+			liquidity: web3.utils.fromWei(returnValues.liquidity, 'ether'),
+		});
+	};
+	const emitter = poolContract.events
+		.LPBurnt({ filter: { provider: account } })
 		.on('data', eventHandler);
 	return () => emitter.removeListener('data', eventHandler);
 };

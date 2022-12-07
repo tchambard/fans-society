@@ -233,6 +233,49 @@ contract('Pools', (accounts) => {
 				assert.equal(_reserveY.toNumber(), 1000);
 			});
 
+			describe('> computing functions', () => {
+				it('> computeMaxOutputAmount should return price regarding fees', async () => {
+					const amountIn = 100;
+					const expectedAmountOut = 95;
+
+					const { _reserveX, _reserveY } = (await poolInstance.getReserves(
+						tokenX.address,
+					)) as any;
+					const amountOut = await poolInstance.computeMaxOutputAmount(
+						amountIn,
+						_reserveX,
+						_reserveY,
+					);
+					assert.equal(amountOut.toNumber(), expectedAmountOut);
+				});
+
+				it('> computeRequiredInputAmount should return price regarding fees', async () => {
+					const amountOut = 95;
+					const expectedAmountIn = 100;
+
+					const { _reserveX, _reserveY } = (await poolInstance.getReserves(
+						tokenX.address,
+					)) as any;
+					const amountIn = await poolInstance.computeRequiredInputAmount(
+						amountOut,
+						_reserveX,
+						_reserveY,
+					);
+					assert.equal(amountIn.toNumber(), expectedAmountIn);
+				});
+
+				it('> computePriceOut should return price regarding fees', async () => {
+					const amountIn = 100;
+					const expectedPriceOut = 100;
+
+					const priceOut = await poolInstance.computePriceOut(
+						tokenX.address,
+						amountIn,
+					);
+					assert.equal(priceOut.toNumber(), expectedPriceOut);
+				});
+			});
+
 			it('> swap with input on tokenX', async () => {
 				const amountIn = BN(100);
 				const expectedAmountOut = 95;

@@ -21,8 +21,22 @@ contract Pool is Initializable, LPTokenERC20 {
 
 	uint256 private k; // k = x * y
 
-	event LPMinted(address indexed provider, uint256 amountX, uint256 amountY);
-	event LPBurnt(address indexed provider, uint256 amountX, uint256 amountY);
+	event LPMinted(
+		address indexed provider,
+		address tokenX,
+		uint256 amountX,
+		address tokenY,
+		uint256 amountY,
+		uint256 liquidity
+	);
+	event LPBurnt(
+		address indexed provider,
+		address tokenX,
+		uint256 amountX,
+		address tokenY,
+		uint256 amountY,
+		uint256 liquidity
+	);
 	event PoolSwapped(
 		address tokenIn,
 		uint256 amountIn,
@@ -94,7 +108,7 @@ contract Pool is Initializable, LPTokenERC20 {
 
 		k = reserveX * reserveY;
 
-		emit LPMinted(provider, amountX, amountY);
+		emit LPMinted(provider, tokenX, amountX, tokenY, amountY, liquidity);
 	}
 
 	function burnLP(address provider)
@@ -130,7 +144,7 @@ contract Pool is Initializable, LPTokenERC20 {
 
 		k = reserveX * reserveY;
 
-		emit LPBurnt(provider, amountX, amountY);
+		emit LPBurnt(provider, tokenX, amountX, tokenY, amountY, liquidity);
 	}
 
 	function swap(
@@ -183,10 +197,10 @@ contract Pool is Initializable, LPTokenERC20 {
 		require(_amountIn > 0, 'Not enough input');
 		require(_reserveIn > 0 && _reserveIn > 0, 'Not enough liquidity');
 		// 1% fees
-		uint256 amountInWithFees = _amountIn * 990;
+		uint256 amountInWithFee = _amountIn * 990;
 		amountOut =
-			(_reserveOut * amountInWithFees) /
-			((_reserveIn * 1000) + amountInWithFees);
+			(amountInWithFee * _reserveOut) /
+			((_reserveIn * 1000) + amountInWithFee);
 	}
 
 	function computeRequiredInputAmount(
@@ -215,8 +229,8 @@ contract Pool is Initializable, LPTokenERC20 {
 			uint256 rootK = Math.sqrt(_reserveX * _reserveY);
 			uint256 rootKLast = Math.sqrt(_k);
 			if (rootK > rootKLast) {
-				uint256 numerator = totalSupply() * (rootK - rootKLast) * 8;
-				uint256 denominator = rootK * 17 + rootKLast * 8;
+				uint256 numerator = totalSupply() * (rootK - rootKLast) * 50;
+				uint256 denominator = rootK * 100 + rootKLast * 50;
 				uint256 liquidity = numerator / denominator;
 				if (liquidity > 0) _mint(fansSocietyAddress, liquidity);
 			}

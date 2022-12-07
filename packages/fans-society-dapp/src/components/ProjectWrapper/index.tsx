@@ -71,13 +71,7 @@ export default ({
 }: IProjectWrapperProps) => {
 	return (
 		<Container sx={{ mt: 3 }} maxWidth="xl">
-			<Grid
-				container
-				direction="row"
-				justifyContent="center"
-				alignItems="stretch"
-				spacing={3}
-			>
+			<Grid container direction="row" justifyContent="center" alignItems="stretch">
 				<Grid item xs={12} md={8}>
 					<Box display={'flex'} mb={3}>
 						<Tooltip arrow placement={'top'} title={'Go back'}>
@@ -101,9 +95,7 @@ export default ({
 					<AvatarWrapper>
 						<Avatar variant="rounded" alt={name} src={web3Url(avatarCid)} />
 					</AvatarWrapper>
-					<Box py={2} pl={2} mb={3}>
-						{content}
-					</Box>
+					<Box pt={4}>{content}</Box>
 				</Grid>
 			</Grid>
 		</Container>

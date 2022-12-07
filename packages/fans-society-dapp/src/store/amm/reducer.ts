@@ -40,6 +40,9 @@ import {
 	CLAIM_ON_PROJECT,
 	COMMITED,
 	WITHDRAWED,
+	COMPUTE_POOL_PRICE,
+	ADD_POOL_LIQUIDITY,
+	REMOVE_POOL_LIQUIDITY,
 } from './actions';
 
 export interface IProjectsState {
@@ -79,6 +82,13 @@ export interface IProjectsState {
 			tokenOut: string;
 			amountOut: string;
 			priceOut: string;
+		};
+		error?: string;
+	};
+	poolInfo?: {
+		result?: {
+			tokenY: string;
+			priceY: string;
 		};
 		error?: string;
 	};
@@ -302,6 +312,8 @@ export default createReducer(initialState)
 			WITHDRAW_ON_PROJECT.request,
 			CLAIM_ON_PROJECT.request,
 			SWAP.request,
+			ADD_POOL_LIQUIDITY.request,
+			REMOVE_POOL_LIQUIDITY.request,
 		],
 		(state: IProjectsState): IProjectsState => {
 			return {
@@ -320,6 +332,8 @@ export default createReducer(initialState)
 			WITHDRAW_ON_PROJECT.failure,
 			CLAIM_ON_PROJECT.failure,
 			SWAP.failure,
+			ADD_POOL_LIQUIDITY.failure,
+			REMOVE_POOL_LIQUIDITY.failure,
 		],
 		(
 			state: IProjectsState,
@@ -342,6 +356,8 @@ export default createReducer(initialState)
 			WITHDRAW_ON_PROJECT.success,
 			CLAIM_ON_PROJECT.success,
 			SWAP.success,
+			ADD_POOL_LIQUIDITY.success,
+			REMOVE_POOL_LIQUIDITY.success,
 		],
 		(state: IProjectsState): IProjectsState => {
 			return {
@@ -477,12 +493,7 @@ export default createReducer(initialState)
 			action: ActionType<typeof COMMITED>,
 		): IProjectsState => {
 			const { id, amount } = action.payload;
-			console.log('amount', amount);
-			console.log('fund', state.dashboard.projects.items[id].fund);
-			console.log(
-				'commitment',
-				(state.dashboard.projects.items[id].commitment ?? 0) + amount,
-			);
+
 			return {
 				...state,
 				dashboard: {
@@ -493,9 +504,9 @@ export default createReducer(initialState)
 							...state.dashboard.projects.items,
 							[id]: {
 								...state.dashboard.projects.items[id],
-								fund: state.dashboard.projects.items[id].fund + amount,
+								fund: (state.dashboard.projects.items[id]?.fund ?? 0) + amount,
 								commitment:
-									(state.dashboard.projects.items[id].commitment ?? 0) + amount,
+									(state.dashboard.projects.items[id]?.commitment ?? 0) + amount,
 							},
 						},
 					},
@@ -678,40 +689,6 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[COMPUTE_SWAP_OUT.failure],
-		(
-			state: IProjectsState,
-			action: ActionType<typeof COMPUTE_SWAP_OUT.failure>,
-		): IProjectsState => {
-			return {
-				...state,
-				swapInfo: {
-					error: action.payload,
-				},
-			};
-		},
-	)
-
-	.handleAction(
-		[COMPUTE_SWAP_OUT.success],
-		(
-			state: IProjectsState,
-			action: ActionType<typeof COMPUTE_SWAP_OUT.success>,
-		): IProjectsState => {
-			return {
-				...state,
-				swapInfo: {
-					result: {
-						tokenOut: action.payload.tokenOut,
-						amountOut: action.payload.amountOut,
-						priceOut: action.payload.priceOut,
-					},
-				},
-			};
-		},
-	)
-
-	.handleAction(
 		[LIST_POOLS.request],
 		(state: IProjectsState): IProjectsState => {
 			return {
@@ -767,6 +744,72 @@ export default createReducer(initialState)
 		},
 	)
 
+	.handleAction(
+		[COMPUTE_SWAP_OUT.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof COMPUTE_SWAP_OUT.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				swapInfo: {
+					error: action.payload,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[COMPUTE_SWAP_OUT.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof COMPUTE_SWAP_OUT.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				swapInfo: {
+					result: {
+						tokenOut: action.payload.tokenOut,
+						amountOut: action.payload.amountOut,
+						priceOut: action.payload.priceOut,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[COMPUTE_POOL_PRICE.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof COMPUTE_POOL_PRICE.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				poolInfo: {
+					error: action.payload,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[COMPUTE_POOL_PRICE.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof COMPUTE_POOL_PRICE.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				poolInfo: {
+					result: {
+						tokenY: action.payload.tokenY,
+						priceY: action.payload.priceY,
+					},
+				},
+			};
+		},
+	)
 	.handleAction(
 		[PROJECT_STATUS_CHANGED],
 		(

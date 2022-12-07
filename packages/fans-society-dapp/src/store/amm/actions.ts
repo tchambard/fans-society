@@ -201,6 +201,47 @@ export interface ISwapEvent {
 	amountOut: string;
 }
 
+export interface IAddPoolLiquidityParams {
+	tokenX: string;
+	tokenY: string;
+	amountX: string;
+	amountY: string;
+}
+
+export interface IRemovePoolLiquidityParams {
+	tokenX: string;
+	tokenY: string;
+	amountLP: string;
+}
+
+export interface IComputePoolPriceParams {
+	poolAddress: string;
+	tokenX: string;
+	tokenY: string;
+	amountX: string;
+}
+
+export interface IComputePoolPriceResult {
+	tokenY: string;
+	priceY: string;
+}
+
+export interface ILPMintedEvent {
+	tokenX: string;
+	amountX: string;
+	tokenY: string;
+	amountY: string;
+	liquidity: string;
+}
+
+export interface ILPBurntEvent {
+	tokenX: string;
+	amountX: string;
+	tokenY: string;
+	amountY: string;
+	liquidity: string;
+}
+
 export interface ITokenBalanceResult {
 	address: string;
 	balance: string;
@@ -342,6 +383,24 @@ export const SWAP = createAsyncAction(
 	'SWAP_SUCCESS',
 	'SWAP_FAILURE',
 )<ISwapParams, void, string>();
+
+export const ADD_POOL_LIQUIDITY = createAsyncAction(
+	'ADD_POOL_LIQUIDITY_REQUEST',
+	'ADD_POOL_LIQUIDITY_SUCCESS',
+	'ADD_POOL_LIQUIDITY_FAILURE',
+)<IAddPoolLiquidityParams, void, string>();
+
+export const REMOVE_POOL_LIQUIDITY = createAsyncAction(
+	'REMOVE_POOL_LIQUIDITY_REQUEST',
+	'REMOVE_POOL_LIQUIDITY_SUCCESS',
+	'REMOVE_POOL_LIQUIDITY_FAILURE',
+)<IRemovePoolLiquidityParams, void, string>();
+
+export const COMPUTE_POOL_PRICE = createAsyncAction(
+	'COMPUTE_POOL_PRICE_REQUEST',
+	'COMPUTE_POOL_PRICE_SUCCESS',
+	'COMPUTE_POOL_PRICEFAILURE',
+)<IComputePoolPriceParams, IComputePoolPriceResult, string>();
 
 export const GET_TOKEN_BALANCE = createAsyncAction(
 	'GET_TOKEN_BALANCE_REQUEST',

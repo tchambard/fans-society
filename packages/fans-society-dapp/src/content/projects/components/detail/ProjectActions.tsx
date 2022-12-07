@@ -14,7 +14,7 @@ import ProjectValidateDialog from './ProjectValidateDialog';
 
 interface IProps {
 	projectId: string;
-	capabilities: IProjectDetailCapabilities;
+	capabilities?: IProjectDetailCapabilities;
 }
 
 export default ({ projectId, capabilities }: IProps) => {
@@ -31,7 +31,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'primary',
 			icon: <PlaylistAddIcon fontSize={'small'} />,
 			url: '',
-			hidden: !capabilities.$canCommit,
+			hidden: !capabilities?.$canCommit,
 			onClick: () => setCommitDialogVisible(!commitDialogVisible),
 		},
 		{
@@ -40,7 +40,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'primary',
 			icon: <PlaylistRemoveIcon fontSize={'small'} />,
 			url: '',
-			hidden: !capabilities.$canWithdraw,
+			hidden: !capabilities?.$canWithdraw,
 			onClick: () => setWithdrawDialogVisible(!withdrawDialogVisible),
 		},
 		{
@@ -49,7 +49,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'success',
 			icon: <SavingsIcon fontSize={'small'} />,
 			url: '',
-			hidden: !capabilities.$canClaim,
+			hidden: !capabilities?.$canClaim,
 			onClick: () => setClaimDialogVisible(!claimDialogVisible),
 		},
 		{
@@ -58,7 +58,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'error',
 			icon: <DeleteIcon fontSize={'small'} />,
 			url: '',
-			hidden: !capabilities.$canAbort,
+			hidden: !capabilities?.$canAbort,
 			onClick: () => setAbortDialogVisible(!abortDialogVisible),
 		},
 		{
@@ -67,7 +67,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'info',
 			icon: <DeleteIcon fontSize={'small'} />,
 			url: '',
-			hidden: !capabilities.$canValidate,
+			hidden: !capabilities?.$canValidate,
 			onClick: () => setValidateDialogVisible(!validateDialogVisible),
 		},
 	];

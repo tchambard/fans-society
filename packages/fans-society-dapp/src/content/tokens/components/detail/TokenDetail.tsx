@@ -2,9 +2,8 @@ import * as _ from 'lodash';
 import * as qs from 'qs';
 import { ChangeEvent, useState } from 'react';
 import { useSelector } from 'react-redux';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Grid from '@mui/material/Grid';
-import { IconButton, Link, Tab, Tabs, Tooltip, useTheme } from '@mui/material';
+import { Tab, Tabs } from '@mui/material';
 
 import { RootState } from 'state-types';
 
@@ -12,13 +11,17 @@ import { Routes } from 'src/router';
 import SuspenseLoader from 'src/components/SuspenseLoader';
 import ProjectWrapper from 'src/components/ProjectWrapper';
 import TokenSwap from './TokenSwap';
+import TokenLiquidity from './TokenLiquidity';
+import CopyAddress from 'src/components/CopyAddress';
 
 export default ({}) => {
-	const theme = useTheme();
-
-	const tabHash = qs.parse(window.location.hash.substring(1))?.tab?.toString();
+	let tabHash = qs.parse(window.location.hash.substring(1))?.tab?.toString();
+	if (!tabHash) {
+		tabHash = 'swap';
+		window.location.hash = `#tab=${tabHash}`;
+	}
 	const { currentToken, pools } = useSelector((state: RootState) => state.amm);
-	const [currentTab, setCurrentTab] = useState<string>(tabHash || 'swap');
+	const [currentTab, setCurrentTab] = useState<string>(tabHash);
 
 	if (!currentToken.item || currentToken.loading || pools.loading) {
 		return <SuspenseLoader />;
@@ -31,6 +34,7 @@ export default ({}) => {
 
 	const handleTabsChange = (event: ChangeEvent<{}>, value: string): void => {
 		setCurrentTab(value);
+		window.location.hash = `#tab=${value}`;
 	};
 
 	const poolAddress = currentToken.poolIds[0];
@@ -44,21 +48,11 @@ export default ({}) => {
 			avatarCid={currentToken.item.avatarCid}
 			coverCid={currentToken.item.coverCid}
 			actions={
-				<Tooltip placement={'top'} title={'Copy token address'}>
-					<IconButton
-						sx={{
-							'&:hover': {
-								background: theme.colors.primary.lighter,
-							},
-							color: theme.palette.primary.main,
-						}}
-						color={'inherit'}
-						size={'small'}
-						onClick={() => navigator.clipboard.writeText(currentToken.item.address)}
-					>
-						<ContentCopyIcon fontSize={'medium'} />
-					</IconButton>
-				</Tooltip>
+				<CopyAddress
+					title={'Copy LP token address'}
+					address={pool?.poolAddress}
+					size={'medium'}
+				/>
 			}
 			content={
 				<>
@@ -85,15 +79,13 @@ export default ({}) => {
 
 						{currentTab === 'swap' && (
 							<Grid item xs={12}>
-								<Grid item xs={12}>
-									<TokenSwap pool={pool} />
-								</Grid>
+								<TokenSwap pool={pool} />
 							</Grid>
 						)}
 
 						{currentTab === 'pool' && (
 							<Grid item xs={12}>
-								<></>
+								<TokenLiquidity pool={pool} />
 							</Grid>
 						)}
 					</Grid>
