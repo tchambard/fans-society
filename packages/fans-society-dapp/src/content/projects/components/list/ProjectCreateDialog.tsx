@@ -88,7 +88,7 @@ export default ({
 							label={'Cover image'}
 							placeholder={'Select a file for project cover'}
 							required={true}
-							onUploaded={({ cid }) => setCoverCid(cid)}
+							onUploaded={(cid) => setCoverCid(cid)}
 						/>
 						<br />
 						<Web3Uploader
@@ -96,7 +96,7 @@ export default ({
 							label={'Avatar image'}
 							placeholder={'Select a file for project avatar'}
 							required={true}
-							onUploaded={({ cid }) => setAvatarCid(cid)}
+							onUploaded={(cid) => setAvatarCid(cid)}
 						/>
 						<br />
 						<TextFieldElement

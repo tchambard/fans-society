@@ -16,7 +16,7 @@ interface Uploader {
 	label: string;
 	placeholder?: string;
 	required?: boolean;
-	onUploaded: (file: IpfsFile) => void;
+	onUploaded: (cid: string) => void;
 }
 
 interface IpfsFile {
@@ -38,6 +38,10 @@ const Web3Uploader = ({
 	const [cid, setCid] = useState<string>('');
 	const [file, setFile] = useState<File>();
 	const [storage, setStorage] = useState<Web3Storage>();
+
+	useEffect(() => {
+		onUploaded(cid);
+	}, [cid]);
 
 	useEffect(() => {
 		setStorage(new Web3Storage({ token }));
@@ -74,7 +78,6 @@ const Web3Uploader = ({
 		const cid = files[0].cid;
 		setCid(cid);
 		setLoading(false);
-		onUploaded({ rootCid, name, cid });
 	};
 
 	return (
@@ -82,6 +85,7 @@ const Web3Uploader = ({
 			id={id}
 			label={label}
 			value={cid}
+			onChange={(e) => setCid(e.target.value)}
 			placeholder={placeholder}
 			required={required}
 			InputProps={{

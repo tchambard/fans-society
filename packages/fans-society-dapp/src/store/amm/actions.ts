@@ -48,7 +48,6 @@ export interface IWithdrawOnProjectParams {
 
 export interface IClaimOnProjectParams {
 	projectId: string;
-	amount: number;
 }
 
 export interface IProjectListCapabilities {
@@ -98,6 +97,7 @@ export interface IProjectDetail {
 	fund: number;
 	partnerAddress: string;
 	status: ProjectStatus;
+	commitment?: number;
 	$capabilities: IProjectDetailCapabilities;
 }
 
@@ -214,6 +214,10 @@ export interface ITokenWithBalance {
 	balance: string;
 }
 
+export interface IProjectWithShare {
+	projectId: string;
+}
+
 export const LOAD_CONTRACTS_INFO = createAsyncAction(
 	'LOAD_CONTRACTS_INFO_REQUEST',
 	'LOAD_CONTRACTS_INFO_SUCCESS',
@@ -252,10 +256,10 @@ export const GET_PROJECT = createAsyncAction(
 	'GET_PROJECT_FAILURE',
 )<string, IProjectDetail, string>();
 
-export const LIST_MY_PROJECT_COMMITMENTS = createAsyncAction(
-	'LIST_MY_PROJECT_COMMITMENTS_REQUEST',
-	'LIST_MY_PROJECT_COMMITMENTS_SUCCESS',
-	'LIST_MY_PROJECT_COMMITMENTS_FAILURE',
+export const GET_CURRENT_PROJECT_COMMITMENTS = createAsyncAction(
+	'GET_CURRENT_PROJECT_COMMITMENTS_REQUEST',
+	'GET_CURRENT_PROJECT_COMMITMENTS_SUCCESS',
+	'GET_CURRENT_PROJECT_COMMITMENTS_FAILURE',
 )<IListMyProjectCommitmentsParams, { [id: string]: number }, string>();
 
 export const COMMIT_ON_PROJECT = createAsyncAction(
@@ -282,7 +286,7 @@ export const CLAIM_ON_PROJECT = createAsyncAction(
 	'CLAIM_ON_PROJECT_REQUEST',
 	'CLAIM_ON_PROJECT_SUCCESS',
 	'CLAIM_ON_PROJECT_FAILURE',
-)<ICommitOnProjectParams, void, string>();
+)<IClaimOnProjectParams, void, string>();
 
 export const CLAIMED = createAction('CLAIMED', (action) => {
 	return (claim: IProjectClaim) => action(claim);
@@ -350,6 +354,12 @@ export const LIST_TOKENS_WITH_BALANCE = createAsyncAction(
 	'LIST_TOKENS_WITH_BALANCE_SUCCESS',
 	'LIST_TOKENS_WITH_BALANCE_FAILURE',
 )<void, ITokenWithBalance[], string>();
+
+export const LIST_PROJECTS_DETAILS_WITH_COMMITMENTS = createAsyncAction(
+	'LIST_PROJECTS_DETAILS_WITH_COMMITMENTS_REQUEST',
+	'LIST_PROJECTS_DETAILS_WITH_COMMITMENTS_SUCCESS',
+	'LIST_PROJECTS_DETAILS_WITH_COMMITMENTS_FAILURE',
+)<void, IProjectDetail[], string>();
 
 export const CLEAR_TX_ERROR = createAction('CLEAR_TX_ERROR', (action) => {
 	return () => action();

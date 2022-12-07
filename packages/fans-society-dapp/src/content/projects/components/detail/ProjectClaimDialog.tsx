@@ -9,9 +9,9 @@ import {
 	DialogTitle,
 } from '@mui/material';
 
-import { WITHDRAW_ON_PROJECT } from '../../../../store/amm/actions';
+import { CLAIM_ON_PROJECT } from '../../../../store/amm/actions';
 
-interface IProjectWithdrawDialogProps {
+interface IProjectClaimDialogProps {
 	projectId: string;
 	dialogVisible: boolean;
 	setDialogVisible: React.Dispatch<React.SetStateAction<boolean>>;
@@ -21,23 +21,23 @@ export default ({
 	projectId,
 	dialogVisible,
 	setDialogVisible,
-}: IProjectWithdrawDialogProps) => {
+}: IProjectClaimDialogProps) => {
 	const dispatch = useDispatch();
 
 	return (
 		<Dialog
 			disableEscapeKeyDown
 			maxWidth={'sm'}
-			aria-labelledby={'withdraw-project-title'}
+			aria-labelledby={'claim-project-title'}
 			open={dialogVisible}
 			fullWidth={true}
 		>
-			<DialogTitle id={'withdraw-project-title'}>
-				{'Are you sure to withdraw on this project ?'}
+			<DialogTitle id={'claim-project-title'}>
+				{'Are you sure to claim on this project ?'}
 			</DialogTitle>
 			<DialogContent dividers>
 				<DialogContentText id={'alert-dialog-description'}>
-					This operation will return your commitment.
+					This operation will return tokens for your commitment.
 				</DialogContentText>
 			</DialogContent>
 			<DialogActions>
@@ -47,7 +47,7 @@ export default ({
 				<Button
 					color={'primary'}
 					onClick={() => {
-						dispatch(WITHDRAW_ON_PROJECT.request({ projectId }));
+						dispatch(CLAIM_ON_PROJECT.request({ projectId }));
 						setDialogVisible(false);
 					}}
 				>

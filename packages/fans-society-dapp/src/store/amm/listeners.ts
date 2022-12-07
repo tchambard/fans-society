@@ -20,7 +20,6 @@ import {
 	ITokensFactoryContractInfo,
 	ProjectStatus,
 } from './actions';
-import { getWethAddress } from './contract';
 
 export const listenProjectStatusChanged = (
 	contractInfo: IAMMContractInfo,
@@ -61,7 +60,8 @@ export const listenProjectCreated = (
 				$canAbort: contract.isOwner,
 				$canCommit: true,
 				$canWithdraw: false,
-				$canValidate: account === returnValues.partnerAddress,
+				$canValidate: false,
+				$canClaim: false,
 			},
 		});
 	};
@@ -77,10 +77,14 @@ export const listenCommitted = (
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: Committed) => {
+		console.log('returnValues.amount', returnValues.amount);
+		const amount = web3.utils.fromWei(returnValues.amount, 'ether');
+		console.log('amount', amount);
+		console.log('amount+', +amount);
 		onData({
 			id: returnValues.id,
 			address: returnValues.caller,
-			amount: +web3.utils.fromWei(returnValues.amount, 'ether'),
+			amount: +amount,
 		});
 	};
 	const emitter = contractInfo.contract.events

@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { ActionType, createReducer } from 'typesafe-actions';
 
 import { SET_CURRENT_ACCOUNT } from 'src/eth-network/actions';
@@ -22,7 +23,7 @@ import {
 	ITokenListItem,
 	ITokensFactoryContractInfo,
 	LAUNCH_PROJECT,
-	LIST_MY_PROJECT_COMMITMENTS,
+	GET_CURRENT_PROJECT_COMMITMENTS,
 	LIST_POOLS,
 	LIST_PROJECTS,
 	LOAD_CONTRACTS_INFO,
@@ -35,6 +36,10 @@ import {
 	WITHDRAW_ON_PROJECT,
 	ITokenWithBalance,
 	LIST_TOKENS_WITH_BALANCE,
+	LIST_PROJECTS_DETAILS_WITH_COMMITMENTS,
+	CLAIM_ON_PROJECT,
+	COMMITED,
+	WITHDRAWED,
 } from './actions';
 
 export interface IProjectsState {
@@ -78,7 +83,14 @@ export interface IProjectsState {
 		error?: string;
 	};
 	dashboard: {
-		tokens: { items: ITokenWithBalance[]; loading: boolean };
+		tokens: {
+			items: { [address: string]: ITokenWithBalance };
+			loading: boolean;
+		};
+		projects: {
+			items: { [projectId: string]: IProjectDetail };
+			loading: boolean;
+		};
 	};
 	txPending: boolean;
 	error?: string;
@@ -96,7 +108,8 @@ const initialState: IProjectsState = {
 	pools: { items: {}, loading: false },
 	balances: {},
 	dashboard: {
-		tokens: { items: [], loading: false },
+		tokens: { items: {}, loading: false },
+		projects: { items: {}, loading: false },
 	},
 	txPending: false,
 };
@@ -287,6 +300,7 @@ export default createReducer(initialState)
 			LAUNCH_PROJECT.request,
 			COMMIT_ON_PROJECT.request,
 			WITHDRAW_ON_PROJECT.request,
+			CLAIM_ON_PROJECT.request,
 			SWAP.request,
 		],
 		(state: IProjectsState): IProjectsState => {
@@ -304,6 +318,7 @@ export default createReducer(initialState)
 			LAUNCH_PROJECT.failure,
 			COMMIT_ON_PROJECT.failure,
 			WITHDRAW_ON_PROJECT.failure,
+			CLAIM_ON_PROJECT.failure,
 			SWAP.failure,
 		],
 		(
@@ -325,6 +340,7 @@ export default createReducer(initialState)
 			LAUNCH_PROJECT.success,
 			COMMIT_ON_PROJECT.success,
 			WITHDRAW_ON_PROJECT.success,
+			CLAIM_ON_PROJECT.success,
 			SWAP.success,
 		],
 		(state: IProjectsState): IProjectsState => {
@@ -382,7 +398,7 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[LIST_MY_PROJECT_COMMITMENTS.request],
+		[GET_CURRENT_PROJECT_COMMITMENTS.request],
 		(state: IProjectsState): IProjectsState => {
 			return {
 				...state,
@@ -395,10 +411,10 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[LIST_MY_PROJECT_COMMITMENTS.failure],
+		[GET_CURRENT_PROJECT_COMMITMENTS.failure],
 		(
 			state: IProjectsState,
-			action: ActionType<typeof LIST_MY_PROJECT_COMMITMENTS.failure>,
+			action: ActionType<typeof GET_CURRENT_PROJECT_COMMITMENTS.failure>,
 		): IProjectsState => {
 			return {
 				...state,
@@ -412,17 +428,17 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[LIST_MY_PROJECT_COMMITMENTS.success],
+		[GET_CURRENT_PROJECT_COMMITMENTS.success],
 		(
 			state: IProjectsState,
-			action: ActionType<typeof LIST_MY_PROJECT_COMMITMENTS.success>,
+			action: ActionType<typeof GET_CURRENT_PROJECT_COMMITMENTS.success>,
 		): IProjectsState => {
 			const commitmentsItems = {
 				...state.commitments.items,
 				...action.payload,
 			};
 			const currentProjectCommitment =
-				commitmentsItems[state.currentProject.item.id] || 0;
+				commitmentsItems[state.currentProject.item.id] ?? 0;
 
 			return {
 				...state,
@@ -439,6 +455,9 @@ export default createReducer(initialState)
 							$canWithdraw:
 								state.currentProject.item.status < ProjectStatus.Completed &&
 								currentProjectCommitment > 0,
+							$canClaim:
+								state.currentProject.item.status >= ProjectStatus.Launched &&
+								currentProjectCommitment > 0,
 						},
 					},
 				},
@@ -446,6 +465,68 @@ export default createReducer(initialState)
 					...state.commitments,
 					items: commitmentsItems,
 					loading: false,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[COMMITED],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof COMMITED>,
+		): IProjectsState => {
+			const { id, amount } = action.payload;
+			console.log('amount', amount);
+			console.log('fund', state.dashboard.projects.items[id].fund);
+			console.log(
+				'commitment',
+				(state.dashboard.projects.items[id].commitment ?? 0) + amount,
+			);
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					projects: {
+						...state.dashboard.projects,
+						items: {
+							...state.dashboard.projects.items,
+							[id]: {
+								...state.dashboard.projects.items[id],
+								fund: state.dashboard.projects.items[id].fund + amount,
+								commitment:
+									(state.dashboard.projects.items[id].commitment ?? 0) + amount,
+							},
+						},
+					},
+				},
+			};
+		},
+	)
+	.handleAction(
+		[WITHDRAWED],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof WITHDRAWED>,
+		): IProjectsState => {
+			const { id, amount } = action.payload;
+
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					projects: {
+						...state.dashboard.projects,
+						items: {
+							...state.dashboard.projects.items,
+							[id]: {
+								...state.dashboard.projects.items[id],
+								fund: state.dashboard.projects.items[id].fund - amount,
+								commitment:
+									(state.dashboard.projects.items[id].commitment ?? 0) - amount,
+							},
+						},
+					},
 				},
 			};
 		},
@@ -749,7 +830,7 @@ export default createReducer(initialState)
 				dashboard: {
 					...state.dashboard,
 					tokens: {
-						items: [],
+						items: {},
 						loading: true,
 					},
 				},
@@ -788,7 +869,68 @@ export default createReducer(initialState)
 				dashboard: {
 					...state.dashboard,
 					tokens: {
-						items: action.payload,
+						items: action.payload.reduce((acc, token) => {
+							acc[token.address] = token;
+							return acc;
+						}, {}),
+						loading: false,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_PROJECTS_DETAILS_WITH_COMMITMENTS.request],
+		(state: IProjectsState): IProjectsState => {
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					projects: {
+						items: {},
+						loading: true,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_PROJECTS_DETAILS_WITH_COMMITMENTS.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof LIST_PROJECTS_DETAILS_WITH_COMMITMENTS.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					projects: {
+						...state.dashboard.projects,
+						loading: false,
+					},
+				},
+				error: action.payload,
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_PROJECTS_DETAILS_WITH_COMMITMENTS.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof LIST_PROJECTS_DETAILS_WITH_COMMITMENTS.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					projects: {
+						items: action.payload.reduce((acc, project) => {
+							acc[project.id] = project;
+							return acc;
+						}, {}),
 						loading: false,
 					},
 				},
