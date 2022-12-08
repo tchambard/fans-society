@@ -202,6 +202,7 @@ export interface ISwapEvent {
 }
 
 export interface IAddPoolLiquidityParams {
+	poolAddress: string;
 	tokenX: string;
 	tokenY: string;
 	amountX: string;
@@ -209,8 +210,7 @@ export interface IAddPoolLiquidityParams {
 }
 
 export interface IRemovePoolLiquidityParams {
-	tokenX: string;
-	tokenY: string;
+	poolAddress: string;
 	amountLP: string;
 }
 

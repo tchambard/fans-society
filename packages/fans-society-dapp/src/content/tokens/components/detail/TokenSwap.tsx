@@ -25,7 +25,6 @@ import {
 } from '../../../../store/amm/actions';
 import { listenSwap } from '../../../../store/amm/listeners';
 import CopyAddress from 'src/components/CopyAddress';
-import { getWethAddress } from 'src/store/amm/contract';
 import { Helmet } from 'react-helmet-async';
 
 interface ITokenSwapForm {
@@ -41,9 +40,12 @@ export default ({ pool }: IProps) => {
 	const theme = useTheme();
 	const dispatch = useDispatch();
 
-	const { account, contracts, balances, swapInfo } = useSelector(
-		(state: RootState) => state.amm,
-	);
+	const {
+		account,
+		contracts,
+		balances,
+		swapInfo,
+	} = useSelector((state: RootState) => state.amm);
 
 	const [swapped, setSwapped] = useState<{ amount: string; symbol: string }>();
 	const [tokenIn, setTokenIn] = useState<IToken>();
@@ -93,6 +95,8 @@ export default ({ pool }: IProps) => {
 						amountIn: event.target.value,
 					}),
 				);
+			} else {
+				setValues({ amountIn: '', amountOut: '' });
 			}
 		};
 
@@ -101,9 +105,18 @@ export default ({ pool }: IProps) => {
 			account.address,
 			contracts.amm,
 			async (data) => {
+				setValues({ amountIn: values.amountIn, amountOut: '' });
 				setSwapped({ amount: data.amountOut, symbol: tokenOut.symbol });
 				dispatch(GET_TOKEN_BALANCE.request(data.tokenIn));
 				dispatch(GET_TOKEN_BALANCE.request(data.tokenOut));
+				dispatch(
+					COMPUTE_SWAP_OUT.request({
+						poolAddress: pool.poolAddress,
+						tokenIn: tokenIn.address,
+						tokenOut: tokenOut.address,
+						amountIn: values.amountIn,
+					}),
+				);
 				destroyListener();
 			},
 		);

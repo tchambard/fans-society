@@ -158,13 +158,14 @@ contract('Pools', (accounts) => {
 			});
 
 			it('> burnLP', async () => {
-				const lpToRemove = BN(1000);
+				const lpToRemove = BN(3000);
 
 				const lpUser1 = await poolInstance.balanceOf(user1);
+
 				assert.equal(lpUser1.toNumber(), initialLiquidity.toNumber());
 
 				// user1 gives back LP token to the pool
-				await poolInstance.transfer(poolInstance.address, lpUser1.sub(lpToRemove), {
+				await poolInstance.transfer(poolInstance.address, lpToRemove, {
 					from: user1,
 				});
 
@@ -174,24 +175,31 @@ contract('Pools', (accounts) => {
 				await expectEvent(receipt, 'Transfer', {
 					from: poolInstance.address,
 					to: address0,
-					value: initialLiquidity.sub(lpToRemove),
+					value: lpToRemove,
 				});
 
 				await expectEvent(receipt, 'Transfer', {
 					from: poolInstance.address,
-					to: user1,
-					value: initialLiquidity.sub(lpToRemove),
+					to: amm,
+					value: amountX,
+				});
+
+				await expectEvent(receipt, 'Transfer', {
+					from: poolInstance.address,
+					to: amm,
+					value: amountY,
 				});
 
 				await expectEvent(receipt, 'ReservesUpdated', {
-					reserveX: BN(1000),
-					reserveY: BN(1000),
+					reserveX: BN(0),
+					reserveY: BN(0),
 				});
 
 				await expectEvent(receipt, 'LPBurnt', {
 					provider: user1,
-					amountX: BN(amountX - 1000),
-					amountY: BN(amountY - 1000),
+					amountX,
+					amountY,
+					liquidity: lpToRemove,
 				});
 
 				const tokenXTransferEvent = _.last(
@@ -203,34 +211,26 @@ contract('Pools', (accounts) => {
 
 				assert.deepEqual(tokenXTransferEvent, {
 					from: poolInstance.address,
-					to: user1,
-					value: amountX - 1000,
+					to: amm,
+					value: amountX.toNumber(),
 				});
 				assert.deepEqual(tokenYTransferEvent, {
 					from: poolInstance.address,
-					to: user1,
-					value: amountY - 1000,
+					to: amm,
+					value: amountY.toNumber(),
 				});
 
-				assert.equal((await poolInstance.totalSupply()).toNumber(), 1000);
-				assert.equal((await poolInstance.balanceOf(user1)).toNumber(), 1000);
-				assert.equal(
-					(await tokenX.balanceOf(poolInstance.address)).toNumber(),
-					1000,
-				);
-				assert.equal(
-					(await tokenY.balanceOf(poolInstance.address)).toNumber(),
-					1000,
-				);
-
-				assert.equal((await tokenX.balanceOf(user1)).toNumber(), 4000);
-				assert.equal((await tokenY.balanceOf(user1)).toNumber(), 4000);
+				assert.equal((await poolInstance.totalSupply()).toNumber(), 0);
+				assert.equal((await poolInstance.balanceOf(user1)).toNumber(), 0);
+				assert.equal((await tokenX.balanceOf(poolInstance.address)).toNumber(), 0);
+				assert.equal((await tokenY.balanceOf(poolInstance.address)).toNumber(), 0);
 
 				const { _reserveX, _reserveY } = (await poolInstance.getReserves(
 					tokenX.address,
 				)) as any;
-				assert.equal(_reserveX.toNumber(), 1000);
-				assert.equal(_reserveY.toNumber(), 1000);
+
+				assert.equal(_reserveX.toNumber(), 0);
+				assert.equal(_reserveY.toNumber(), 0);
 			});
 
 			describe('> computing functions', () => {
@@ -241,11 +241,13 @@ contract('Pools', (accounts) => {
 					const { _reserveX, _reserveY } = (await poolInstance.getReserves(
 						tokenX.address,
 					)) as any;
+
 					const amountOut = await poolInstance.computeMaxOutputAmount(
 						amountIn,
 						_reserveX,
 						_reserveY,
 					);
+
 					assert.equal(amountOut.toNumber(), expectedAmountOut);
 				});
 
@@ -282,7 +284,6 @@ contract('Pools', (accounts) => {
 				await tokenX.transfer(poolInstance.address, amountIn, {
 					from: user2,
 				});
-
 				const receipt = await poolInstance.swap(tokenX.address, amountIn, user2);
 
 				const tokenYTransferEvent = _.last(
@@ -294,7 +295,6 @@ contract('Pools', (accounts) => {
 					to: user2,
 					value: expectedAmountOut,
 				});
-
 				await expectEvent(receipt, 'ReservesUpdated', {
 					reserveX: amountX.add(amountIn),
 					reserveY: amountY.sub(BN(expectedAmountOut)),

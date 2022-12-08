@@ -277,12 +277,7 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 
 				const { contract, isOwner } = state$.value.amm.contracts.amm;
 				const account = state$.value.amm.account.address;
-				console.log('ProjectId', projectId);
-				console.log('state$.value.amm.commitments', state$.value.amm.commitments);
-				console.log(
-					'state$.value.amm.commitments.items[projectId]',
-					state$.value.amm.commitments.items[projectId],
-				);
+
 				const project = await _getProject(
 					web3,
 					contract,
@@ -592,31 +587,27 @@ export const computeSwapAmountOut: Epic<
 		filter(isActionOf(COMPUTE_SWAP_OUT.request)),
 		mergeMap(async (action) => {
 			try {
-				const wethAddress = await getWethAddress(web3);
-
 				const { poolAddress, tokenIn, tokenOut, amountIn } = action.payload;
 
 				const _amountIn = web3.utils.toWei(amountIn, 'ether');
+
 				const contract = await getPoolContract(web3, poolAddress);
 
 				const { _reserveX, _reserveY } = await contract.methods
 					.getReserves(tokenIn)
 					.call();
 
-				const [_amountOut, _priceOut] = await Promise.all([
+				const [amountOut, priceOut] = await Promise.all([
 					contract.methods
 						.computeMaxOutputAmount(_amountIn, _reserveX, _reserveY)
 						.call(),
 					contract.methods.computePriceOut(tokenIn, _amountIn).call(),
 				]);
 
-				const amountOut = web3.utils.fromWei(_amountOut, 'ether');
-				const priceOut = web3.utils.fromWei(_priceOut, 'ether');
-
 				return COMPUTE_SWAP_OUT.success({
 					tokenOut,
-					amountOut,
-					priceOut,
+					amountOut: web3.utils.fromWei(amountOut, 'ether'),
+					priceOut: web3.utils.fromWei(priceOut, 'ether'),
 				});
 			} catch (e) {
 				loggerService.log(e.message);
@@ -646,6 +637,7 @@ export const swap: Epic<RootAction, RootAction, RootState, Services> = (
 				if (tokenIn === wethAddress) {
 					value = web3.utils.toWei(amountIn, 'ether');
 				}
+
 				const _amountOut = web3.utils.toWei(amountOut, 'ether');
 
 				await contract.methods
@@ -706,7 +698,7 @@ export const addPoolLiquidity: Epic<
 				const contract = state$.value.amm.contracts.amm.contract;
 				const wethAddress = await getWethAddress(web3);
 
-				const { tokenX, amountX, tokenY, amountY } = action.payload;
+				const { poolAddress, tokenX, amountX, tokenY, amountY } = action.payload;
 
 				let value: string;
 				if (tokenX === wethAddress) {
@@ -720,7 +712,7 @@ export const addPoolLiquidity: Epic<
 					tokenX === wethAddress ? web3.utils.toWei(amountY, 'ether') : '0';
 
 				await contract.methods
-					.addPoolLiquidity(tokenX, tokenY, _amountX, _amountY)
+					.addPoolLiquidity(poolAddress, tokenX, tokenY, _amountX, _amountY)
 					.send({ from: account, value });
 
 				return ADD_POOL_LIQUIDITY.success();
@@ -745,12 +737,12 @@ export const removePoolLiquidity: Epic<
 				const account = state$.value.ethNetwork.account;
 				const contract = state$.value.amm.contracts.amm.contract;
 
-				const { tokenX, tokenY, amountLP } = action.payload;
+				const { poolAddress, amountLP } = action.payload;
 
 				const _amountLP = web3.utils.toWei(amountLP, 'ether');
 
 				await contract.methods
-					.removePoolLiquidity(tokenX, tokenY, _amountLP)
+					.removePoolLiquidity(poolAddress, _amountLP)
 					.send({ from: account });
 
 				return REMOVE_POOL_LIQUIDITY.success();

@@ -85,11 +85,7 @@ contract Pool is Initializable, LPTokenERC20 {
 		uint256 amountX = balanceX - _reserveX;
 		uint256 amountY = balanceY - _reserveY;
 
-		if (_reserveX > 0 || _reserveY > 0) {
-			require(_reserveX * amountY == _reserveY * amountX, 'x / y != dx / dy');
-		}
-
-		_mintFansSocietyFees(_reserveX, _reserveY);
+		//	_mintFansSocietyFees(_reserveX, _reserveY);
 
 		uint256 _totalSupply = totalSupply();
 		if (_totalSupply == 0) {
@@ -106,7 +102,7 @@ contract Pool is Initializable, LPTokenERC20 {
 
 		_updateReserves(balanceX, balanceY);
 
-		k = reserveX * reserveY;
+		k = _reserveX * _reserveY;
 
 		emit LPMinted(provider, tokenX, amountX, tokenY, amountY, liquidity);
 	}
@@ -114,16 +110,22 @@ contract Pool is Initializable, LPTokenERC20 {
 	function burnLP(address provider)
 		external
 		onlyAmm
-		returns (uint256 amountX, uint256 amountY)
+		returns (
+			address _tokenX,
+			uint256 amountX,
+			address _tokenY,
+			uint256 amountY
+		)
 	{
 		(uint256 _reserveX, uint256 _reserveY) = (reserveX, reserveY);
-		(address _tokenX, address _tokenY) = (tokenX, tokenY);
+		require(_reserveX > 0 && _reserveY > 0, 'not enough liquidity');
+
+		(_tokenX, _tokenY) = (tokenX, tokenY);
 
 		uint256 balanceX = IERC20(_tokenX).balanceOf(address(this));
 		uint256 balanceY = IERC20(_tokenY).balanceOf(address(this));
 		uint256 liquidity = balanceOf(address(this));
-
-		_mintFansSocietyFees(_reserveX, _reserveY);
+		//	_mintFansSocietyFees(_reserveX, _reserveY);
 
 		uint256 _totalSupply = totalSupply();
 
@@ -134,15 +136,15 @@ contract Pool is Initializable, LPTokenERC20 {
 
 		_burn(address(this), liquidity);
 
-		SafeERC20.safeTransfer(IERC20(_tokenX), provider, amountX);
-		SafeERC20.safeTransfer(IERC20(_tokenY), provider, amountY);
+		SafeERC20.safeTransfer(IERC20(_tokenX), msg.sender, amountX);
+		SafeERC20.safeTransfer(IERC20(_tokenY), msg.sender, amountY);
 
 		_updateReserves(
 			IERC20(tokenX).balanceOf(address(this)),
 			IERC20(tokenY).balanceOf(address(this))
 		);
 
-		k = reserveX * reserveY;
+		k = _reserveX * _reserveY;
 
 		emit LPBurnt(provider, tokenX, amountX, tokenY, amountY, liquidity);
 	}
@@ -197,10 +199,8 @@ contract Pool is Initializable, LPTokenERC20 {
 		require(_amountIn > 0, 'Not enough input');
 		require(_reserveIn > 0 && _reserveIn > 0, 'Not enough liquidity');
 		// 1% fees
-		uint256 amountInWithFee = _amountIn * 990;
-		amountOut =
-			(amountInWithFee * _reserveOut) /
-			((_reserveIn * 1000) + amountInWithFee);
+		uint256 amountInWithFee = (_amountIn * 990) / 1000;
+		amountOut = (_reserveOut * amountInWithFee) / (_reserveIn + amountInWithFee);
 	}
 
 	function computeRequiredInputAmount(

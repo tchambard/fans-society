@@ -3,7 +3,7 @@
   "chainId": "1337",
   "contracts": {
     "WETHToken": {
-      "address": "0xB2ff9d5e60d68A52cea3cd041b32f1390A880365",
+      "address": "0xBCF063A9eB18bc3C6eB005791C61801B7cB16fe4",
       "abi": [
         {
           "anonymous": false,
@@ -292,7 +292,7 @@
       ]
     },
     "ProjectTokenERC20": {
-      "address": "0xa68E430060f74F9821D2dC9A9E2CE3aF7d842EBe",
+      "address": "0xF62eEc897fa5ef36a957702AA4a45B58fE8Fe312",
       "abi": [
         {
           "anonymous": false,
@@ -686,7 +686,7 @@
       ]
     },
     "ProjectTokenFactory": {
-      "address": "0x8B64968F69E669faCc86FA3484FD946f1bBE7c91",
+      "address": "0x364C7188028348566E38D762f6095741c49f492B",
       "abi": [
         {
           "inputs": [
@@ -777,7 +777,7 @@
       ]
     },
     "Pool": {
-      "address": "0x9A86494Ba45eE1f9EEed9cFC0894f6C5d13a1F0b",
+      "address": "0x5147c5C1Cb5b5D3f56186C37a4bcFBb3Cd0bD5A7",
       "abi": [
         {
           "anonymous": false,
@@ -1087,9 +1087,19 @@
           "name": "burnLP",
           "outputs": [
             {
+              "internalType": "address",
+              "name": "_tokenX",
+              "type": "address"
+            },
+            {
               "internalType": "uint256",
               "name": "amountX",
               "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "_tokenY",
+              "type": "address"
             },
             {
               "internalType": "uint256",
@@ -1471,7 +1481,7 @@
       ]
     },
     "PoolFactory": {
-      "address": "0xC0340c0831Aa40A0791cF8C3Ab4287EB0a9705d8",
+      "address": "0xF2cb3cfA36Bfb95E0FD855C1b41Ab19c517FcDB9",
       "abi": [
         {
           "inputs": [
@@ -1622,7 +1632,7 @@
       ]
     },
     "AMM": {
-      "address": "0xFf658343244c0475b9305859F1b7CDAB9784762f",
+      "address": "0xC3549920b94a795D75E6C003944943D552C46F97",
       "abi": [
         {
           "inputs": [
@@ -1634,6 +1644,11 @@
             {
               "internalType": "address",
               "name": "_wethTokenAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_ethUsdtAggregatorAddress",
               "type": "address"
             },
             {
@@ -1904,6 +1919,11 @@
           "inputs": [
             {
               "internalType": "address",
+              "name": "_pool",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
               "name": "_tokenX",
               "type": "address"
             },
@@ -2064,6 +2084,19 @@
           "type": "function"
         },
         {
+          "inputs": [],
+          "name": "getEthUsdPrice",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
           "inputs": [
             {
               "internalType": "uint256",
@@ -2191,12 +2224,7 @@
           "inputs": [
             {
               "internalType": "address",
-              "name": "_tokenX",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_tokenY",
+              "name": "_pool",
               "type": "address"
             },
             {
@@ -2206,18 +2234,7 @@
             }
           ],
           "name": "removePoolLiquidity",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "amountX",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "amountY",
-              "type": "uint256"
-            }
-          ],
+          "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
         },

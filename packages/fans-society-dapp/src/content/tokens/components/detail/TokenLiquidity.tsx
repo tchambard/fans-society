@@ -44,7 +44,7 @@ export default ({ pool }: IProps) => {
 	const theme = useTheme();
 	const dispatch = useDispatch();
 
-	const { account, contracts, balances, poolInfo } = useSelector(
+	const { account, balances, poolInfo } = useSelector(
 		(state: RootState) => state.amm,
 	);
 
@@ -115,10 +115,11 @@ export default ({ pool }: IProps) => {
 		);
 		dispatch(
 			ADD_POOL_LIQUIDITY.request({
+				poolAddress: pool.poolAddress,
 				tokenX: tokenX.address,
-				amountX: values.amountX.toString(),
+				amountX: values.amountX,
 				tokenY: tokenY.address,
-				amountY: values.amountY.toString(),
+				amountY: values.amountY,
 			}),
 		);
 	};
@@ -137,8 +138,7 @@ export default ({ pool }: IProps) => {
 		);
 		dispatch(
 			REMOVE_POOL_LIQUIDITY.request({
-				tokenX: tokenX.address,
-				tokenY: tokenY.address,
+				poolAddress: pool.poolAddress,
 				amountLP: liquidity,
 			}),
 		);
@@ -177,23 +177,24 @@ export default ({ pool }: IProps) => {
 								</Grid>
 							</Grid>
 							<Grid item>
-								{balances[pool?.poolAddress]?.balance !== '0' && (
-									<Button
-										sx={{
-											'&:hover': {
-												background: theme.palette.warning.dark,
-											},
-											color: theme.palette.warning.contrastText,
-											background: theme.palette.warning.light,
-										}}
-										variant={'contained'}
-										color={'inherit'}
-										startIcon={<RemoveCircleOutlineIcon />}
-										onClick={() => onRemoveLiquidity(balances[pool.poolAddress].balance)}
-									>
-										Remove liquidity
-									</Button>
-								)}
+								{balances[pool?.poolAddress]?.balance &&
+									balances[pool?.poolAddress]?.balance !== '0' && (
+										<Button
+											sx={{
+												'&:hover': {
+													background: theme.palette.warning.dark,
+												},
+												color: theme.palette.warning.contrastText,
+												background: theme.palette.warning.light,
+											}}
+											variant={'contained'}
+											color={'inherit'}
+											startIcon={<RemoveCircleOutlineIcon />}
+											onClick={() => onRemoveLiquidity(balances[pool.poolAddress].balance)}
+										>
+											Remove liquidity
+										</Button>
+									)}
 							</Grid>
 						</Grid>
 					</Paper>

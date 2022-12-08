@@ -1,15 +1,19 @@
-import * as _ from 'lodash';
 import { ActionType, createReducer } from 'typesafe-actions';
 
 import { SET_CURRENT_ACCOUNT } from 'src/eth-network/actions';
 
 import {
 	ABORT_PROJECT,
+	ADD_POOL_LIQUIDITY,
 	ADD_PROJECT_COMMITMENT,
+	CLAIM_ON_PROJECT,
 	CLEAR_TX_ERROR,
 	COMMIT_ON_PROJECT,
+	COMMITED,
+	COMPUTE_POOL_PRICE,
 	COMPUTE_SWAP_OUT,
 	CREATE_PROJECT,
+	GET_CURRENT_PROJECT_COMMITMENTS,
 	GET_PROJECT,
 	GET_TOKEN,
 	GET_TOKEN_BALANCE,
@@ -22,27 +26,22 @@ import {
 	ITokenDetail,
 	ITokenListItem,
 	ITokensFactoryContractInfo,
+	ITokenWithBalance,
 	LAUNCH_PROJECT,
-	GET_CURRENT_PROJECT_COMMITMENTS,
 	LIST_POOLS,
 	LIST_PROJECTS,
+	LIST_PROJECTS_DETAILS_WITH_COMMITMENTS,
+	LIST_TOKENS_WITH_BALANCE,
 	LOAD_CONTRACTS_INFO,
 	PROJECT_ADDED,
 	PROJECT_STATUS_CHANGED,
 	ProjectStatus,
+	REMOVE_POOL_LIQUIDITY,
 	REMOVE_PROJECT_COMMITMENT,
 	SWAP,
 	TOKEN_ADDED,
 	WITHDRAW_ON_PROJECT,
-	ITokenWithBalance,
-	LIST_TOKENS_WITH_BALANCE,
-	LIST_PROJECTS_DETAILS_WITH_COMMITMENTS,
-	CLAIM_ON_PROJECT,
-	COMMITED,
 	WITHDRAWED,
-	COMPUTE_POOL_PRICE,
-	ADD_POOL_LIQUIDITY,
-	REMOVE_POOL_LIQUIDITY,
 } from './actions';
 
 export interface IProjectsState {
@@ -102,6 +101,7 @@ export interface IProjectsState {
 			loading: boolean;
 		};
 	};
+	ethUsdtPrice?: number;
 	txPending: boolean;
 	error?: string;
 }
@@ -454,7 +454,7 @@ export default createReducer(initialState)
 				...action.payload,
 			};
 			const currentProjectCommitment =
-				commitmentsItems[state.currentProject.item.id] ?? 0;
+				commitmentsItems[state.currentProject.item?.id] ?? 0;
 
 			return {
 				...state,

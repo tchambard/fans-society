@@ -84,10 +84,7 @@ export const listenCommitted = (
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: Committed) => {
-		console.log('returnValues.amount', returnValues.amount);
 		const amount = web3.utils.fromWei(returnValues.amount, 'ether');
-		console.log('amount', amount);
-		console.log('amount+', +amount);
 		onData({
 			id: returnValues.id,
 			address: returnValues.caller,
