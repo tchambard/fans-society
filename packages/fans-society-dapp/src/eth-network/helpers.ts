@@ -69,11 +69,11 @@ export function findRpcMessage(error: Error): string {
 		const rpcError = error.message.match(/{(.*)}/g);
 		let rpcMsg = rpcError?.length && JSON.parse(rpcError[0]);
 		if (rpcMsg) {
-			result = rpcMsg?.value.data.message.replace(searchText, '') || error.message;
+			result = rpcMsg?.value.data.message.replace(searchText, '');
 		} else {
 			rpcMsg = error.message.match(new RegExp(`"${searchText}(.*)"`, 'g'));
 			const message = rpcMsg?.[0].replace(searchText, '');
-			result = message?.substring(1, message.length - 1) || error.message;
+			result = message?.substring(1, message.length - 1);
 		}
 	});
 	return result || error.message;

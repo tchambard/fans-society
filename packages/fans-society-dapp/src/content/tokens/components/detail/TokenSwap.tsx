@@ -24,6 +24,8 @@ import {
 	SWAP,
 } from '../../../../store/amm/actions';
 import { listenSwap } from '../../../../store/amm/listeners';
+import CopyAddress from 'src/components/CopyAddress';
+import { Helmet } from 'react-helmet-async';
 
 interface ITokenSwapForm {
 	amountIn: string;
@@ -38,9 +40,12 @@ export default ({ pool }: IProps) => {
 	const theme = useTheme();
 	const dispatch = useDispatch();
 
-	const { account, contracts, balances, swapInfo } = useSelector(
-		(state: RootState) => state.amm,
-	);
+	const {
+		account,
+		contracts,
+		balances,
+		swapInfo,
+	} = useSelector((state: RootState) => state.amm);
 
 	const [swapped, setSwapped] = useState<{ amount: string; symbol: string }>();
 	const [tokenIn, setTokenIn] = useState<IToken>();
@@ -90,6 +95,8 @@ export default ({ pool }: IProps) => {
 						amountIn: event.target.value,
 					}),
 				);
+			} else {
+				setValues({ amountIn: '', amountOut: '' });
 			}
 		};
 
@@ -98,9 +105,18 @@ export default ({ pool }: IProps) => {
 			account.address,
 			contracts.amm,
 			async (data) => {
+				setValues({ amountIn: values.amountIn, amountOut: '' });
 				setSwapped({ amount: data.amountOut, symbol: tokenOut.symbol });
 				dispatch(GET_TOKEN_BALANCE.request(data.tokenIn));
 				dispatch(GET_TOKEN_BALANCE.request(data.tokenOut));
+				dispatch(
+					COMPUTE_SWAP_OUT.request({
+						poolAddress: pool.poolAddress,
+						tokenIn: tokenIn.address,
+						tokenOut: tokenOut.address,
+						amountIn: values.amountIn,
+					}),
+				);
 				destroyListener();
 			},
 		);
@@ -117,124 +133,152 @@ export default ({ pool }: IProps) => {
 
 	const { txPending } = useSelector((state: RootState) => state.amm);
 	return (
-		<Grid container spacing={2}>
-			<Grid item xs={12} md={12}>
-				<Box sx={{ p: 2, ml: 12, mr: 12, display: 'grid' }}>
-					<OutlinedInput
-						id={'amount'}
-						value={values.amountIn}
-						onChange={handleChange('amountIn')}
-						endAdornment={
-							<InputAdornment position="end">{tokenIn?.symbol}</InputAdornment>
-						}
-						aria-describedby="amount-helper-text"
-						inputProps={{
-							'aria-label': 'Input',
-						}}
-						autoComplete={'off'}
-					/>
-					<Box
-						id={'amount-helper-text'}
-						sx={{
-							display: 'flex',
-							justifyContent: 'space-between',
-						}}
-					>
-						<Typography>Send</Typography>
-						<Typography>
-							Balance: {(tokenIn && balances[tokenIn.address]?.balance) || 0}
-						</Typography>
+		<>
+			<Helmet>
+				<title>Fans Society Swap</title>
+			</Helmet>
+			<Grid container justifyContent={'center'}>
+				<Grid item xs={12} sm={8} md={8} xl={6}>
+					<Box display={'flex'} mb={3}>
+						<Box>
+							<Typography variant={'h3'} component={'h3'} gutterBottom>
+								Exchange tokens
+							</Typography>{' '}
+						</Box>
 					</Box>
-					<Box sx={{ display: 'flex', justifyContent: 'center' }}>
-						<IconButton
-							sx={{
-								'&:hover': {
-									background: theme.colors.primary.lighter,
-								},
-								color: theme.palette.primary.main,
+					<Box sx={{ display: 'grid' }}>
+						<OutlinedInput
+							id={'amount'}
+							value={values.amountIn}
+							onChange={handleChange('amountIn')}
+							endAdornment={
+								<>
+									<InputAdornment position="end">{tokenIn?.symbol}</InputAdornment>
+									<CopyAddress
+										title={`Copy ${tokenIn?.symbol} token address`}
+										address={tokenIn?.address}
+										size={'small'}
+									/>
+								</>
+							}
+							aria-describedby="amount-helper-text"
+							inputProps={{
+								'aria-label': 'Input',
 							}}
-							color={'inherit'}
-							size={'small'}
-							onClick={() => {
-								setTokenOut(tokenIn);
-								setTokenIn(tokenOut);
-								setValues({ ...values, amountIn: values.amountOut });
-								if (values.amountOut?.length) {
-									dispatch(
-										COMPUTE_SWAP_OUT.request({
-											poolAddress: pool.poolAddress,
-											tokenIn: tokenOut.address,
-											tokenOut: tokenIn.address,
-											amountIn: values.amountOut,
-										}),
-									);
-								}
+							autoComplete={'off'}
+						/>
+						<Box
+							id={'amount-helper-text'}
+							sx={{
+								display: 'flex',
+								justifyContent: 'space-between',
 							}}
 						>
-							<SwapVertIcon fontSize={'small'} />
-						</IconButton>
-					</Box>
-					<br />
-					<OutlinedInput
-						id={'amount'}
-						value={values.amountOut}
-						onChange={handleChange('amountOut')}
-						endAdornment={
-							<InputAdornment position="end">{tokenOut?.symbol}</InputAdornment>
-						}
-						aria-describedby={'expected-helper-text'}
-						inputProps={{
-							'aria-label': 'Input',
-						}}
-						autoComplete={'off'}
-					/>
-					<Box
-						id={'expected-helper-text'}
-						sx={{
-							display: 'flex',
-							justifyContent: 'space-between',
-						}}
-					>
-						<Typography>Receive</Typography>
-						<Typography>
-							Balance: {(tokenOut && balances[tokenOut.address]?.balance) || 0}
-						</Typography>
-					</Box>
-					<br />
-					{swapped != null && (
-						<Alert severity={'info'} onClose={() => setSwapped(undefined)}>
-							<AlertTitle>Info</AlertTitle>
-							<strong>
-								{swapped.amount} {swapped.symbol}
-							</strong>{' '}
-							have been transferred
-						</Alert>
-					)}
-					{swapInfo?.error != null && (
-						<Alert severity={'error'}>{swapInfo?.error}</Alert>
-					)}
-					<br />
-					{swapInfo?.result?.priceOut && (
-						<Box sx={{ display: 'flex' }}>
+							<Typography>Send</Typography>
 							<Typography>
-								Price: {swapInfo.result.priceOut} {tokenOut?.symbol} per{' '}
-								{tokenIn?.symbol}
+								Balance: {(tokenIn && balances[tokenIn.address]?.balance) || 0}
 							</Typography>
 						</Box>
-					)}
-					<LoadingButton
-						loading={txPending}
-						loadingPosition={'end'}
-						variant={'contained'}
-						color={'primary'}
-						endIcon={<SendIcon />}
-						type={'submit'}
-						onClick={onSwap}
-					>
-						Exchange
-					</LoadingButton>
-				</Box>
+						<br />
+						<Box sx={{ display: 'flex', justifyContent: 'center' }}>
+							<IconButton
+								sx={{
+									'&:hover': {
+										background: theme.colors.primary.lighter,
+									},
+									color: theme.palette.primary.main,
+									border: 'double',
+								}}
+								color={'inherit'}
+								size={'small'}
+								onClick={() => {
+									setTokenOut(tokenIn);
+									setTokenIn(tokenOut);
+									setValues({ ...values, amountIn: values.amountOut });
+									if (values.amountOut?.length) {
+										dispatch(
+											COMPUTE_SWAP_OUT.request({
+												poolAddress: pool.poolAddress,
+												tokenIn: tokenOut.address,
+												tokenOut: tokenIn.address,
+												amountIn: values.amountOut,
+											}),
+										);
+									}
+								}}
+							>
+								<SwapVertIcon fontSize={'small'} />
+							</IconButton>
+						</Box>
+						<br />
+						<OutlinedInput
+							id={'amount'}
+							value={values.amountOut}
+							onChange={handleChange('amountOut')}
+							endAdornment={
+								<>
+									<InputAdornment position="end">{tokenOut?.symbol}</InputAdornment>
+									<CopyAddress
+										title={`Copy ${tokenOut?.symbol} token address`}
+										address={tokenOut?.address}
+										size={'small'}
+									/>
+								</>
+							}
+							aria-describedby={'expected-helper-text'}
+							inputProps={{
+								'aria-label': 'Input',
+							}}
+							autoComplete={'off'}
+						/>
+						<Box
+							id={'expected-helper-text'}
+							sx={{
+								display: 'flex',
+								justifyContent: 'space-between',
+							}}
+						>
+							<Typography>Receive</Typography>
+							<Typography>
+								Balance: {(tokenOut && balances[tokenOut.address]?.balance) || 0}
+							</Typography>
+						</Box>
+						<br />
+						{swapped != null && (
+							<Alert severity={'info'} onClose={() => setSwapped(undefined)}>
+								<AlertTitle>Info</AlertTitle>
+								<strong>
+									{swapped.amount} {swapped.symbol}
+								</strong>{' '}
+								have been transferred
+							</Alert>
+						)}
+						{swapInfo?.error != null && (
+							<Alert severity={'error'}>{swapInfo?.error}</Alert>
+						)}
+						<br />
+						{swapInfo?.result?.priceOut && (
+							<Box sx={{ display: 'flex' }}>
+								<Typography>
+									Price: {swapInfo.result.priceOut} {tokenOut?.symbol} per{' '}
+									{tokenIn?.symbol}
+								</Typography>
+							</Box>
+						)}
+						<LoadingButton
+							loading={txPending}
+							loadingPosition={'end'}
+							variant={'contained'}
+							color={'primary'}
+							endIcon={<SendIcon />}
+							type={'submit'}
+							onClick={onSwap}
+						>
+							Exchange
+						</LoadingButton>
+					</Box>
+				</Grid>
 			</Grid>
-		</Grid>
+		</>
 	);
 };

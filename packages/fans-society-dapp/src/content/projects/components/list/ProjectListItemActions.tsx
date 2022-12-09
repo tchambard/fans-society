@@ -9,7 +9,7 @@ import ProjectAbortDialog from './ProjectAbortDialog';
 interface IProps {
 	currentView: 'list' | 'detail';
 	projectId: string;
-	capabilities: IProjectDetailCapabilities;
+	capabilities?: IProjectDetailCapabilities;
 }
 
 export default ({ projectId, capabilities, currentView }: IProps) => {
@@ -30,7 +30,7 @@ export default ({ projectId, capabilities, currentView }: IProps) => {
 			color: 'error',
 			icon: <DeleteIcon fontSize={'small'} />,
 			url: '',
-			hidden: !capabilities.$canAbort,
+			hidden: !capabilities?.$canAbort,
 			onClick: () => setDeleteDialogVisible(!deleteDialogVisible),
 		},
 	];

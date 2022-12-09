@@ -105,7 +105,7 @@ contract AMM is Projects {
 		// swap with weth
 		IWETH(weth).deposit{ value: poolFundsShares }();
 		// transfer weth
-		assert(IWETH(weth).transfer(pool, poolFundsShares));
+		require(IWETH(weth).transfer(pool, poolFundsShares), 'weth transfer failed');
 
 		// TODO: transfer funds to partner
 		(bool sent, ) = payable(project.partnerAddress).call{
@@ -139,71 +139,122 @@ contract AMM is Projects {
 	}
 
 	function addPoolLiquidity(
+		address _pool,
 		address _tokenX,
 		address _tokenY,
 		uint256 _amountX,
 		uint256 _amountY
 	) external payable {
-		address pool = IPoolFactory(poolFactory).getPool(_tokenX, _tokenY);
-
-		(, , uint256 reserveX, uint256 reserveY) = IPool(pool).getReserves(_tokenX);
-
 		if (_tokenX == weth) {
 			require(
 				_amountX == 0 && _amountY > 0 && msg.value > 0,
 				'invalid amount state'
 			);
 
-			IWETH(weth).deposit{ value: msg.value }();
-			assert(IWETH(weth).transfer(pool, msg.value));
+			(uint256 amountX, uint256 amountY) = computeOptimalLiquidityAmount(
+				_pool,
+				_tokenX,
+				_tokenY,
+				msg.value,
+				_amountY
+			);
+			IWETH(weth).deposit{ value: amountX }();
+			require(IWETH(weth).transfer(_pool, amountX), 'weth transfer failed');
 
-			uint256 quoteAmountY = (msg.value * reserveY) / reserveX;
+			IProjectTokenERC20(_tokenY).safeTransferFrom(msg.sender, _pool, amountY);
 
-			IProjectTokenERC20(_tokenY).safeTransferFrom(msg.sender, pool, quoteAmountY);
+			if (msg.value > amountX) {
+				(bool success, ) = msg.sender.call{ value: msg.value - amountX }('');
+				require(success, 'refund exceeded ETH failed');
+			}
 		} else if (_tokenY == weth) {
 			require(
 				_amountY == 0 && _amountX > 0 && msg.value > 0,
 				'invalid amount state'
 			);
 
-			IWETH(weth).deposit{ value: msg.value }();
-			assert(IWETH(weth).transfer(pool, msg.value));
+			(uint256 amountX, uint256 amountY) = computeOptimalLiquidityAmount(
+				_pool,
+				_tokenX,
+				_tokenY,
+				_amountX,
+				msg.value
+			);
+			IWETH(weth).deposit{ value: amountY }();
+			require(IWETH(weth).transfer(_pool, amountY), 'weth transfer failed');
 
-			uint256 quoteAmountX = (msg.value * reserveX) / reserveY;
+			IProjectTokenERC20(_tokenX).safeTransferFrom(msg.sender, _pool, amountX);
 
-			IProjectTokenERC20(_tokenX).safeTransferFrom(msg.sender, pool, quoteAmountX);
+			if (msg.value > amountY) {
+				(bool success, ) = msg.sender.call{ value: msg.value - amountY }('');
+				require(success, 'refund exceeded ETH failed');
+			}
 		} else {
 			require(
 				msg.value == 0 && _amountX > 0 && _amountY > 0,
 				'invalid amount state'
 			);
 
-			IProjectTokenERC20(_tokenX).safeTransferFrom(msg.sender, pool, _amountX);
+			(uint256 amountX, uint256 amountY) = computeOptimalLiquidityAmount(
+				_pool,
+				_tokenX,
+				_tokenY,
+				_amountX,
+				_amountY
+			);
+			IProjectTokenERC20(_tokenX).safeTransferFrom(msg.sender, _pool, amountX);
 
-			uint256 quoteAmountY = (msg.value * reserveY) / reserveX;
-
-			IProjectTokenERC20(_tokenY).safeTransferFrom(msg.sender, pool, quoteAmountY);
+			IProjectTokenERC20(_tokenY).safeTransferFrom(msg.sender, _pool, amountY);
 		}
 
-		IPool(pool).mintLP(msg.sender);
+		IPool(_pool).mintLP(msg.sender);
 	}
 
-	function removePoolLiquidity(
+	function computeOptimalLiquidityAmount(
+		address _pool,
 		address _tokenX,
 		address _tokenY,
-		uint256 _amountLP
-	) external returns (uint256 amountX, uint256 amountY) {
-		address pool = IPoolFactory(poolFactory).getPool(_tokenX, _tokenY);
-		(, , uint256 reserveX, uint256 reserveY) = IPool(pool).getReserves(_tokenX);
+		uint256 _amountX,
+		uint256 _amountY
+	) private view returns (uint256 amountX, uint256 amountY) {
+		(, , uint256 reserveX, uint256 reserveY) = IPool(_pool).getReserves(_tokenX);
 
-		require(reserveX > 0 && reserveY > 0, 'not enough liquidity');
+		if (reserveX == 0 && reserveY == 0) {
+			(amountX, amountY) = (_amountX, _amountY);
+		} else {
+			uint256 amountYOptimal = IPool(_pool).computePriceOut(_tokenX, _amountX);
+			if (amountYOptimal <= _amountY) {
+				(amountX, amountY) = (_amountX, amountYOptimal);
+			} else {
+				uint256 amountXOptimal = IPool(_pool).computePriceOut(_tokenY, _amountY);
+				require(amountXOptimal <= _amountX, 'too big input amount');
+				(amountX, amountY) = (amountXOptimal, _amountY);
+			}
+		}
+	}
 
-		IPool(pool).safeTransferFrom(msg.sender, pool, _amountLP);
-		(uint256 _amountX, uint256 _amountY) = IPool(pool).burnLP(msg.sender);
-		(address tokenX, ) = PoolHelpers.sortTokens(_tokenX, _tokenY);
-		(amountX, amountY) = address(_tokenX) != address(tokenX)
-			? (_amountY, _amountX)
-			: (_amountX, _amountY);
+	function removePoolLiquidity(address _pool, uint256 _amountLP) external {
+		IPool(_pool).safeTransferFrom(msg.sender, _pool, _amountLP);
+
+		(address tokenX, uint256 amountX, address tokenY, uint256 amountY) = IPool(
+			_pool
+		).burnLP(msg.sender);
+
+		if (tokenX == weth) {
+			IWETH(weth).withdraw(amountX);
+			(bool success, ) = msg.sender.call{ value: amountX }('');
+			require(success, 'withdraw ETH failed');
+		} else {
+			IERC20(tokenX).transfer(msg.sender, amountX);
+		}
+
+		if (tokenY == weth) {
+			IWETH(weth).withdraw(amountY);
+			(bool success, ) = msg.sender.call{ value: amountY }('');
+			require(success, 'withdraw ETH failed');
+		} else {
+			IERC20(tokenY).transfer(msg.sender, amountY);
+		}
 	}
 
 	function swap(
@@ -230,7 +281,7 @@ contract AMM is Projects {
 			require(msg.value >= amountIn, 'not enough eth');
 
 			IWETH(weth).deposit{ value: amountIn }();
-			assert(IWETH(weth).transfer(_pool, amountIn));
+			require(IWETH(weth).transfer(_pool, amountIn), 'weth transfer failed');
 		} else {
 			require(msg.value == 0, 'not expected eth');
 

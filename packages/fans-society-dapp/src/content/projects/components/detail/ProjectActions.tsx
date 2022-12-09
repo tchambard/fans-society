@@ -1,18 +1,20 @@
+import { useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
-import { useState } from 'react';
+import SavingsIcon from '@mui/icons-material/Savings';
 
 import ActionsMenu, { IActionMenuItem } from 'src/components/ActionsMenu';
 import { IProjectDetailCapabilities } from '../../../../store/amm/actions';
 import ProjectAbortDialog from '../list/ProjectAbortDialog';
 import ProjectCommitDialog from './ProjectCommitDialog';
 import ProjectWithdrawDialog from './ProjectWithdrawDialog';
+import ProjectClaimDialog from './ProjectClaimDialog';
 import ProjectValidateDialog from './ProjectValidateDialog';
 
 interface IProps {
 	projectId: string;
-	capabilities: IProjectDetailCapabilities;
+	capabilities?: IProjectDetailCapabilities;
 }
 
 export default ({ projectId, capabilities }: IProps) => {
@@ -20,6 +22,7 @@ export default ({ projectId, capabilities }: IProps) => {
 	const [validateDialogVisible, setValidateDialogVisible] = useState(false);
 	const [commitDialogVisible, setCommitDialogVisible] = useState(false);
 	const [withdrawDialogVisible, setWithdrawDialogVisible] = useState(false);
+	const [claimDialogVisible, setClaimDialogVisible] = useState(false);
 
 	const menuItems: IActionMenuItem[] = [
 		{
@@ -28,7 +31,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'primary',
 			icon: <PlaylistAddIcon fontSize={'small'} />,
 			url: '',
-			hidden: !capabilities.$canCommit,
+			hidden: !capabilities?.$canCommit,
 			onClick: () => setCommitDialogVisible(!commitDialogVisible),
 		},
 		{
@@ -37,8 +40,17 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'primary',
 			icon: <PlaylistRemoveIcon fontSize={'small'} />,
 			url: '',
-			hidden: !capabilities.$canWithdraw,
+			hidden: !capabilities?.$canWithdraw,
 			onClick: () => setWithdrawDialogVisible(!withdrawDialogVisible),
+		},
+		{
+			title: 'Claim',
+			description: 'Withdraw on project',
+			color: 'success',
+			icon: <SavingsIcon fontSize={'small'} />,
+			url: '',
+			hidden: !capabilities?.$canClaim,
+			onClick: () => setClaimDialogVisible(!claimDialogVisible),
 		},
 		{
 			title: 'Abort',
@@ -46,7 +58,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'error',
 			icon: <DeleteIcon fontSize={'small'} />,
 			url: '',
-			hidden: !capabilities.$canAbort,
+			hidden: !capabilities?.$canAbort,
 			onClick: () => setAbortDialogVisible(!abortDialogVisible),
 		},
 		{
@@ -55,7 +67,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			color: 'info',
 			icon: <DeleteIcon fontSize={'small'} />,
 			url: '',
-			hidden: !capabilities.$canValidate,
+			hidden: !capabilities?.$canValidate,
 			onClick: () => setValidateDialogVisible(!validateDialogVisible),
 		},
 	];
@@ -93,6 +105,14 @@ export default ({ projectId, capabilities }: IProps) => {
 					projectId={projectId}
 					dialogVisible={withdrawDialogVisible}
 					setDialogVisible={setWithdrawDialogVisible}
+				/>
+			)}
+
+			{claimDialogVisible && (
+				<ProjectClaimDialog
+					projectId={projectId}
+					dialogVisible={claimDialogVisible}
+					setDialogVisible={setClaimDialogVisible}
 				/>
 			)}
 		</>

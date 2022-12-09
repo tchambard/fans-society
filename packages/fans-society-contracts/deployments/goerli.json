@@ -3,7 +3,7 @@
   "chainId": "5",
   "contracts": {
     "ProjectTokenERC20": {
-      "address": "0x2d13dc8f752f4f0880Dc16EF5b1f609A90155915",
+      "address": "0x68E5702F42C0ffe42903883758fCAd250e0cd8BF",
       "abi": [
         {
           "anonymous": false,
@@ -397,7 +397,7 @@
       ]
     },
     "ProjectTokenFactory": {
-      "address": "0x21E2f6A83a21A8C7296843742BD885257a3Be3a6",
+      "address": "0xac27c4D170ed9bC3C21EB00De64797602fCbE258",
       "abi": [
         {
           "inputs": [
@@ -414,7 +414,7 @@
           "anonymous": false,
           "inputs": [
             {
-              "indexed": false,
+              "indexed": true,
               "internalType": "uint256",
               "name": "projectId",
               "type": "uint256"
@@ -488,7 +488,7 @@
       ]
     },
     "Pool": {
-      "address": "0x32D032aa4E09B7E9478eb3E7e18A18a9AF2d3B2F",
+      "address": "0x1FfbDC749A13D15024Aec9b4cf273B3De595892A",
       "abi": [
         {
           "anonymous": false,
@@ -539,14 +539,32 @@
             },
             {
               "indexed": false,
+              "internalType": "address",
+              "name": "tokenX",
+              "type": "address"
+            },
+            {
+              "indexed": false,
               "internalType": "uint256",
               "name": "amountX",
               "type": "uint256"
             },
             {
               "indexed": false,
+              "internalType": "address",
+              "name": "tokenY",
+              "type": "address"
+            },
+            {
+              "indexed": false,
               "internalType": "uint256",
               "name": "amountY",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "liquidity",
               "type": "uint256"
             }
           ],
@@ -564,14 +582,32 @@
             },
             {
               "indexed": false,
+              "internalType": "address",
+              "name": "tokenX",
+              "type": "address"
+            },
+            {
+              "indexed": false,
               "internalType": "uint256",
               "name": "amountX",
               "type": "uint256"
             },
             {
               "indexed": false,
+              "internalType": "address",
+              "name": "tokenY",
+              "type": "address"
+            },
+            {
+              "indexed": false,
               "internalType": "uint256",
               "name": "amountY",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "liquidity",
               "type": "uint256"
             }
           ],
@@ -1146,7 +1182,7 @@
       ]
     },
     "PoolFactory": {
-      "address": "0x6dd5453Ef9FdB17B6DE37eFc5DC201E39931DF5c",
+      "address": "0x5D38ca4347093bE19025D91d1b7F843374391cAf",
       "abi": [
         {
           "inputs": [
@@ -1297,7 +1333,7 @@
       ]
     },
     "AMM": {
-      "address": "0x3a9c4a328Ac6B24A200a36b5B95e7fE015b6Fa4d",
+      "address": "0xEc85580e26A4b32810771EBe7A93e40fd94bd9C5",
       "abi": [
         {
           "inputs": [
@@ -1309,6 +1345,11 @@
             {
               "internalType": "address",
               "name": "_wethTokenAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_ethUsdtAggregatorAddress",
               "type": "address"
             },
             {
@@ -1579,6 +1620,11 @@
           "inputs": [
             {
               "internalType": "address",
+              "name": "_pool",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
               "name": "_tokenX",
               "type": "address"
             },
@@ -1739,6 +1785,19 @@
           "type": "function"
         },
         {
+          "inputs": [],
+          "name": "getEthUsdtPrice",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
           "inputs": [
             {
               "internalType": "uint256",
@@ -1866,12 +1925,7 @@
           "inputs": [
             {
               "internalType": "address",
-              "name": "_tokenX",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_tokenY",
+              "name": "_pool",
               "type": "address"
             },
             {
@@ -1881,18 +1935,7 @@
             }
           ],
           "name": "removePoolLiquidity",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "amountX",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "amountY",
-              "type": "uint256"
-            }
-          ],
+          "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
         },

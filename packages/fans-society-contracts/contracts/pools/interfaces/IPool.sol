@@ -16,7 +16,12 @@ interface IPool {
 
 	function burnLP(address provider)
 		external
-		returns (uint256 amountX, uint256 amountY);
+		returns (
+			address tokenX,
+			uint256 amountX,
+			address tokenY,
+			uint256 amountY
+		);
 
 	function swap(
 		address _tokenIn,

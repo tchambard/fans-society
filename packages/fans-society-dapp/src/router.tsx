@@ -52,13 +52,17 @@ export class Routes {
 }
 
 export function buildRoute(route: string, params?: any, hash?: any) {
-	return _.reduce(
+	let _route = _.reduce(
 		params,
 		(_route, value, key) => {
 			return _route.replace(new RegExp(`:${key}`, 'g'), value);
 		},
 		route,
 	);
+	if (hash) {
+		_route += '#' + _.map(hash, (v, k) => `${k}=${v}`).join('&');
+	}
+	return _route;
 }
 
 export const routes: RouteObject[] = [

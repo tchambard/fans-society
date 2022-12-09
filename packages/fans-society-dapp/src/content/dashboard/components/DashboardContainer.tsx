@@ -6,18 +6,14 @@ import { RootState } from 'state-types';
 
 import ContentContainerWrapper from 'src/content/ContentContainerWrapper';
 import DashboardDetail from './DashboardDetail';
+import {
+	listenClaimed,
+	listenCommitted,
+	listenProjectStatusChanged,
+	listenWithdrawed,
+} from 'src/store/amm/listeners';
 
 export default () => {
-	const { projectId } = useParams();
-
-	const dispatch = useDispatch();
-
-	const { account } = useSelector((state: RootState) => state.ethNetwork);
-
-	const { contracts } = useSelector((state: RootState) => state.amm);
-
-	useEffect(() => {}, []);
-
 	return (
 		<ContentContainerWrapper>
 			<DashboardDetail />

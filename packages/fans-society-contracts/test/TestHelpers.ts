@@ -3,6 +3,7 @@ import { PoolFactoryInstance } from '../types/truffle/contracts/pools/PoolFactor
 import { AMMInstance } from '../types/truffle/contracts/AMM';
 import { WETHTokenInstance } from '../types/truffle/contracts/common/WETHToken';
 import { ProjectTokenERC20Instance } from '../types/truffle/contracts/tokens/ProjectTokenERC20';
+import { PoolInstance } from '../types/truffle/contracts/pools/Pool';
 
 const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
 const ProjectTokenFactory = artifacts.require('ProjectTokenFactory');
@@ -38,6 +39,24 @@ export interface IWethTransfer {
 export interface IWethDeposit {
 	dst: string;
 	wad: number;
+}
+
+export interface ILpMinted {
+	tokenX: string;
+	tokenY: string;
+	amountX: string;
+	amountY: string;
+	provider: string;
+	liquidity: string;
+}
+
+export interface ILPBurnt {
+	tokenX: string;
+	tokenY: string;
+	amountX: string;
+	amountY: string;
+	provider: string;
+	liquidity: string;
 }
 
 export const address0 = '0x0000000000000000000000000000000000000000';
@@ -178,4 +197,34 @@ export async function getLastSortedTokenAddressesFromPastEvents(
 		.slice(-count)
 		.map((t) => t.token)
 		.sort(sortTokens);
+}
+
+export async function getLpMintedFromPastEvents(
+	poolInstance: PoolInstance,
+): Promise<ILpMinted[]> {
+	return (await poolInstance.getPastEvents('LPMinted', { fromBlock: 0 })).map(
+		({ returnValues }) => ({
+			tokenX: returnValues.tokenX,
+			tokenY: returnValues.tokenX,
+			amountX: returnValues.amountX,
+			amountY: returnValues.amountY,
+			provider: returnValues.provider,
+			liquidity: returnValues.liquidity,
+		}),
+	);
+}
+
+export async function getLpBurntFromPastEvents(
+	poolInstance: PoolInstance,
+): Promise<ILPBurnt[]> {
+	return (await poolInstance.getPastEvents('LPBurnt', { fromBlock: 0 })).map(
+		({ returnValues }) => ({
+			tokenX: returnValues.tokenX,
+			tokenY: returnValues.tokenX,
+			amountX: returnValues.amountX,
+			amountY: returnValues.amountY,
+			provider: returnValues.provider,
+			liquidity: returnValues.liquidity,
+		}),
+	);
 }

@@ -5,6 +5,8 @@ import { BN, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
 import {
 	address0,
 	deployProjectsInstances,
+	getLpBurntFromPastEvents,
+	getLpMintedFromPastEvents,
 	getPoolsCreatedFromPastEvents,
 	getTokensCreatedFromPastEvents,
 	getTokenTransfersFromPastEvents,
@@ -28,7 +30,7 @@ enum ProjectStatus {
 	Launched,
 }
 
-contract.only('AMM', (accounts) => {
+contract('AMM', (accounts) => {
 	const administrator = accounts[0];
 	const fsociety = accounts[1];
 	const partnerAddress = accounts[2];
@@ -52,8 +54,8 @@ contract.only('AMM', (accounts) => {
 	const description = 'A very famous mafia film';
 	const symbol = 'TGF';
 	const target = web3.utils.toWei(totalFunds.toString()); // 1 ETH
-	const minInvest = web3.utils.toWei((totalFunds / 100).toString()); // 0.1 ETH
-	const maxInvest = web3.utils.toWei((totalFunds / 10).toString()); // 0.01 ETH
+	const minInvest = web3.utils.toWei((totalFunds / 100).toString()); // 0.01 ETH
+	const maxInvest = web3.utils.toWei((totalFunds / 10).toString()); // 0.1 ETH
 	const totalSupply = 100_000_000;
 
 	// tokens
@@ -382,38 +384,66 @@ contract.only('AMM', (accounts) => {
 					describe('> addPoolLiquidity', () => {
 						it('> should fail when using weth on tokenX and no msg.value', async () => {
 							await expectRevert(
-								amm.addPoolLiquidity(wethToken.address, erc20Instance.address, 0, 100, {
-									from: fans[0],
-								}),
+								amm.addPoolLiquidity(
+									poolInstance.address,
+									wethToken.address,
+									erc20Instance.address,
+									0,
+									100,
+									{
+										from: fans[0],
+									},
+								),
 								'invalid amount state',
 							);
 						});
 
 						it('> should fail when using weth on tokenY and no msg.value', async () => {
 							await expectRevert(
-								amm.addPoolLiquidity(erc20Instance.address, wethToken.address, 100, 0, {
-									from: fans[0],
-								}),
+								amm.addPoolLiquidity(
+									poolInstance.address,
+									erc20Instance.address,
+									wethToken.address,
+									100,
+									0,
+									{
+										from: fans[0],
+									},
+								),
 								'invalid amount state',
 							);
 						});
 
 						it('> should fail when using weth on tokenX and no amountY value', async () => {
 							await expectRevert(
-								amm.addPoolLiquidity(wethToken.address, erc20Instance.address, 0, 0, {
-									from: fans[0],
-									value: web3.utils.toWei('0.001'),
-								}),
+								amm.addPoolLiquidity(
+									poolInstance.address,
+									wethToken.address,
+									erc20Instance.address,
+									0,
+									0,
+									{
+										from: fans[0],
+										value: web3.utils.toWei('0.001'),
+									},
+								),
 								'invalid amount state',
 							);
 						});
 
 						it('> should fail when using weth on tokenY and no amountX value', async () => {
 							await expectRevert(
-								amm.addPoolLiquidity(erc20Instance.address, wethToken.address, 0, 0, {
-									from: fans[0],
-									value: web3.utils.toWei('0.001'),
-								}),
+								amm.addPoolLiquidity(
+									poolInstance.address,
+									erc20Instance.address,
+									wethToken.address,
+									0,
+									0,
+									{
+										from: fans[0],
+										value: web3.utils.toWei('0.001'),
+									},
+								),
 								'invalid amount state',
 							);
 						});
@@ -421,6 +451,7 @@ contract.only('AMM', (accounts) => {
 						it('> should fail when using weth on tokenX and amountX value not equal to zero', async () => {
 							await expectRevert(
 								amm.addPoolLiquidity(
+									poolInstance.address,
 									wethToken.address,
 									erc20Instance.address,
 									100,
@@ -437,6 +468,7 @@ contract.only('AMM', (accounts) => {
 						it('> should fail when using weth on tokenY and amountY value not equal to zero', async () => {
 							await expectRevert(
 								amm.addPoolLiquidity(
+									poolInstance.address,
 									erc20Instance.address,
 									wethToken.address,
 									100,
@@ -457,14 +489,21 @@ contract.only('AMM', (accounts) => {
 
 							assert.equal(fanLpBalanceBefore, 0);
 
-							const receipt = await amm.addPoolLiquidity(
+							const inputEthValue = web3.utils.toWei('0.00001');
+							const estimatedTokenPrice = await poolInstance.computePriceOut(
+								wethToken.address,
+								inputEthValue,
+							);
+
+							await amm.addPoolLiquidity(
+								poolInstance.address,
 								wethToken.address,
 								erc20Instance.address,
 								0,
-								100,
+								estimatedTokenPrice,
 								{
 									from: fans[0],
-									value: web3.utils.toWei('0.00001'),
+									value: inputEthValue,
 								},
 							);
 
@@ -488,14 +527,21 @@ contract.only('AMM', (accounts) => {
 
 							assert.equal(fanLpBalanceBefore, 0);
 
-							const receipt = await amm.addPoolLiquidity(
+							const inputEthValue = web3.utils.toWei('0.00001');
+							const estimatedTokenPrice = await poolInstance.computePriceOut(
+								wethToken.address,
+								inputEthValue,
+							);
+
+							await amm.addPoolLiquidity(
+								poolInstance.address,
 								erc20Instance.address,
 								wethToken.address,
-								100,
+								estimatedTokenPrice,
 								0,
 								{
 									from: fans[0],
-									value: web3.utils.toWei('0.00001'),
+									value: inputEthValue,
 								},
 							);
 
@@ -516,10 +562,11 @@ contract.only('AMM', (accounts) => {
 							// TODO
 						});
 					});
+
 					describe('> removePoolLiquidity', () => {
 						it('> should fail when caller does not own LP tokens', async () => {
 							await expectRevert(
-								amm.removePoolLiquidity(erc20Instance.address, wethToken.address, 10, {
+								amm.removePoolLiquidity(poolInstance.address, 10, {
 									from: fans[0],
 								}),
 								'ERC20: transfer amount exceeds balance',
@@ -529,14 +576,20 @@ contract.only('AMM', (accounts) => {
 
 					context('# first fan investor has added liquidity', () => {
 						beforeEach(async () => {
+							const inputEthValue = web3.utils.toWei('0.00001');
+							const estimatedTokenPrice = await poolInstance.computePriceOut(
+								wethToken.address,
+								inputEthValue,
+							);
 							await amm.addPoolLiquidity(
+								poolInstance.address,
 								wethToken.address,
 								erc20Instance.address,
 								0,
-								100,
+								estimatedTokenPrice,
 								{
 									from: fans[0],
-									value: web3.utils.toWei('0.00001'),
+									value: inputEthValue,
 								},
 							);
 						});
@@ -548,23 +601,21 @@ contract.only('AMM', (accounts) => {
 								).toNumber();
 								assert.ok(fanLpTokenBalanceBefore > 0);
 
-								const params: any = [
-									wethToken.address,
-									erc20Instance.address,
+								await amm.removePoolLiquidity(
+									poolInstance.address,
 									fanLpTokenBalanceBefore,
 									{
 										from: fans[0],
 									},
-								];
-								const res = await amm.removePoolLiquidity.call.apply(null, params);
-
+								);
+								const lastLpBurntEvent = _.last(
+									await getLpBurntFromPastEvents(poolInstance),
+								);
 								assert.equal(
-									web3.utils.fromWei(res['amountX']),
+									web3.utils.fromWei(lastLpBurntEvent!.amountX),
 									'0.000009999999951564',
 								);
-								assert.equal(res['amountY'].toNumber(), 1799);
-
-								await amm.removePoolLiquidity.apply(null, params);
+								assert.equal(lastLpBurntEvent?.amountY, '1799');
 
 								const fanLpTokenBalanceAfter = (
 									await poolInstance.balanceOf(fans[0])
@@ -579,24 +630,21 @@ contract.only('AMM', (accounts) => {
 								).toNumber();
 								assert.ok(fanLpTokenBalanceBefore > 0);
 
-								const params: any = [
-									erc20Instance.address,
-									wethToken.address,
+								await amm.removePoolLiquidity(
+									poolInstance.address,
 									fanLpTokenBalanceBefore,
 									{
 										from: fans[0],
 									},
-								];
-								const res = await amm.removePoolLiquidity.call.apply(null, params);
-
-								assert.equal(res['amountX'].toNumber(), 1799);
+								);
+								const lastLpBurntEvent = _.last(
+									await getLpBurntFromPastEvents(poolInstance),
+								);
+								assert.equal(lastLpBurntEvent!.amountX, '1799');
 								assert.equal(
-									web3.utils.fromWei(res['amountY']),
+									web3.utils.fromWei(lastLpBurntEvent!.amountY),
 									'0.000009999999951564',
 								);
-
-								await amm.removePoolLiquidity.apply(null, params);
-
 								const fanLpTokenBalanceAfter = (
 									await poolInstance.balanceOf(fans[0])
 								).toNumber();

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import * as _ from 'lodash';
+import { useState } from 'react';
 import { useTheme } from '@mui/material';
 import { useSelector } from 'react-redux';
 import Accordion from '@mui/material/Accordion';
@@ -9,30 +10,29 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import { RootState } from 'state-types';
 import DashboardTokensList from './tokens/DashboardTokensList';
+import DashboardProjectsList from './projects/DashboardProjectsList';
 
 export default ({}) => {
 	const theme = useTheme();
 
 	const { contracts } = useSelector((state: RootState) => state.amm);
 
-	const [expanded, setExpanded] = useState<string | false>('tokens');
+	const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({
+		tokens: true,
+	});
 
 	const handleChange =
 		(panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
-			setExpanded(isExpanded ? panel : false);
+			setExpanded(
+				isExpanded
+					? { ...expanded, [panel]: true }
+					: { ...expanded, [panel]: false },
+			);
 		};
-
-	useEffect(() => {
-		if (expanded === 'tokens') {
-		}
-	}, [expanded]);
 
 	return (
 		<>
-			<Accordion
-				expanded={expanded === 'tokens'}
-				onChange={handleChange('tokens')}
-			>
+			<Accordion expanded={expanded.tokens} onChange={handleChange('tokens')}>
 				<AccordionSummary
 					expandIcon={<ExpandMoreIcon />}
 					aria-controls="tokens-content"
@@ -41,7 +41,7 @@ export default ({}) => {
 					<Typography
 						sx={{ fontSize: '1.5em', lineHeight: 2, width: '33%', flexShrink: 0 }}
 					>
-						My entertainment tokens
+						Tokens
 					</Typography>
 				</AccordionSummary>
 				<AccordionDetails
@@ -50,29 +50,26 @@ export default ({}) => {
 					<DashboardTokensList />
 				</AccordionDetails>
 			</Accordion>
-			<Accordion
-				expanded={expanded === 'pending-claims'}
-				onChange={handleChange('pending-claims')}
-			>
+			<Accordion expanded={expanded.projects} onChange={handleChange('projects')}>
 				<AccordionSummary
 					expandIcon={<ExpandMoreIcon />}
-					aria-controls="pending-claims-content"
-					id="pending-claims-header"
+					aria-controls="projects-content"
+					id="projects-header"
 				>
 					<Typography
 						sx={{ fontSize: '1.5em', lineHeight: 2, width: '33%', flexShrink: 0 }}
 					>
-						My pending claims
+						Projects ICO
 					</Typography>
 				</AccordionSummary>
 				<AccordionDetails
 					sx={{ backgroundColor: theme.palette.background.default }}
 				>
-					<Typography>TODO.</Typography>
+					<DashboardProjectsList />
 				</AccordionDetails>
 			</Accordion>
 			<Accordion
-				expanded={expanded === 'liquidities'}
+				expanded={expanded.liquidities}
 				onChange={handleChange('liquidities')}
 			>
 				<AccordionSummary
@@ -83,7 +80,7 @@ export default ({}) => {
 					<Typography
 						sx={{ fontSize: '1.5em', lineHeight: 2, width: '33%', flexShrink: 0 }}
 					>
-						Liquidity
+						Yield farming
 					</Typography>
 				</AccordionSummary>
 				<AccordionDetails
