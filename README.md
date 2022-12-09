@@ -1,29 +1,33 @@
-# Fans Society
+# Fans Society - Projet Final Alyra - Promotion Rinkeby
 
-## Development
+## Contributors
 
-### Installation
+- Teddy Chambard (teddy.chambard@gmail.com)
+- Nicolas Thierry (nicolasthierry154@gmail.com)
+
+## Installation
 
 ```sh
+# Installer yarn
+npm i -g yarn
+
+# Cloner le repo
+git clone https://github.com/fans-society/fans-society.git
+
+# Installer les dépendances
 yarn install
 ```
 
-### Smart contracts
+## Démo
 
-```sh
-cd packages/fans-society-contracts
-# Compilation
-yarn compile
-# Tests
-yarn test
-# Deployment on ganache
-yarn deploy:localhost
-```
+[Voir la vidéo sur Ubstream]()
 
-### Decentralized React App
+## Packages
 
-```sh
-cd packages/fans-society-dapp
-# Start react development server
-yarn start
-```
+- [fans-society-contracts](./packages/fans-society-contracts/)
+- [fans-society-dapp](./packages/fans-society-dapp)
+
+## Intégration continue
+
+- [Workflow dev](https://github.com/fans-society/fans-society/blob/master/.github/workflows/ci.yml)
+- [Workflow prod](https://github.com/fans-society/fans-society/blob/master/.github/workflows/ci-prod.yml)
