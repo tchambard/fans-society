@@ -8,6 +8,10 @@ import { SafeERC20Upgradeable } from '@openzeppelin/contracts-upgradeable/token/
 import { IProjectTokenERC20 } from './interfaces/IProjectTokenERC20.sol';
 import 'hardhat/console.sol';
 
+/**
+ * ProjectTokenERC20 Fans Society Interface
+ * @author Teddy Chambard, Nicolas Thierry
+ */
 contract ProjectTokenERC20 is
 	Initializable,
 	ERC20Upgradeable,
@@ -24,6 +28,14 @@ contract ProjectTokenERC20 is
 		_;
 	}
 
+	/**
+	 * Allow anyone to exchange ERC20 tokens (ETH is supported)
+	 * @param _name The name of ERC20 token
+	 * @param _symbol The symbol of ERC20 token
+	 * @param _amm The AMM contract address
+	 * @param _totalSupply The max total supply of tokens
+	 * @param _initialSupply The initial supply of tokens
+	 */
 	function initialize(
 		string memory _name,
 		string memory _symbol,
@@ -60,6 +72,9 @@ contract ProjectTokenERC20 is
 		_mint(amm, _initialSupply);
 	}
 
+	/**
+	 * @dev See {IProjectTokenERC20-safeTransferFrom}.
+	 */
 	function safeTransferFrom(
 		address from,
 		address to,
@@ -69,12 +84,15 @@ contract ProjectTokenERC20 is
 		_transfer(from, to, value);
 	}
 
-	function claim(address account, uint256 amount) external onlyAmm {
-		require(!claimed[account], 'already claimed');
+	/**
+	 * @dev See {IProjectTokenERC20-claim}.
+	 */
+	function claim(address _account, uint256 _amount) external onlyAmm {
+		require(!claimed[_account], 'already claimed');
 		uint256 totalSupply = totalSupply();
-		require((totalSupply + amount) <= maxTotalSupply, 'maxTotalSupply limit');
-		_mint(account, amount);
-		claimed[account] = true;
-		emit TokenClaimed(account, amount);
+		require((totalSupply + _amount) <= maxTotalSupply, 'maxTotalSupply limit');
+		_mint(_account, _amount);
+		claimed[_account] = true;
+		emit TokenClaimed(_account, _amount);
 	}
 }

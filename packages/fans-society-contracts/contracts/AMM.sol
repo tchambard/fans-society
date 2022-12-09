@@ -5,24 +5,45 @@ import { Projects } from './Projects.sol';
 
 import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { SafeERC20 } from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import { ReentrancyGuard } from '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import { AggregatorV3Interface } from '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
 
 import { IWETH } from './interfaces/IWETH.sol';
 import { IProjectTokenFactory } from './tokens/interfaces/IProjectTokenFactory.sol';
 import { IPoolFactory } from './pools/interfaces/IPoolFactory.sol';
 import { IPool } from './pools/interfaces/IPool.sol';
-import { PoolHelpers } from './pools/PoolHelpers.sol';
 import { IProjectTokenERC20 } from './tokens/interfaces/IProjectTokenERC20.sol';
 
 import 'hardhat/console.sol';
 
-contract AMM is Projects, ReentrancyGuard {
+/**
+ * Main Fans Society Automated Market Maker Contract
+ * @author Teddy Chambard, Nicolas Thierry
+ * @notice This contract is responsible for all projects management and it alaso offers DEX capabilities addressing liquidity pools
+ */
+contract AMM is Projects {
+	/**
+	 * The address to use to reward fans society team
+	 */
 	address internal fansSociety;
+
+	/**
+	 * The address of Wrapped ETH contract
+	 */
 	address internal weth;
+
+	/**
+	 * The address of ETH / USD Chainlink data feed aggregator
+	 */
 	address internal ethUsdtAggregator;
 
+	/**
+	 * The token factory contract address that is responsible for ERC20 tokens creation
+	 */
 	address internal tokenFactory;
+
+	/**
+	 * The pool factory contract address that is responsible for liquidity pools creation
+	 */
 	address internal poolFactory;
 
 	event TokensClaimed(
@@ -49,10 +70,13 @@ contract AMM is Projects, ReentrancyGuard {
 		ethUsdtAggregator = _ethUsdtAggregatorAddress;
 	}
 
+	/**
+	 * @dev This function is reserved for deployer, and needs to be called to initialize factories addresses
+	 */
 	function setFactories(
 		address _tokenFactoryAddress,
 		address _poolFactoryAddress
-	) external {
+	) external onlyOwner {
 		require(
 			tokenFactory == address(0) && poolFactory == address(0),
 			'AMM factories already set'
@@ -61,6 +85,9 @@ contract AMM is Projects, ReentrancyGuard {
 		poolFactory = _poolFactoryAddress;
 	}
 
+	/**
+	 * This function can be called only by project owner (partner) when a project reached is target (status compeleted)
+	 */
 	function launchProject(uint256 _id)
 		external
 		statusIs(_id, ProjectStatus.Completed)
@@ -105,14 +132,14 @@ contract AMM is Projects, ReentrancyGuard {
 			partnerTokenShares
 		);
 
-		// ===== AMM transfer tokens to fans society =====
+		// ===== transfer tokens to fans society =====
 		IProjectTokenERC20(projects[_id].tokenAddress).safeTransferFrom(
 			address(this),
 			fansSociety,
 			fansSocietyTokenShares
 		);
 
-		// ===== AMM transfer tokens to pool =====
+		// ===== transfer tokens to pool =====
 		IProjectTokenERC20(projects[_id].tokenAddress).safeTransferFrom(
 			address(this),
 			pool,
@@ -121,20 +148,27 @@ contract AMM is Projects, ReentrancyGuard {
 
 		// swap with weth
 		IWETH(weth).deposit{ value: poolFundsShares }();
-		// transfer weth
+		// ===== transfer WETH to pool =====
 		require(IWETH(weth).transfer(pool, poolFundsShares), 'weth transfer failed');
 
+		// ===== transfer partner funds =====
 		(bool sent, ) = payable(project.partnerAddress).call{
 			value: partnerFundsShares
 		}('');
 		require(sent, 'partner distribution failed');
 
+		// trigger first pool liquidity deposit
 		IPool(pool).mintLP(address(this));
 
 		projects[_id].status = ProjectStatus.Launched;
 		emit ProjectStatusChanged(_id, ProjectStatus.Launched);
 	}
 
+	/**
+	 * Can be called by ICO participant when project has been validated by partner (status launched)
+	 * This will reward the participant with the created ERC20 token
+	 * @param _projectId The project ID
+	 */
 	function claimProjectTokens(uint256 _projectId)
 		external
 		statusIs(_projectId, ProjectStatus.Launched)
@@ -154,6 +188,17 @@ contract AMM is Projects, ReentrancyGuard {
 		emit TokensClaimed(_projectId, project.tokenAddress, msg.sender, tokenAmount);
 	}
 
+	/**
+	 * Allow anyone to add liquidity on specified pool
+	 * @dev This function is compliant with any created project ERC20 token and also with ETH values
+	 * Caller can either provide simple amounts as parameter or give some Ethers as value.
+	 * Tokens addresses could have been enought to determine pool address thanks to Clones factory, but giving pool address here is gas saving.
+	 * @param _pool The pool address
+	 * @param _tokenX The first token address
+	 * @param _tokenY The second token address
+	 * @param _amountX The amount of first token. MUST be 0 _tokenX is WETH address
+	 * @param _amountY The amount of the second token. MUST be 0 _tokenY is WETH address
+	 */
 	function addPoolLiquidity(
 		address _pool,
 		address _tokenX,
@@ -226,6 +271,13 @@ contract AMM is Projects, ReentrancyGuard {
 		IPool(_pool).mintLP(msg.sender);
 	}
 
+	/**
+	 * Allow liquidity providers to remove liquidity on specified pool
+	 * Caller MUST own LP tokens to be able to use this function.
+	 * LP tokens will be burnt, and ERC20 and/or ETH will be returned to the caller
+	 * @param _pool The pool address
+	 * @param _amountLP The amount of LP token to give back to the pool.
+	 */
 	function removePoolLiquidity(address _pool, uint256 _amountLP)
 		external
 		nonReentrant
@@ -253,6 +305,15 @@ contract AMM is Projects, ReentrancyGuard {
 		}
 	}
 
+	/**
+	 * Allow anyone to exchange ERC20 tokens (ETH is supported)
+	 * @param _pool The pool address
+	 * @param _tokenIn The address of token caller owns and want to exchange.
+	 * @param _amountOut The amount of other token provided by the pool that caller want to get.
+	 * Providing the output amount allows the protocol to determine required input amount in the limit of available liquidities
+	 *
+	 * Caller needs to compute output amount before calling this function. For this purpose, Pool contract provides `computeMaxOutputAmount` function
+	 */
 	function swap(
 		address _pool,
 		address _tokenIn,
@@ -300,6 +361,9 @@ contract AMM is Projects, ReentrancyGuard {
 		emit Swapped(msg.sender, tokenX, amountIn, tokenY, amountOut);
 	}
 
+	/**
+	 * Allow to retrieve ETH / USD price with Chainlink aggregator
+	 */
 	function getEthUsdPrice() public view returns (uint256) {
 		require(ethUsdtAggregator != address(0), 'no aggregator');
 		AggregatorV3Interface priceFeed = AggregatorV3Interface(ethUsdtAggregator);

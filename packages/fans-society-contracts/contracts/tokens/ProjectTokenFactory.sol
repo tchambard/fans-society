@@ -7,6 +7,11 @@ import { IProjectTokenFactory } from './interfaces/IProjectTokenFactory.sol';
 import { ProjectTokenERC20 } from './ProjectTokenERC20.sol';
 import { AMMFactorySecurity } from '../common/AMMFactorySecurity.sol';
 
+/**
+ * ProjectTokenFactory Fans Society Interface
+ * @dev This contract uses Clones mechanism optimized for minimal gas fees when deploying new ERC20 contracts
+ * @author Teddy Chambard, Nicolas Thierry
+ */
 contract ProjectTokenFactory is IProjectTokenFactory, AMMFactorySecurity {
 	address private immutable tokenImplementationAddress;
 
@@ -23,6 +28,9 @@ contract ProjectTokenFactory is IProjectTokenFactory, AMMFactorySecurity {
 		tokenImplementationAddress = _tokenImplementationAddress;
 	}
 
+	/**
+	 * @dev See {IProjectTokenFactory-createToken}.
+	 */
 	function createToken(
 		uint256 _projectId,
 		string memory _name,
