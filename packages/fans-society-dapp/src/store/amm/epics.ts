@@ -38,6 +38,7 @@ import {
 	COMPUTE_POOL_PRICE,
 	ADD_POOL_LIQUIDITY,
 	REMOVE_POOL_LIQUIDITY,
+	GET_ETH_USD_PRICE,
 } from './actions';
 import {
 	getAMMContract,
@@ -898,6 +899,35 @@ export const listProjectsClaims: Epic<
 			} catch (e) {
 				loggerService.log(e.message);
 				return LIST_PROJECTS_DETAILS_WITH_COMMITMENTS.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const getEthUsdtPrice: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3, logger }) => {
+	return action$.pipe(
+		filter(isActionOf(GET_ETH_USD_PRICE.request)),
+		mergeMap(async (action) => {
+			try {
+				const networkAlias = state$.value.ethNetwork.networkAlias;
+				if (networkAlias === 'localhost') {
+					return GET_ETH_USD_PRICE.failure('price unavailable on localhost');
+				}
+				const contract = await getAMMContract(web3);
+
+				const price = await contract.methods.getEthUsdPrice().call();
+
+				logger.log('=== ETH / USDT price ===', price);
+				// here there is a trick: balance of weth address is not correct as we got eth balance
+				return GET_ETH_USD_PRICE.success(+price / 10 ** 8);
+			} catch (e) {
+				loggerService.log(e.message);
+				return GET_ETH_USD_PRICE.failure(findRpcMessage(e));
 			}
 		}),
 	);

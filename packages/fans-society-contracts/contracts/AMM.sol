@@ -5,6 +5,7 @@ import { Projects } from './Projects.sol';
 
 import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { SafeERC20 } from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import { AggregatorV3Interface } from '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
 
 import { IWETH } from './interfaces/IWETH.sol';
 import { IProjectTokenFactory } from './tokens/interfaces/IProjectTokenFactory.sol';
@@ -18,6 +19,7 @@ import 'hardhat/console.sol';
 contract AMM is Projects {
 	address internal fansSociety;
 	address internal weth;
+	address internal ethUsdtAggregator;
 
 	address internal tokenFactory;
 	address internal poolFactory;
@@ -39,11 +41,13 @@ contract AMM is Projects {
 	constructor(
 		address _fansSocietyAddress,
 		address _wethTokenAddress,
+		address _ethUsdtAggregatorAddress,
 		address _tokenFactoryAddress,
 		address _poolFactoryAddress
 	) Projects() {
 		fansSociety = _fansSocietyAddress;
 		weth = _wethTokenAddress;
+		ethUsdtAggregator = _ethUsdtAggregatorAddress;
 		tokenFactory = _tokenFactoryAddress;
 		poolFactory = _poolFactoryAddress;
 	}
@@ -302,6 +306,13 @@ contract AMM is Projects {
 			require(success, 'withdraw ETH failed');
 		}
 		emit Swapped(msg.sender, tokenX, amountIn, tokenY, amountOut);
+	}
+
+	function getEthUsdPrice() public view returns (uint256) {
+		require(ethUsdtAggregator != address(0), 'no aggregator');
+		AggregatorV3Interface priceFeed = AggregatorV3Interface(ethUsdtAggregator);
+		(, int256 answer, , , ) = priceFeed.latestRoundData();
+		return uint256(answer);
 	}
 
 	function computeTokenShares(uint112 _totalSupply)

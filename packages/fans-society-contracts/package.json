@@ -13,6 +13,7 @@
 		"deploy:goerli": "yarn g:hardhat-deploy:goerli"
 	},
 	"devDependencies": {
+		"@chainlink/contracts": "^0.5.1",
 		"@openzeppelin/contracts": "^4.7.3",
 		"@openzeppelin/contracts-upgradeable": "^4.8.0"
 	},
