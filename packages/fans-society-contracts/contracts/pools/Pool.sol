@@ -9,8 +9,13 @@ import { Math } from '@openzeppelin/contracts/utils/math/Math.sol';
 import { IPool } from './interfaces/IPool.sol';
 import { LPTokenERC20 } from './LPTokenERC20.sol';
 
-import 'hardhat/console.sol';
+import 'hardhat/console.sol'; // TODO: to remove
 
+/**
+ * Pool Fans Society Contract
+ * @author Teddy Chambard, Nicolas Thierry
+ * @notice This contract is responsible for ERC20 pair pool liquidity management
+ */
 contract Pool is Initializable, LPTokenERC20 {
 	address private fansSocietyAddress;
 	address private tokenX;
@@ -57,6 +62,9 @@ contract Pool is Initializable, LPTokenERC20 {
 		tokenY = _tokenY;
 	}
 
+	/**
+	 * @dev See {IPool-getReserves}.
+	 */
 	function getReserves(address _tokenIn)
 		public
 		view
@@ -73,7 +81,10 @@ contract Pool is Initializable, LPTokenERC20 {
 			: (tokenY, tokenX, reserveY, reserveX);
 	}
 
-	function mintLP(address provider)
+	/**
+	 * @dev See {IPool-mintLP}.
+	 */
+	function mintLP(address _provider)
 		external
 		onlyAmm
 		returns (uint256 liquidity)
@@ -98,16 +109,19 @@ contract Pool is Initializable, LPTokenERC20 {
 		}
 		require(liquidity > 0, 'not enough liquidity to add');
 
-		_mint(provider, liquidity);
+		_mint(_provider, liquidity);
 
 		_updateReserves(balanceX, balanceY);
 
 		k = reserveX * reserveY;
-		console.log('UPDATE K', k);
-		emit LPMinted(provider, tokenX, amountX, tokenY, amountY, liquidity);
+
+		emit LPMinted(_provider, tokenX, amountX, tokenY, amountY, liquidity);
 	}
 
-	function burnLP(address provider)
+	/**
+	 * @dev See {IPool-burnLP}.
+	 */
+	function burnLP(address _provider)
 		external
 		onlyAmm
 		returns (
@@ -147,9 +161,12 @@ contract Pool is Initializable, LPTokenERC20 {
 
 		k = reserveX * reserveY;
 
-		emit LPBurnt(provider, tokenX, amountX, tokenY, amountY, liquidity);
+		emit LPBurnt(_provider, tokenX, amountX, tokenY, amountY, liquidity);
 	}
 
+	/**
+	 * @dev See {IPool-swap}.
+	 */
 	function swap(
 		address _tokenIn,
 		uint256 _amountIn,
@@ -179,10 +196,13 @@ contract Pool is Initializable, LPTokenERC20 {
 		);
 	}
 
+	/**
+	 * @dev See {IPool-computePriceOut}.
+	 */
 	function computePriceOut(address _tokenIn, uint256 _amountIn)
 		external
 		view
-		returns (uint256)
+		returns (uint256 priceOut)
 	{
 		(uint256 reserveIn, uint256 reserveOut) = _tokenIn == tokenX
 			? (reserveX, reserveY)
@@ -192,6 +212,9 @@ contract Pool is Initializable, LPTokenERC20 {
 		return (_amountIn * reserveOut) / reserveIn;
 	}
 
+	/**
+	 * @dev See {IPool-computeMaxOutputAmount}.
+	 */
 	function computeMaxOutputAmount(
 		uint256 _amountIn,
 		uint256 _reserveIn,
@@ -204,6 +227,9 @@ contract Pool is Initializable, LPTokenERC20 {
 		amountOut = (_reserveOut * amountInWithFee) / (_reserveIn + amountInWithFee);
 	}
 
+	/**
+	 * @dev See {IPool-computeRequiredInputAmount}.
+	 */
 	function computeRequiredInputAmount(
 		uint256 _amountOut,
 		uint256 _reserveIn,
@@ -226,19 +252,16 @@ contract Pool is Initializable, LPTokenERC20 {
 
 	function _mintFansSocietyFees(uint256 _reserveX, uint256 _reserveY) private {
 		uint256 _k = k;
-		console.log('_k', _k);
 		if (_k != 0) {
 			uint256 rootK = Math.sqrt(_reserveX * _reserveY);
 			uint256 rootKLast = Math.sqrt(_k);
-			console.log('rootK', rootK);
-			console.log('rootKLast', rootKLast);
+			// when global liquidity increase, 50% percent LP fees are minted for Fans Society
 			if (rootK > rootKLast) {
 				uint256 numerator = totalSupply() * (rootK - rootKLast) * 50;
 				uint256 denominator = rootK * 100 + rootKLast * 50;
 				uint256 liquidity = numerator / denominator;
 
 				if (liquidity > 0) {
-					console.log('FANS SOCIETY TAKES FEES', liquidity);
 					_mint(fansSocietyAddress, liquidity);
 				}
 			}

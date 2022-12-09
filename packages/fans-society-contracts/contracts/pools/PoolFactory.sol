@@ -7,10 +7,14 @@ import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 
 import { IPoolFactory } from './interfaces/IPoolFactory.sol';
 import { Pool } from './Pool.sol';
-import { PoolHelpers } from './PoolHelpers.sol';
 import { IPool } from './interfaces/IPool.sol';
 import { AMMFactorySecurity } from '../common/AMMFactorySecurity.sol';
 
+/**
+ * PoolFactory Fans Society Interface
+ * @dev This contract uses Clones mechanism optimized for minimal gas fees when deploying new pool contracts
+ * @author Teddy Chambard, Nicolas Thierry
+ */
 contract PoolFactory is IPoolFactory, Ownable, AMMFactorySecurity {
 	address private immutable fansSocietyAddress;
 
@@ -31,12 +35,15 @@ contract PoolFactory is IPoolFactory, Ownable, AMMFactorySecurity {
 		poolImplementationAddress = _poolImplementationAddress;
 	}
 
+	/**
+	 * @dev See {IPoolFactory-createPool}.
+	 */
 	function createPool(address _tokenX, address _tokenY)
 		public
 		onlyAmm
 		returns (address poolAddress)
 	{
-		(address tokenX, address tokenY, bytes32 salt) = PoolHelpers.computePoolSalt(
+		(address tokenX, address tokenY, bytes32 salt) = computePoolSalt(
 			_tokenX,
 			_tokenY
 		);
@@ -52,12 +59,40 @@ contract PoolFactory is IPoolFactory, Ownable, AMMFactorySecurity {
 		return (poolAddress);
 	}
 
+	/**
+	 * @dev See {IPoolFactory-getPool}.
+	 */
 	function getPool(address _tokenX, address _tokenY)
 		external
 		view
 		returns (address pool)
 	{
-		(, , bytes32 salt) = PoolHelpers.computePoolSalt(_tokenX, _tokenY);
+		(, , bytes32 salt) = computePoolSalt(_tokenX, _tokenY);
 		return Clones.predictDeterministicAddress(poolImplementationAddress, salt);
+	}
+
+	function computePoolSalt(address _tokenX, address _tokenY)
+		private
+		pure
+		returns (
+			address tokenX,
+			address tokenY,
+			bytes32 salt
+		)
+	{
+		(tokenX, tokenY) = sortTokens(_tokenX, _tokenY);
+		salt = keccak256(abi.encodePacked(tokenX, tokenY));
+	}
+
+	function sortTokens(address _tokenX, address _tokenY)
+		private
+		pure
+		returns (address tokenX, address tokenY)
+	{
+		require(_tokenX != _tokenY, 'same token');
+		(tokenX, tokenY) = _tokenX < _tokenY
+			? (_tokenX, _tokenY)
+			: (_tokenY, _tokenX);
+		require(tokenX != address(0), 'invalid token');
 	}
 }

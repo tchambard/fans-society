@@ -6,8 +6,13 @@ import { Initializable } from '@openzeppelin/contracts-upgradeable/proxy/utils/I
 import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { ERC20Wrapper } from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol';
 import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
+import { ReentrancyGuard } from '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
-contract Projects is Ownable {
+/**
+ * Projects Fans Society Interface
+ * @author Teddy Chambard, Nicolas Thierry
+ */
+contract Projects is Ownable, ReentrancyGuard {
 	enum ProjectStatus {
 		Opened,
 		Aborted,
@@ -80,6 +85,13 @@ contract Projects is Ownable {
 		_;
 	}
 
+	/**
+	 * Allows Fans Society deployer to create a new project
+	 * @param _info The project informations
+	 * @param _ico The project ICO settings
+	 * @param _partnerAddress The project owner (partner) address
+	 * @param _totalSupply The total supply of tokens that would be created if the project ICO reaches its goal
+	 */
 	function createProject(
 		ProjectInfo calldata _info,
 		ProjectICO calldata _ico,
@@ -102,6 +114,10 @@ contract Projects is Ownable {
 		emit ProjectCreated(count, _info, _ico, _partnerAddress, _totalSupply);
 	}
 
+	/**
+	 * Allows Fans Society to abort a project
+	 * @param _id The project ID
+	 */
 	function abortProject(uint256 _id)
 		external
 		onlyOwner
@@ -111,6 +127,11 @@ contract Projects is Ownable {
 		emit ProjectStatusChanged(_id, ProjectStatus.Aborted);
 	}
 
+	/**
+	 * Allows anyone to participant to the project ICO
+	 * ETH value is expected here, and should match with project ICO settings (min, max...)
+	 * @param _id The project ID
+	 */
 	function commitOnProject(uint256 _id)
 		external
 		payable
@@ -137,10 +158,15 @@ contract Projects is Ownable {
 		}
 	}
 
+	/**
+	 * Allows any participant of a project ICO to withdraw his funds
+	 * @param _id The project ID
+	 */
 	function withdrawOnProject(uint256 _id)
 		external
 		statusLessThan(_id, ProjectStatus.Completed)
 		isCommited(_id)
+		nonReentrant
 	{
 		uint256 commitment = commitments[_id][msg.sender];
 
