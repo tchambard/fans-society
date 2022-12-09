@@ -85,7 +85,7 @@ contract Pool is Initializable, LPTokenERC20 {
 		uint256 amountX = balanceX - _reserveX;
 		uint256 amountY = balanceY - _reserveY;
 
-		//	_mintFansSocietyFees(_reserveX, _reserveY);
+		_mintFansSocietyFees(_reserveX, _reserveY);
 
 		uint256 _totalSupply = totalSupply();
 		if (_totalSupply == 0) {
@@ -102,8 +102,8 @@ contract Pool is Initializable, LPTokenERC20 {
 
 		_updateReserves(balanceX, balanceY);
 
-		k = _reserveX * _reserveY;
-
+		k = reserveX * reserveY;
+		console.log('UPDATE K', k);
 		emit LPMinted(provider, tokenX, amountX, tokenY, amountY, liquidity);
 	}
 
@@ -125,7 +125,8 @@ contract Pool is Initializable, LPTokenERC20 {
 		uint256 balanceX = IERC20(_tokenX).balanceOf(address(this));
 		uint256 balanceY = IERC20(_tokenY).balanceOf(address(this));
 		uint256 liquidity = balanceOf(address(this));
-		//	_mintFansSocietyFees(_reserveX, _reserveY);
+
+		_mintFansSocietyFees(_reserveX, _reserveY);
 
 		uint256 _totalSupply = totalSupply();
 
@@ -144,7 +145,7 @@ contract Pool is Initializable, LPTokenERC20 {
 			IERC20(tokenY).balanceOf(address(this))
 		);
 
-		k = _reserveX * _reserveY;
+		k = reserveX * reserveY;
 
 		emit LPBurnt(provider, tokenX, amountX, tokenY, amountY, liquidity);
 	}
@@ -225,14 +226,21 @@ contract Pool is Initializable, LPTokenERC20 {
 
 	function _mintFansSocietyFees(uint256 _reserveX, uint256 _reserveY) private {
 		uint256 _k = k;
+		console.log('_k', _k);
 		if (_k != 0) {
 			uint256 rootK = Math.sqrt(_reserveX * _reserveY);
 			uint256 rootKLast = Math.sqrt(_k);
+			console.log('rootK', rootK);
+			console.log('rootKLast', rootKLast);
 			if (rootK > rootKLast) {
 				uint256 numerator = totalSupply() * (rootK - rootKLast) * 50;
 				uint256 denominator = rootK * 100 + rootKLast * 50;
 				uint256 liquidity = numerator / denominator;
-				if (liquidity > 0) _mint(fansSocietyAddress, liquidity);
+
+				if (liquidity > 0) {
+					console.log('FANS SOCIETY TAKES FEES', liquidity);
+					_mint(fansSocietyAddress, liquidity);
+				}
 			}
 		}
 	}

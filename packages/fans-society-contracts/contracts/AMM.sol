@@ -5,6 +5,7 @@ import { Projects } from './Projects.sol';
 
 import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { SafeERC20 } from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import { ReentrancyGuard } from '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import { AggregatorV3Interface } from '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
 
 import { IWETH } from './interfaces/IWETH.sol';
@@ -16,7 +17,7 @@ import { IProjectTokenERC20 } from './tokens/interfaces/IProjectTokenERC20.sol';
 
 import 'hardhat/console.sol';
 
-contract AMM is Projects {
+contract AMM is Projects, ReentrancyGuard {
 	address internal fansSociety;
 	address internal weth;
 	address internal ethUsdtAggregator;
@@ -41,13 +42,21 @@ contract AMM is Projects {
 	constructor(
 		address _fansSocietyAddress,
 		address _wethTokenAddress,
-		address _ethUsdtAggregatorAddress,
-		address _tokenFactoryAddress,
-		address _poolFactoryAddress
+		address _ethUsdtAggregatorAddress
 	) Projects() {
 		fansSociety = _fansSocietyAddress;
 		weth = _wethTokenAddress;
 		ethUsdtAggregator = _ethUsdtAggregatorAddress;
+	}
+
+	function setFactories(
+		address _tokenFactoryAddress,
+		address _poolFactoryAddress
+	) external {
+		require(
+			tokenFactory == address(0) && poolFactory == address(0),
+			'AMM factories already set'
+		);
 		tokenFactory = _tokenFactoryAddress;
 		poolFactory = _poolFactoryAddress;
 	}
@@ -56,7 +65,13 @@ contract AMM is Projects {
 		external
 		statusIs(_id, ProjectStatus.Completed)
 		onlyPartner(_id)
+		nonReentrant
 	{
+		require(
+			tokenFactory != address(0) && poolFactory != address(0),
+			'no factories'
+		);
+
 		Project memory project = projects[_id];
 
 		(
@@ -74,13 +89,11 @@ contract AMM is Projects {
 			_id,
 			project.info.name,
 			project.info.symbol,
-			address(this),
 			project.totalSupply,
 			partnerTokenShares + poolTokenShares + fansSocietyTokenShares
 		);
 
 		address pool = IPoolFactory(poolFactory).createPool(
-			address(this),
 			projects[_id].tokenAddress,
 			weth
 		);
@@ -111,7 +124,6 @@ contract AMM is Projects {
 		// transfer weth
 		require(IWETH(weth).transfer(pool, poolFundsShares), 'weth transfer failed');
 
-		// TODO: transfer funds to partner
 		(bool sent, ) = payable(project.partnerAddress).call{
 			value: partnerFundsShares
 		}('');
@@ -148,7 +160,7 @@ contract AMM is Projects {
 		address _tokenY,
 		uint256 _amountX,
 		uint256 _amountY
-	) external payable {
+	) external payable nonReentrant {
 		if (_tokenX == weth) {
 			require(
 				_amountX == 0 && _amountY > 0 && msg.value > 0,
@@ -214,30 +226,10 @@ contract AMM is Projects {
 		IPool(_pool).mintLP(msg.sender);
 	}
 
-	function computeOptimalLiquidityAmount(
-		address _pool,
-		address _tokenX,
-		address _tokenY,
-		uint256 _amountX,
-		uint256 _amountY
-	) private view returns (uint256 amountX, uint256 amountY) {
-		(, , uint256 reserveX, uint256 reserveY) = IPool(_pool).getReserves(_tokenX);
-
-		if (reserveX == 0 && reserveY == 0) {
-			(amountX, amountY) = (_amountX, _amountY);
-		} else {
-			uint256 amountYOptimal = IPool(_pool).computePriceOut(_tokenX, _amountX);
-			if (amountYOptimal <= _amountY) {
-				(amountX, amountY) = (_amountX, amountYOptimal);
-			} else {
-				uint256 amountXOptimal = IPool(_pool).computePriceOut(_tokenY, _amountY);
-				require(amountXOptimal <= _amountX, 'too big input amount');
-				(amountX, amountY) = (amountXOptimal, _amountY);
-			}
-		}
-	}
-
-	function removePoolLiquidity(address _pool, uint256 _amountLP) external {
+	function removePoolLiquidity(address _pool, uint256 _amountLP)
+		external
+		nonReentrant
+	{
 		IPool(_pool).safeTransferFrom(msg.sender, _pool, _amountLP);
 
 		(address tokenX, uint256 amountX, address tokenY, uint256 amountY) = IPool(
@@ -265,7 +257,7 @@ contract AMM is Projects {
 		address _pool,
 		address _tokenIn,
 		uint256 _amountOut
-	) external payable {
+	) external payable nonReentrant {
 		(
 			address tokenX,
 			address tokenY,
@@ -313,6 +305,29 @@ contract AMM is Projects {
 		AggregatorV3Interface priceFeed = AggregatorV3Interface(ethUsdtAggregator);
 		(, int256 answer, , , ) = priceFeed.latestRoundData();
 		return uint256(answer);
+	}
+
+	function computeOptimalLiquidityAmount(
+		address _pool,
+		address _tokenX,
+		address _tokenY,
+		uint256 _amountX,
+		uint256 _amountY
+	) private view returns (uint256 amountX, uint256 amountY) {
+		(, , uint256 reserveX, uint256 reserveY) = IPool(_pool).getReserves(_tokenX);
+
+		if (reserveX == 0 && reserveY == 0) {
+			(amountX, amountY) = (_amountX, _amountY);
+		} else {
+			uint256 amountYOptimal = IPool(_pool).computePriceOut(_tokenX, _amountX);
+			if (amountYOptimal <= _amountY) {
+				(amountX, amountY) = (_amountX, amountYOptimal);
+			} else {
+				uint256 amountXOptimal = IPool(_pool).computePriceOut(_tokenY, _amountY);
+				require(amountXOptimal <= _amountX, 'too big input amount');
+				(amountX, amountY) = (amountXOptimal, _amountY);
+			}
+		}
 	}
 
 	function computeTokenShares(uint112 _totalSupply)

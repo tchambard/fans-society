@@ -19,6 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	let wethTokenAddress: string;
 	let ethUsdAggregatorAddress: string;
+
 	if (hre.network.name === 'localhost') {
 		wethTokenAddress = (
 			await deploy('WETHToken', {
@@ -27,7 +28,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				autoMine: true,
 			})
 		).address;
-		ethUsdAggregatorAddress = '0x0000000000000000000000000000000000000000';
+		ethUsdAggregatorAddress = '0x0000000000000000000000000000000000000000'; // no aggregator on localhost
 	} else {
 		wethTokenAddress = weth[hre.network.name];
 		ethUsdAggregatorAddress = ethUsdAggregator[hre.network.name];
@@ -40,35 +41,41 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		throw new Error('Missing eth/usd aggregator token address');
 	}
 
-	const projectTokenImplementation = await deploy('ProjectTokenERC20', {
-		from: deployer,
-	});
-	const projectTokenFactory = await deploy('ProjectTokenFactory', {
+	// Main fans society protocol contract
+	const amm = await deploy('AMM', {
 		from: deployer,
 		log: true,
 		autoMine: true,
-		args: [projectTokenImplementation.address],
+		args: [fansSocietyAddress, wethTokenAddress, ethUsdAggregatorAddress],
 	});
 
+	// deploy implementation of ProjectTokenERC20 for future Clones
+	const projectTokenImplementation = await deploy('ProjectTokenERC20', {
+		from: deployer,
+	});
+
+	// deploy ProjectToken factory
+	const tokenFactory = await deploy('ProjectTokenFactory', {
+		from: deployer,
+		log: true,
+		autoMine: true,
+		args: [amm.address, projectTokenImplementation.address],
+	});
+
+	// deploy implementation of Pool for future Clones
 	const poolImplementation = await deploy('Pool', { from: deployer });
+
+	// deploy Pool factory
 	const poolFactory = await deploy('PoolFactory', {
 		from: deployer,
 		log: true,
 		autoMine: true,
-		args: [poolImplementation.address, fansSocietyAddress],
+		args: [amm.address, poolImplementation.address, fansSocietyAddress],
 	});
 
-	await deploy('AMM', {
+	const ammContract = await hre.ethers.getContractAt('AMM', amm.address);
+	await ammContract.setFactories(tokenFactory.address, poolFactory.address, {
 		from: deployer,
-		log: true,
-		autoMine: true,
-		args: [
-			fansSocietyAddress,
-			wethTokenAddress,
-			ethUsdAggregatorAddress,
-			projectTokenFactory.address,
-			poolFactory.address,
-		],
 	});
 };
 export default func;

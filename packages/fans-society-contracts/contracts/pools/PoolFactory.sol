@@ -9,8 +9,9 @@ import { IPoolFactory } from './interfaces/IPoolFactory.sol';
 import { Pool } from './Pool.sol';
 import { PoolHelpers } from './PoolHelpers.sol';
 import { IPool } from './interfaces/IPool.sol';
+import { AMMFactorySecurity } from '../common/AMMFactorySecurity.sol';
 
-contract PoolFactory is IPoolFactory, Ownable {
+contract PoolFactory is IPoolFactory, Ownable, AMMFactorySecurity {
 	address private immutable fansSocietyAddress;
 
 	address private immutable poolImplementationAddress;
@@ -21,16 +22,20 @@ contract PoolFactory is IPoolFactory, Ownable {
 		address indexed tokenY
 	);
 
-	constructor(address _poolImplementationAddress, address _fansSocietyAddress) {
+	constructor(
+		address _amm,
+		address _poolImplementationAddress,
+		address _fansSocietyAddress
+	) AMMFactorySecurity(_amm) {
 		fansSocietyAddress = _fansSocietyAddress;
 		poolImplementationAddress = _poolImplementationAddress;
 	}
 
-	function createPool(
-		address _amm,
-		address _tokenX,
-		address _tokenY
-	) public returns (address poolAddress) {
+	function createPool(address _tokenX, address _tokenY)
+		public
+		onlyAmm
+		returns (address poolAddress)
+	{
 		(address tokenX, address tokenY, bytes32 salt) = PoolHelpers.computePoolSalt(
 			_tokenX,
 			_tokenY
@@ -41,7 +46,7 @@ contract PoolFactory is IPoolFactory, Ownable {
 		);
 
 		poolAddress = Clones.cloneDeterministic(poolImplementationAddress, salt);
-		Pool(poolAddress).initialize(_amm, fansSocietyAddress, tokenX, tokenY);
+		Pool(poolAddress).initialize(amm, fansSocietyAddress, tokenX, tokenY);
 
 		emit PoolCreated(poolAddress, tokenX, tokenY);
 		return (poolAddress);
