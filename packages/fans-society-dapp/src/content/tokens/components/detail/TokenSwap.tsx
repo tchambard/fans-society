@@ -18,6 +18,7 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { RootState } from 'state-types';
 import {
 	COMPUTE_SWAP_OUT,
+	GET_ETH_USD_PRICE,
 	GET_TOKEN_BALANCE,
 	IPoolInfo,
 	IToken,
@@ -45,6 +46,7 @@ export default ({ pool }: IProps) => {
 		contracts,
 		balances,
 		swapInfo,
+		ethUsdPrice,
 	} = useSelector((state: RootState) => state.amm);
 
 	const [swapped, setSwapped] = useState<{ amount: string; symbol: string }>();
@@ -58,6 +60,7 @@ export default ({ pool }: IProps) => {
 
 	useEffect(() => {
 		if (pool) {
+			dispatch(GET_ETH_USD_PRICE.request());
 			setTokenIn(pool.tokenY);
 			setTokenOut(pool.tokenX);
 			dispatch(GET_TOKEN_BALANCE.request(pool.tokenX.address));
@@ -174,7 +177,19 @@ export default ({ pool }: IProps) => {
 								justifyContent: 'space-between',
 							}}
 						>
-							<Typography>Send</Typography>
+							{tokenIn?.symbol === 'ETH' ? (
+								ethUsdPrice != null ? (
+									<Typography>Send: {+values.amountIn * ethUsdPrice} $</Typography>
+								) : (
+									<Typography>Send: - $</Typography>
+								)
+							) : ethUsdPrice != null && swapInfo?.result ? (
+								<Typography>
+									Send: {+swapInfo.result.priceOut * ethUsdPrice} $
+								</Typography>
+							) : (
+								<Typography>Send: - $</Typography>
+							)}
 							<Typography>
 								Balance: {(tokenIn && balances[tokenIn.address]?.balance) || 0}
 							</Typography>

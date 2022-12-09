@@ -420,6 +420,12 @@ export const LIST_PROJECTS_DETAILS_WITH_COMMITMENTS = createAsyncAction(
 	'LIST_PROJECTS_DETAILS_WITH_COMMITMENTS_FAILURE',
 )<void, IProjectDetail[], string>();
 
+export const GET_ETH_USD_PRICE = createAsyncAction(
+	'GET_ETH_USD_PRICE_REQUEST',
+	'GET_ETH_USD_PRICE_SUCCESS',
+	'GET_ETH_USD_PRICE_FAILURE',
+)<void, number, string>();
+
 export const CLEAR_TX_ERROR = createAction('CLEAR_TX_ERROR', (action) => {
 	return () => action();
 });

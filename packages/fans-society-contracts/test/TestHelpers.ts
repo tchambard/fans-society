@@ -71,6 +71,7 @@ export async function deployProjectsInstances(
 	amm: AMMInstance;
 }> {
 	const wethToken = await deployWethInstance(contractOwnerAddress);
+	const ethUsdAggregatorAddress = address0;
 	const projectTokenFactory = await deployProjectTokenFactoryInstance(
 		contractOwnerAddress,
 	);
@@ -82,6 +83,7 @@ export async function deployProjectsInstances(
 	const amm = await AMM.new(
 		fansSocietyAddress,
 		wethToken.address,
+		ethUsdAggregatorAddress,
 		projectTokenFactory.address,
 		PoolFactory.address,
 		{
