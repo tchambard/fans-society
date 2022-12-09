@@ -611,43 +611,19 @@ contract('AMM', (accounts) => {
 								const lastLpBurntEvent = _.last(
 									await getLpBurntFromPastEvents(poolInstance),
 								);
-								assert.equal(
-									web3.utils.fromWei(lastLpBurntEvent!.amountX),
-									'0.000009999999951564',
-								);
-								assert.equal(lastLpBurntEvent?.amountY, '1799');
+
+								if (lastLpBurntEvent?.tokenX === wethToken.address) {
+									assert.equal(lastLpBurntEvent!.amountX, '9999999951564');
+									assert.equal(lastLpBurntEvent!.amountY, '1799');
+								} else {
+									assert.equal(lastLpBurntEvent!.amountY, '9999999951564');
+									assert.equal(lastLpBurntEvent!.amountX, '1799');
+								}
 
 								const fanLpTokenBalanceAfter = (
 									await poolInstance.balanceOf(fans[0])
 								).toNumber();
 
-								assert.equal(fanLpTokenBalanceAfter, 0);
-							});
-
-							it('> should succeed when caller ask for owned LP tokens amount (reversed token order)', async () => {
-								const fanLpTokenBalanceBefore = (
-									await poolInstance.balanceOf(fans[0])
-								).toNumber();
-								assert.ok(fanLpTokenBalanceBefore > 0);
-
-								await amm.removePoolLiquidity(
-									poolInstance.address,
-									fanLpTokenBalanceBefore,
-									{
-										from: fans[0],
-									},
-								);
-								const lastLpBurntEvent = _.last(
-									await getLpBurntFromPastEvents(poolInstance),
-								);
-								assert.equal(lastLpBurntEvent!.amountX, '1799');
-								assert.equal(
-									web3.utils.fromWei(lastLpBurntEvent!.amountY),
-									'0.000009999999951564',
-								);
-								const fanLpTokenBalanceAfter = (
-									await poolInstance.balanceOf(fans[0])
-								).toNumber();
 								assert.equal(fanLpTokenBalanceAfter, 0);
 							});
 						});

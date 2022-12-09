@@ -13,8 +13,9 @@ const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
 
 contract('Tokens', (accounts) => {
 	const administrator = accounts[0];
-	const partner = accounts[1];
-	const account3 = accounts[2];
+	const amm = accounts[1];
+	const partner = accounts[2];
+	const account3 = accounts[3];
 
 	let projectTokenFactory: ProjectTokenFactoryInstance;
 
@@ -24,7 +25,10 @@ contract('Tokens', (accounts) => {
 	const partnerGlobalShare = 800_000;
 
 	beforeEach(async () => {
-		projectTokenFactory = await deployProjectTokenFactoryInstance(administrator);
+		projectTokenFactory = await deployProjectTokenFactoryInstance(
+			administrator,
+			amm,
+		);
 	});
 
 	describe('> Project token factory', () => {
@@ -35,10 +39,9 @@ contract('Tokens', (accounts) => {
 						0,
 						'Test',
 						'TEST',
-						administrator,
 						100,
 						ammGlobalShare + partnerGlobalShare,
-						{ from: administrator },
+						{ from: amm },
 					),
 					'total supply too small',
 				);
@@ -52,10 +55,9 @@ contract('Tokens', (accounts) => {
 					0,
 					name,
 					symbol,
-					administrator,
 					totalSupply,
 					ammGlobalShare + partnerGlobalShare,
-					{ from: administrator },
+					{ from: amm },
 				);
 
 				const lastTokenCreated = _.last(
@@ -86,10 +88,9 @@ contract('Tokens', (accounts) => {
 				0,
 				'Test',
 				'TEST',
-				administrator,
 				totalSupply,
 				ammGlobalShare + partnerGlobalShare,
-				{ from: administrator },
+				{ from: amm },
 			);
 			const lastTokenCreated = _.last(
 				await getTokensCreatedFromPastEvents(projectTokenFactory),
@@ -109,7 +110,7 @@ contract('Tokens', (accounts) => {
 				const availableSupply = totalSupply - (ammGlobalShare + partnerGlobalShare);
 				await expectRevert(
 					erc20Instance.claim(account3, availableSupply + 1, {
-						from: administrator,
+						from: amm,
 					}),
 					'maxTotalSupply limit',
 				);
@@ -117,15 +118,15 @@ contract('Tokens', (accounts) => {
 
 			it('> should mint new tokens', async () => {
 				assert.equal((await erc20Instance.balanceOf(account3)).toNumber(), 0);
-				await erc20Instance.claim(account3, 1000, { from: administrator });
+				await erc20Instance.claim(account3, 1000, { from: amm });
 				assert.equal((await erc20Instance.balanceOf(account3)).toNumber(), 1000);
 			});
 
 			it('> should fail when claim is already done for same account', async () => {
-				await erc20Instance.claim(account3, 1000, { from: administrator });
+				await erc20Instance.claim(account3, 1000, { from: amm });
 				await expectRevert(
 					erc20Instance.claim(account3, 1000 + 1, {
-						from: administrator,
+						from: amm,
 					}),
 					'already claimed',
 				);

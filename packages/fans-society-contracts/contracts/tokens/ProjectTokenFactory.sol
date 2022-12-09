@@ -5,8 +5,9 @@ import { Clones } from '@openzeppelin/contracts/proxy/Clones.sol';
 
 import { IProjectTokenFactory } from './interfaces/IProjectTokenFactory.sol';
 import { ProjectTokenERC20 } from './ProjectTokenERC20.sol';
+import { AMMFactorySecurity } from '../common/AMMFactorySecurity.sol';
 
-contract ProjectTokenFactory is IProjectTokenFactory {
+contract ProjectTokenFactory is IProjectTokenFactory, AMMFactorySecurity {
 	address private immutable tokenImplementationAddress;
 
 	event TokenCreated(
@@ -16,7 +17,9 @@ contract ProjectTokenFactory is IProjectTokenFactory {
 		string symbol
 	);
 
-	constructor(address _tokenImplementationAddress) {
+	constructor(address _amm, address _tokenImplementationAddress)
+		AMMFactorySecurity(_amm)
+	{
 		tokenImplementationAddress = _tokenImplementationAddress;
 	}
 
@@ -24,15 +27,14 @@ contract ProjectTokenFactory is IProjectTokenFactory {
 		uint256 _projectId,
 		string memory _name,
 		string memory _symbol,
-		address _amm,
 		uint112 _totalSupply,
 		uint112 _initialSupply
-	) public returns (address) {
+	) public onlyAmm returns (address) {
 		address token = Clones.clone(tokenImplementationAddress);
 		ProjectTokenERC20(token).initialize(
 			_name,
 			_symbol,
-			_amm,
+			amm,
 			_totalSupply,
 			_initialSupply
 		);

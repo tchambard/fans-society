@@ -5,7 +5,6 @@ import { Initializable } from '@openzeppelin/contracts-upgradeable/proxy/utils/I
 import { ERC20BurnableUpgradeable } from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol';
 
 contract LPTokenERC20 is Initializable, ERC20BurnableUpgradeable {
-
 	address private amm;
 
 	modifier onlyAmm() {
@@ -14,12 +13,12 @@ contract LPTokenERC20 is Initializable, ERC20BurnableUpgradeable {
 	}
 
 	/**
-     * @dev Sets the AMM address.
-     */
-    function __LPTokenERC20_init(address _amm) internal onlyInitializing {
-        __ERC20_init_unchained('Fans Society Token', 'FST');
+	 * @dev Sets the AMM address.
+	 */
+	function __LPTokenERC20_init(address _amm) internal onlyInitializing {
+		__ERC20_init_unchained('Fans Society Token', 'FST');
 		amm = _amm;
-    }
+	}
 
 	function safeTransferFrom(
 		address from,
@@ -29,5 +28,4 @@ contract LPTokenERC20 is Initializable, ERC20BurnableUpgradeable {
 		_approve(from, amm, value);
 		_transfer(from, to, value);
 	}
-
 }

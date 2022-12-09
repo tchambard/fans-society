@@ -62,7 +62,7 @@ export interface ILPBurnt {
 export const address0 = '0x0000000000000000000000000000000000000000';
 
 export async function deployProjectsInstances(
-	contractOwnerAddress: string,
+	from: string,
 	fansSocietyAddress: string,
 ): Promise<{
 	wethToken: WETHTokenInstance;
@@ -70,26 +70,29 @@ export async function deployProjectsInstances(
 	poolFactory: PoolFactoryInstance;
 	amm: AMMInstance;
 }> {
-	const wethToken = await deployWethInstance(contractOwnerAddress);
+	const wethToken = await deployWethInstance(from);
 	const ethUsdAggregatorAddress = address0;
-	const projectTokenFactory = await deployProjectTokenFactoryInstance(
-		contractOwnerAddress,
-	);
-	const PoolFactory = await deployPoolFactoryInstance(
-		contractOwnerAddress,
-		fansSocietyAddress,
-	);
 
 	const amm = await AMM.new(
 		fansSocietyAddress,
 		wethToken.address,
 		ethUsdAggregatorAddress,
-		projectTokenFactory.address,
-		PoolFactory.address,
 		{
-			from: contractOwnerAddress,
+			from,
 		},
 	);
+
+	const projectTokenFactory = await deployProjectTokenFactoryInstance(
+		from,
+		amm.address,
+	);
+	const PoolFactory = await deployPoolFactoryInstance(
+		from,
+		amm.address,
+		fansSocietyAddress,
+	);
+
+	await amm.setFactories(projectTokenFactory.address, PoolFactory.address);
 
 	return {
 		wethToken,
@@ -100,32 +103,39 @@ export async function deployProjectsInstances(
 }
 
 export async function deployWethInstance(
-	contractOwnerAddress: string,
+	from: string,
 ): Promise<WETHTokenInstance> {
 	return WETHTokenFactory.new({
-		from: contractOwnerAddress,
+		from,
 	});
 }
 
 export async function deployProjectTokenFactoryInstance(
-	contractOwnerAddress: string,
+	from: string,
+	ammAddress: string,
 ): Promise<ProjectTokenFactoryInstance> {
-	const tokenImplementation = await ProjectTokenERC20.new({
-		from: contractOwnerAddress,
+	const tokenImplementation = await ProjectTokenERC20.new(ammAddress, {
+		from,
 	});
-	return ProjectTokenFactory.new(tokenImplementation.address, {
-		from: contractOwnerAddress,
+	return ProjectTokenFactory.new(ammAddress, tokenImplementation.address, {
+		from,
 	});
 }
 
 export async function deployPoolFactoryInstance(
-	contractOwnerAddress: string,
+	from: string,
+	ammAddress: string,
 	fansSocietyAddress: string,
 ): Promise<PoolFactoryInstance> {
-	const poolImplementation = await Pool.new({ from: contractOwnerAddress });
-	return PoolFactory.new(poolImplementation.address, fansSocietyAddress, {
-		from: contractOwnerAddress,
-	});
+	const poolImplementation = await Pool.new({ from });
+	return PoolFactory.new(
+		ammAddress,
+		poolImplementation.address,
+		fansSocietyAddress,
+		{
+			from,
+		},
+	);
 }
 
 export function sortTokens(tokenX: string, tokenY: string) {
@@ -222,7 +232,7 @@ export async function getLpBurntFromPastEvents(
 	return (await poolInstance.getPastEvents('LPBurnt', { fromBlock: 0 })).map(
 		({ returnValues }) => ({
 			tokenX: returnValues.tokenX,
-			tokenY: returnValues.tokenX,
+			tokenY: returnValues.tokenY,
 			amountX: returnValues.amountX,
 			amountY: returnValues.amountY,
 			provider: returnValues.provider,

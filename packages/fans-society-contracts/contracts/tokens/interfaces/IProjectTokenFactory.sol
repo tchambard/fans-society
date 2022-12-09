@@ -8,7 +8,6 @@ interface IProjectTokenFactory {
 		uint256 _projectId,
 		string memory _name,
 		string memory _symbol,
-		address _amm,
 		uint112 _totalSupply,
 		uint112 _initialSupply
 	) external returns (address);

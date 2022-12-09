@@ -19,10 +19,11 @@ const ProjectTokenERC20 = artifacts.require('ProjectTokenERC20');
 const Pool = artifacts.require('Pool');
 
 contract('Pools', (accounts) => {
-	const amm = accounts[0];
-	const fsociety = accounts[1];
-	const user1 = accounts[2];
-	const user2 = accounts[3];
+	const administrator = accounts[0];
+	const amm = accounts[1];
+	const fsociety = accounts[2];
+	const user1 = accounts[3];
+	const user2 = accounts[4];
 
 	let projectTokenFactory: ProjectTokenFactoryInstance;
 	let PoolFactory: PoolFactoryInstance;
@@ -37,14 +38,16 @@ contract('Pools', (accounts) => {
 	let tokenY: ProjectTokenERC20Instance;
 
 	beforeEach(async () => {
-		projectTokenFactory = await deployProjectTokenFactoryInstance(amm);
-		PoolFactory = await deployPoolFactoryInstance(amm, fsociety);
+		projectTokenFactory = await deployProjectTokenFactoryInstance(
+			administrator,
+			amm,
+		);
+		PoolFactory = await deployPoolFactoryInstance(administrator, amm, fsociety);
 
 		await projectTokenFactory.createToken(
 			0,
-			'tokenY',
+			'token1',
 			'TKN1',
-			amm,
 			tX_totalSupply,
 			tX_initialSupply,
 			{
@@ -56,7 +59,6 @@ contract('Pools', (accounts) => {
 			1,
 			'token2',
 			'TKN2',
-			amm,
 			tY_totalSupply,
 			tY_initialSupply,
 			{
@@ -70,18 +72,18 @@ contract('Pools', (accounts) => {
 		tokenX = await ProjectTokenERC20.at(tokenXAddress);
 		tokenY = await ProjectTokenERC20.at(tokenYAddress);
 
-		await tokenX.transfer(user1, BN(5000));
-		await tokenY.transfer(user1, BN(5000));
+		await tokenX.transfer(user1, BN(5000), { from: amm });
+		await tokenY.transfer(user1, BN(5000), { from: amm });
 
-		await tokenX.transfer(user2, BN(1000));
-		await tokenY.transfer(user2, BN(1000));
+		await tokenX.transfer(user2, BN(1000), { from: amm });
+		await tokenY.transfer(user2, BN(1000), { from: amm });
 	});
 
 	describe('> pool is created', () => {
 		let poolInstance: PoolInstance;
 
 		beforeEach(async () => {
-			await PoolFactory.createPool(amm, tokenX.address, tokenY.address, {
+			await PoolFactory.createPool(tokenX.address, tokenY.address, {
 				from: amm,
 			});
 			const poolCreatedEvent = _.last(
@@ -202,24 +204,6 @@ contract('Pools', (accounts) => {
 					liquidity: lpToRemove,
 				});
 
-				const tokenXTransferEvent = _.last(
-					await getTokenTransfersFromPastEvents(tokenX),
-				);
-				const tokenYTransferEvent = _.last(
-					await getTokenTransfersFromPastEvents(tokenY),
-				);
-
-				assert.deepEqual(tokenXTransferEvent, {
-					from: poolInstance.address,
-					to: amm,
-					value: amountX.toNumber(),
-				});
-				assert.deepEqual(tokenYTransferEvent, {
-					from: poolInstance.address,
-					to: amm,
-					value: amountY.toNumber(),
-				});
-
 				assert.equal((await poolInstance.totalSupply()).toNumber(), 0);
 				assert.equal((await poolInstance.balanceOf(user1)).toNumber(), 0);
 				assert.equal((await tokenX.balanceOf(poolInstance.address)).toNumber(), 0);
@@ -284,7 +268,9 @@ contract('Pools', (accounts) => {
 				await tokenX.transfer(poolInstance.address, amountIn, {
 					from: user2,
 				});
-				const receipt = await poolInstance.swap(tokenX.address, amountIn, user2);
+				const receipt = await poolInstance.swap(tokenX.address, amountIn, user2, {
+					from: amm,
+				});
 
 				const tokenYTransferEvent = _.last(
 					await getTokenTransfersFromPastEvents(tokenY),
