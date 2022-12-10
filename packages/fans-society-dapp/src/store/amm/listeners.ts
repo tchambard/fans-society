@@ -12,6 +12,7 @@ import {
 } from 'fans-society-contracts/types/web3/contracts/pools/Pool';
 import { TokenCreated } from 'fans-society-contracts/types/web3/contracts/tokens/ProjectTokenFactory';
 import { ClientFactory } from 'src/services/ClientFactory';
+import logger from 'src/services/logger-service';
 import {
 	IAMMContractInfo,
 	ILPMintedEvent,
@@ -51,7 +52,7 @@ export const listenProjectCreated = (
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: ProjectCreated) => {
-		onData({
+		const projectCreated: IProjectListItem = {
 			id: returnValues.id,
 			name: returnValues.info[0],
 			symbol: returnValues.info[1],
@@ -70,7 +71,12 @@ export const listenProjectCreated = (
 				$canValidate: false,
 				$canClaim: false,
 			},
-		});
+		};
+		logger.log(
+			'=== Project created ===\n',
+			JSON.stringify(projectCreated, null, 2),
+		);
+		onData(projectCreated);
 	};
 	const emitter = contract.contract.events
 		.ProjectCreated()
@@ -84,12 +90,16 @@ export const listenCommitted = (
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: Committed) => {
-		const amount = web3.utils.fromWei(returnValues.amount, 'ether');
-		onData({
+		const projectCommitment: IProjectCommitment = {
 			id: returnValues.id,
 			address: returnValues.caller,
-			amount: +amount,
-		});
+			amount: +web3.utils.fromWei(returnValues.amount, 'ether'),
+		};
+		logger.log(
+			'=== Project commitment ===\n',
+			JSON.stringify(projectCommitment, null, 2),
+		);
+		onData(projectCommitment);
 	};
 	const emitter = contractInfo.contract.events
 		.Committed()
@@ -103,11 +113,16 @@ export const listenWithdrawed = (
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: Withdrawed) => {
-		onData({
+		const projectWithdraw: IProjectWithdraw = {
 			id: returnValues.id,
 			address: returnValues.caller,
 			amount: +web3.utils.fromWei(returnValues.amount, 'ether'),
-		});
+		};
+		logger.log(
+			'=== Project withdraw ===\n',
+			JSON.stringify(projectWithdraw, null, 2),
+		);
+		onData(projectWithdraw);
 	};
 	const emitter = contractInfo.contract.events
 		.Withdrawed()
@@ -121,11 +136,13 @@ export const listenClaimed = (
 ): (() => void) => {
 	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: TokensClaimed) => {
-		onData({
+		const projectClaim: IProjectClaim = {
 			id: returnValues.projectId,
 			address: returnValues.caller,
 			amount: +web3.utils.fromWei(returnValues.amount, 'ether'),
-		});
+		};
+		logger.log('=== Project claim ===\n', JSON.stringify(projectClaim, null, 2));
+		onData(projectClaim);
 	};
 	const emitter = contractInfo.contract.events
 		.TokensClaimed()
@@ -138,12 +155,14 @@ export const listenTokenCreated = (
 	onData: (data: ITokenCreated) => void,
 ): (() => void) => {
 	const eventHandler = async ({ returnValues }: TokenCreated) => {
-		onData({
+		const tokenCreated: ITokenCreated = {
 			projectId: returnValues.projectId,
 			address: returnValues.token,
 			name: returnValues.name,
 			symbol: returnValues.symbol,
-		});
+		};
+		logger.log('=== Token created ===\n', JSON.stringify(tokenCreated, null, 2));
+		onData(tokenCreated);
 	};
 	const emitter = contractInfo.contract.events
 		.TokenCreated()
@@ -158,12 +177,14 @@ export const listenSwap = async (
 ): Promise<() => void> => {
 	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: Swapped) => {
-		onData({
+		const swap: ISwapEvent = {
 			tokenIn: returnValues.tokenIn,
 			amountIn: web3.utils.fromWei(returnValues.amountIn, 'ether'),
 			tokenOut: returnValues.tokenOut,
 			amountOut: web3.utils.fromWei(returnValues.amountOut, 'ether'),
-		});
+		};
+		logger.log('=== Swap ===\n', JSON.stringify(swap, null, 2));
+		onData(swap);
 	};
 	const emitter = contractInfo.contract.events
 		.Swapped({ filter: { caller: account } })
@@ -179,13 +200,15 @@ export const listenLPMinted = async (
 	const web3 = ClientFactory.web3();
 	const poolContract = await getPoolContract(web3, poolAddress);
 	const eventHandler = async ({ returnValues }: LPMinted) => {
-		onData({
+		const lpMinted: ILPMintedEvent = {
 			tokenX: returnValues.tokenX,
 			amountX: web3.utils.fromWei(returnValues.amountX, 'ether'),
 			tokenY: returnValues.tokenY,
 			amountY: web3.utils.fromWei(returnValues.amountY, 'ether'),
 			liquidity: web3.utils.fromWei(returnValues.liquidity, 'ether'),
-		});
+		};
+		logger.log('=== LP minted ===\n', JSON.stringify(lpMinted, null, 2));
+		onData(lpMinted);
 	};
 	const emitter = poolContract.events
 		.LPMinted({ filter: { provider: account } })
@@ -201,13 +224,15 @@ export const listenLPBurnt = async (
 	const web3 = ClientFactory.web3();
 	const poolContract = await getPoolContract(web3, poolAddress);
 	const eventHandler = async ({ returnValues }: LPBurnt) => {
-		onData({
+		const lpBurnt: ILPMintedEvent = {
 			tokenX: returnValues.tokenX,
 			amountX: web3.utils.fromWei(returnValues.amountX, 'ether'),
 			tokenY: returnValues.tokenY,
 			amountY: web3.utils.fromWei(returnValues.amountY, 'ether'),
 			liquidity: web3.utils.fromWei(returnValues.liquidity, 'ether'),
-		});
+		};
+		logger.log('=== LP burnt ===\n', JSON.stringify(lpBurnt, null, 2));
+		onData(lpBurnt);
 	};
 	const emitter = poolContract.events
 		.LPBurnt({ filter: { provider: account } })

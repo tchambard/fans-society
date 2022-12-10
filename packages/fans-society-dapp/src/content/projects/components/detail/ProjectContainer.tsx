@@ -9,7 +9,7 @@ import {
 	CLAIMED,
 	COMMITED,
 	GET_PROJECT,
-	GET_CURRENT_PROJECT_COMMITMENTS,
+	GET_CURRENT_PROJECT_COMMITMENT,
 	PROJECT_STATUS_CHANGED,
 	REMOVE_PROJECT_COMMITMENT,
 	WITHDRAWED,
@@ -42,7 +42,7 @@ export default () => {
 				currentProject.item?.id !== projectId
 			) {
 				dispatch(GET_PROJECT.request(projectId));
-				dispatch(GET_CURRENT_PROJECT_COMMITMENTS.request({ projectId }));
+				dispatch(GET_CURRENT_PROJECT_COMMITMENT.request({ projectId }));
 			} else {
 				if (currentProject.item != null) {
 					destroyListeners = [

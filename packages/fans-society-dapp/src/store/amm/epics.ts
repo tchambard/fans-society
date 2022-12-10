@@ -10,7 +10,6 @@ import {
 import { RootAction, RootState, Services } from 'state-types';
 
 import { findRpcMessage } from 'src/eth-network/helpers';
-import loggerService from 'src/services/logger-service';
 import {
 	ABORT_PROJECT,
 	COMMIT_ON_PROJECT,
@@ -21,7 +20,6 @@ import {
 	IProjectListItem,
 	ITokenDetail,
 	LAUNCH_PROJECT,
-	GET_CURRENT_PROJECT_COMMITMENTS,
 	LIST_PROJECTS,
 	LIST_POOLS,
 	LOAD_CONTRACTS_INFO,
@@ -41,6 +39,7 @@ import {
 	GET_ETH_USD_PRICE,
 	GET_POOL_RESERVE,
 	COMPUTE_SWAP_REQUIRED_IN,
+	GET_CURRENT_PROJECT_COMMITMENT,
 } from './actions';
 import {
 	getAMMContract,
@@ -90,7 +89,7 @@ export const loadContractsInfo: Epic<
 					},
 				});
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return LOAD_CONTRACTS_INFO.failure(findRpcMessage(e));
 			}
 		}),
@@ -141,7 +140,7 @@ export const listProjects: Epic<RootAction, RootAction, RootState, Services> = (
 				logger.table(projects);
 				return LIST_PROJECTS.success(projects);
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return LIST_PROJECTS.failure(findRpcMessage(e));
 			}
 		}),
@@ -153,7 +152,7 @@ export const createProject: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(CREATE_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -189,7 +188,7 @@ export const createProject: Epic<
 
 				return CREATE_PROJECT.success();
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return CREATE_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
@@ -199,7 +198,7 @@ export const createProject: Epic<
 export const abortProject: Epic<RootAction, RootAction, RootState, Services> = (
 	action$,
 	state$,
-	{ web3 },
+	{ web3, logger },
 ) => {
 	return action$.pipe(
 		filter(isActionOf(ABORT_PROJECT.request)),
@@ -214,7 +213,7 @@ export const abortProject: Epic<RootAction, RootAction, RootState, Services> = (
 
 				return ABORT_PROJECT.success();
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return ABORT_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
@@ -281,6 +280,12 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 				const { contract, isOwner } = state$.value.amm.contracts.amm;
 				const account = state$.value.amm.account.address;
 
+				const commitments = await getProjectsCommitments(
+					web3,
+					contract,
+					account,
+					projectId,
+				);
 				const project = await _getProject(
 					web3,
 					contract,
@@ -292,7 +297,7 @@ export const getProject: Epic<RootAction, RootAction, RootState, Services> = (
 				logger.log('=== Project found ===\n', JSON.stringify(project, null, 2));
 				return GET_PROJECT.success(project);
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return GET_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
@@ -304,7 +309,7 @@ export const commitOnProject: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(COMMIT_ON_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -320,7 +325,7 @@ export const commitOnProject: Epic<
 
 				return COMMIT_ON_PROJECT.success();
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return COMMIT_ON_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
@@ -332,7 +337,7 @@ export const withdrawOnProject: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(WITHDRAW_ON_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -346,7 +351,7 @@ export const withdrawOnProject: Epic<
 
 				return WITHDRAW_ON_PROJECT.success();
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return WITHDRAW_ON_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
@@ -358,7 +363,7 @@ export const claimOnProject: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(CLAIM_ON_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -374,7 +379,7 @@ export const claimOnProject: Epic<
 
 				return CLAIM_ON_PROJECT.success();
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return CLAIM_ON_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
@@ -421,26 +426,28 @@ export const getCurrentProjectCommitments: Epic<
 	Services
 > = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
-		filter(isActionOf(GET_CURRENT_PROJECT_COMMITMENTS.request)),
+		filter(isActionOf(GET_CURRENT_PROJECT_COMMITMENT.request)),
 		mergeMap(async (action) => {
 			try {
 				const account = state$.value.ethNetwork.account;
 				if (!account) {
-					return GET_CURRENT_PROJECT_COMMITMENTS.success({});
+					return GET_CURRENT_PROJECT_COMMITMENT.success({});
 				}
 				const contract = state$.value.amm.contracts.amm.contract;
-				const commitments = await getProjectsCommitments(
+				const projectId = action.payload.projectId;
+				const commitment = await getProjectsCommitments(
 					web3,
 					contract,
 					account,
-					action.payload.projectId,
-				);
-				logger.log('=== commitments ===');
-				logger.table(commitments);
-				return GET_CURRENT_PROJECT_COMMITMENTS.success(commitments);
+					projectId,
+				)[projectId];
+
+				logger.log('=== Commitment ===\n', JSON.stringify(commitment, null, 2));
+
+				return GET_CURRENT_PROJECT_COMMITMENT.success(commitment);
 			} catch (e) {
-				loggerService.log(e.message);
-				return GET_CURRENT_PROJECT_COMMITMENTS.failure(findRpcMessage(e));
+				logger.log(e.message);
+				return GET_CURRENT_PROJECT_COMMITMENT.failure(findRpcMessage(e));
 			}
 		}),
 	);
@@ -451,7 +458,7 @@ export const launchProject: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(LAUNCH_PROJECT.request)),
 		mergeMap(async (action) => {
@@ -465,7 +472,7 @@ export const launchProject: Epic<
 
 				return LAUNCH_PROJECT.success();
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return LAUNCH_PROJECT.failure(findRpcMessage(e));
 			}
 		}),
@@ -509,7 +516,7 @@ export const getToken: Epic<RootAction, RootAction, RootState, Services> = (
 				logger.log('=== Token found ===\n', JSON.stringify(token, null, 2));
 				return GET_TOKEN.success(token);
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return GET_TOKEN.failure(findRpcMessage(e));
 			}
 		}),
@@ -573,7 +580,7 @@ export const listTokenPools: Epic<
 				logger.table(pools);
 				return LIST_POOLS.success({ token, pools });
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return LIST_POOLS.failure(findRpcMessage(e));
 			}
 		}),
@@ -585,7 +592,7 @@ export const computeSwapMaxAmountOut: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(COMPUTE_SWAP_MAX_OUT.request)),
 		mergeMap(async (action) => {
@@ -615,7 +622,7 @@ export const computeSwapMaxAmountOut: Epic<
 					priceOut: web3.utils.fromWei(priceOut, 'ether'),
 				});
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return COMPUTE_SWAP_MAX_OUT.failure(findRpcMessage(e));
 			}
 		}),
@@ -627,7 +634,7 @@ export const computeSwapRequiredAmountIn: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(COMPUTE_SWAP_REQUIRED_IN.request)),
 		mergeMap(async (action) => {
@@ -657,7 +664,7 @@ export const computeSwapRequiredAmountIn: Epic<
 					priceIn: web3.utils.fromWei(_priceIn, 'ether'),
 				});
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return COMPUTE_SWAP_REQUIRED_IN.failure(findRpcMessage(e));
 			}
 		}),
@@ -667,7 +674,7 @@ export const computeSwapRequiredAmountIn: Epic<
 export const swap: Epic<RootAction, RootAction, RootState, Services> = (
 	action$,
 	state$,
-	{ web3 },
+	{ web3, logger },
 ) => {
 	return action$.pipe(
 		filter(isActionOf(SWAP.request)),
@@ -693,7 +700,7 @@ export const swap: Epic<RootAction, RootAction, RootState, Services> = (
 
 				return SWAP.success();
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return SWAP.failure(findRpcMessage(e));
 			}
 		}),
@@ -705,7 +712,7 @@ export const computePoolPrice: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(COMPUTE_POOL_PRICE.request)),
 		mergeMap(async (action) => {
@@ -726,7 +733,7 @@ export const computePoolPrice: Epic<
 					amountY: web3.utils.fromWei(_amountY, 'ether'),
 				});
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return COMPUTE_POOL_PRICE.failure(findRpcMessage(e));
 			}
 		}),
@@ -738,7 +745,7 @@ export const getPoolReserve: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(GET_POOL_RESERVE.request)),
 		mergeMap(async (action) => {
@@ -757,7 +764,7 @@ export const getPoolReserve: Epic<
 					reserveY: web3.utils.fromWei(_reserveY, 'ether'),
 				});
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return GET_POOL_RESERVE.failure(findRpcMessage(e));
 			}
 		}),
@@ -769,7 +776,7 @@ export const addPoolLiquidity: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(ADD_POOL_LIQUIDITY.request)),
 		mergeMap(async (action) => {
@@ -797,7 +804,7 @@ export const addPoolLiquidity: Epic<
 
 				return ADD_POOL_LIQUIDITY.success();
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return ADD_POOL_LIQUIDITY.failure(findRpcMessage(e));
 			}
 		}),
@@ -809,7 +816,7 @@ export const removePoolLiquidity: Epic<
 	RootAction,
 	RootState,
 	Services
-> = (action$, state$, { web3 }) => {
+> = (action$, state$, { web3, logger }) => {
 	return action$.pipe(
 		filter(isActionOf(REMOVE_POOL_LIQUIDITY.request)),
 		mergeMap(async (action) => {
@@ -827,7 +834,7 @@ export const removePoolLiquidity: Epic<
 
 				return REMOVE_POOL_LIQUIDITY.success();
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return REMOVE_POOL_LIQUIDITY.failure(findRpcMessage(e));
 			}
 		}),
@@ -868,7 +875,7 @@ export const getTokenBalance: Epic<
 					balance,
 				});
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return GET_TOKEN_BALANCE.failure(findRpcMessage(e));
 			}
 		}),
@@ -915,7 +922,7 @@ export const listAllTokensBalances: Epic<
 				logger.table(tokens);
 				return LIST_TOKENS_WITH_BALANCE.success(tokens);
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return LIST_TOKENS_WITH_BALANCE.failure(findRpcMessage(e));
 			}
 		}),
@@ -934,7 +941,7 @@ export const listProjectsClaims: Epic<
 			try {
 				const account = state$.value.ethNetwork.account;
 				if (!account) {
-					return GET_CURRENT_PROJECT_COMMITMENTS.success({});
+					return LIST_PROJECTS_DETAILS_WITH_COMMITMENTS.success([]);
 				}
 				const { contract, isOwner } = state$.value.amm.contracts.amm;
 				const commitments = await getProjectsCommitments(web3, contract, account);
@@ -976,7 +983,7 @@ export const listProjectsClaims: Epic<
 				logger.table(projects);
 				return LIST_PROJECTS_DETAILS_WITH_COMMITMENTS.success(projects);
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return LIST_PROJECTS_DETAILS_WITH_COMMITMENTS.failure(findRpcMessage(e));
 			}
 		}),
@@ -1005,7 +1012,7 @@ export const getEthUsdtPrice: Epic<
 				// here there is a trick: balance of weth address is not correct as we got eth balance
 				return GET_ETH_USD_PRICE.success(+price / 10 ** 8);
 			} catch (e) {
-				loggerService.log(e.message);
+				logger.log(e.message);
 				return GET_ETH_USD_PRICE.failure(findRpcMessage(e));
 			}
 		}),

@@ -169,8 +169,13 @@ export interface IListPoolsResult {
 	pools: IPoolInfo[];
 }
 
-export interface IListMyProjectCommitmentsParams {
-	projectId?: string;
+export interface IGetCurrentProjectCommitmentParams {
+	projectId: string;
+}
+
+export interface IGetCurrentProjectCommitmentResult {
+	projectId: string;
+	commitment: number;
 }
 
 export interface ISwapParams {
@@ -328,11 +333,11 @@ export const GET_PROJECT = createAsyncAction(
 	'GET_PROJECT_FAILURE',
 )<string, IProjectDetail, string>();
 
-export const GET_CURRENT_PROJECT_COMMITMENTS = createAsyncAction(
-	'GET_CURRENT_PROJECT_COMMITMENTS_REQUEST',
-	'GET_CURRENT_PROJECT_COMMITMENTS_SUCCESS',
-	'GET_CURRENT_PROJECT_COMMITMENTS_FAILURE',
-)<IListMyProjectCommitmentsParams, { [id: string]: number }, string>();
+export const GET_CURRENT_PROJECT_COMMITMENT = createAsyncAction(
+	'GET_CURRENT_PROJECT_COMMITMENT_REQUEST',
+	'GET_CURRENT_PROJECT_COMMITMENT_SUCCESS',
+	'GET_CURRENT_PROJECT_COMMITMENT_FAILURE',
+)<IGetCurrentProjectCommitmentParams, { [id: string]: number }, string>();
 
 export const COMMIT_ON_PROJECT = createAsyncAction(
 	'COMMIT_ON_PROJECT_REQUEST',
