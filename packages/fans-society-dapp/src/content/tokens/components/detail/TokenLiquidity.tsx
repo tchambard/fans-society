@@ -23,6 +23,7 @@ import { RootState } from 'state-types';
 import {
 	ADD_POOL_LIQUIDITY,
 	COMPUTE_POOL_PRICE,
+	GET_POOL_RESERVE,
 	GET_TOKEN_BALANCE,
 	ILPBurntEvent,
 	ILPMintedEvent,
@@ -44,15 +45,14 @@ export default ({ pool }: IProps) => {
 	const theme = useTheme();
 	const dispatch = useDispatch();
 
-	const { account, balances, poolInfo } = useSelector(
+	const { account, balances, poolInfo, txPending } = useSelector(
 		(state: RootState) => state.amm,
 	);
 
 	const [lpMinted, setLpMinted] = useState<ILPMintedEvent>();
 	const [lpBurnt, setLpBurnt] = useState<ILPBurntEvent>();
-	const [tokenX, setTokenX] = useState<IToken>();
-	const [tokenY, setTokenY] = useState<IToken>();
-
+	const [tokenX, setTokenX] = useState<IToken>(poolInfo?.price?.tokenX);
+	const [tokenY, setTokenY] = useState<IToken>(poolInfo?.price?.tokenY);
 	const [values, setValues] = useState<ILiquidityForm>({
 		amountX: '',
 		amountY: '',
@@ -62,6 +62,12 @@ export default ({ pool }: IProps) => {
 		if (pool) {
 			setTokenX(pool.tokenY);
 			setTokenY(pool.tokenX);
+			dispatch(
+				GET_POOL_RESERVE.request({
+					poolAddress: pool.poolAddress,
+					tokenX: pool.tokenX.address,
+				}),
+			);
 			dispatch(GET_TOKEN_BALANCE.request(pool.poolAddress));
 			dispatch(GET_TOKEN_BALANCE.request(pool.tokenX.address));
 			dispatch(GET_TOKEN_BALANCE.request(pool.tokenY.address));
@@ -69,20 +75,18 @@ export default ({ pool }: IProps) => {
 	}, []);
 
 	useEffect(() => {
-		if (poolInfo?.result) {
-			const form: ILiquidityForm =
-				poolInfo?.result?.tokenY === tokenY?.address
-					? {
-							...values,
-							amountY: poolInfo?.result?.priceY || '',
-					  }
-					: {
-							...values,
-							amountX: poolInfo?.result?.priceY || '',
-					  };
-			setValues(form);
-		}
-	}, [poolInfo?.result]);
+		const form: ILiquidityForm =
+			poolInfo?.price?.tokenY.address === pool?.tokenX.address
+				? {
+						amountX: poolInfo?.price?.amountX || '',
+						amountY: poolInfo?.price?.amountY || '',
+				  }
+				: {
+						amountX: poolInfo?.price?.amountY || '',
+						amountY: poolInfo?.price?.amountX || '',
+				  };
+		setValues(form);
+	}, [poolInfo?.price]);
 
 	const handleChange =
 		(prop: keyof ILiquidityForm) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -93,8 +97,8 @@ export default ({ pool }: IProps) => {
 				dispatch(
 					COMPUTE_POOL_PRICE.request({
 						poolAddress: pool.poolAddress,
-						tokenX: tokenXChanged ? tokenX.address : tokenY.address,
-						tokenY: tokenXChanged ? tokenY.address : tokenX.address,
+						tokenX: tokenXChanged ? tokenX : tokenY,
+						tokenY: tokenXChanged ? tokenY : tokenX,
 						amountX: event.target.value,
 					}),
 				);
@@ -107,6 +111,12 @@ export default ({ pool }: IProps) => {
 			pool.poolAddress,
 			async (data) => {
 				setLpMinted(data);
+				dispatch(
+					GET_POOL_RESERVE.request({
+						poolAddress: pool.poolAddress,
+						tokenX: pool.tokenX.address,
+					}),
+				);
 				dispatch(GET_TOKEN_BALANCE.request(pool.poolAddress));
 				dispatch(GET_TOKEN_BALANCE.request(data.tokenX));
 				dispatch(GET_TOKEN_BALANCE.request(data.tokenY));
@@ -130,6 +140,12 @@ export default ({ pool }: IProps) => {
 			pool.poolAddress,
 			async (data) => {
 				setLpBurnt(data);
+				dispatch(
+					GET_POOL_RESERVE.request({
+						poolAddress: pool.poolAddress,
+						tokenX: pool.tokenX.address,
+					}),
+				);
 				dispatch(GET_TOKEN_BALANCE.request(pool.poolAddress));
 				dispatch(GET_TOKEN_BALANCE.request(data.tokenX));
 				dispatch(GET_TOKEN_BALANCE.request(data.tokenY));
@@ -144,7 +160,6 @@ export default ({ pool }: IProps) => {
 		);
 	};
 
-	const { txPending } = useSelector((state: RootState) => state.amm);
 	return (
 		<>
 			<Helmet>
@@ -171,8 +186,20 @@ export default ({ pool }: IProps) => {
 						<Grid item xs={12} sm container>
 							<Grid item xs container direction="column" spacing={2}>
 								<Grid item xs>
-									<Typography variant="subtitle1" component="div">
+									<Typography component="div">
 										LP tokens balance: {balances[pool?.poolAddress]?.balance || 0}
+									</Typography>
+								</Grid>
+								<Grid item xs>
+									<Typography variant="subtitle1" component="div">
+										Reserve {pool?.tokenX.name}: {poolInfo?.reserve?.reserveX}{' '}
+										{pool?.tokenX.symbol}
+									</Typography>
+								</Grid>
+								<Grid item xs>
+									<Typography variant="subtitle1" component="div">
+										Reserve {pool?.tokenY.name}: {poolInfo?.reserve?.reserveY}{' '}
+										{pool?.tokenY.symbol}
 									</Typography>
 								</Grid>
 							</Grid>
@@ -200,8 +227,8 @@ export default ({ pool }: IProps) => {
 					</Paper>
 					<Box sx={{ display: 'grid' }}>
 						<OutlinedInput
-							id={'amountX'}
-							value={values.amountX}
+							id={'pool-amount-x'}
+							value={values?.amountX}
 							onChange={handleChange('amountX')}
 							endAdornment={
 								<>
@@ -213,14 +240,14 @@ export default ({ pool }: IProps) => {
 									/>
 								</>
 							}
-							aria-describedby="amount-helper-text"
+							aria-describedby="pool-amount-x-helper-text"
 							inputProps={{
 								'aria-label': 'Input',
 							}}
 							autoComplete={'off'}
 						/>
 						<Box
-							id={'amount-helper-text'}
+							id={'pool-amount-x-helper-text'}
 							sx={{
 								display: 'flex',
 								justifyContent: 'space-between',
@@ -233,8 +260,8 @@ export default ({ pool }: IProps) => {
 						</Box>
 						<br />
 						<OutlinedInput
-							id={'amountY'}
-							value={values.amountY}
+							id={'pool-amount-y'}
+							value={values?.amountY}
 							onChange={handleChange('amountY')}
 							endAdornment={
 								<>
@@ -246,14 +273,14 @@ export default ({ pool }: IProps) => {
 									/>
 								</>
 							}
-							aria-describedby={'expected-helper-text'}
+							aria-describedby={'pool-amount-y-helper-text'}
 							inputProps={{
 								'aria-label': 'Input',
 							}}
 							autoComplete={'off'}
 						/>
 						<Box
-							id={'expected-helper-text'}
+							id={'pool-amount-y-helper-text'}
 							sx={{
 								display: 'flex',
 								justifyContent: 'space-between',
@@ -317,13 +344,6 @@ export default ({ pool }: IProps) => {
 							<Alert severity={'error'}>{poolInfo?.error}</Alert>
 						)}
 						<br />
-						{poolInfo?.result?.priceY && (
-							<Box sx={{ display: 'flex' }}>
-								<Typography>
-									Price: {poolInfo.result.priceY} {tokenY?.symbol} per {tokenX?.symbol}
-								</Typography>
-							</Box>
-						)}
 						<LoadingButton
 							loading={txPending}
 							loadingPosition={'end'}

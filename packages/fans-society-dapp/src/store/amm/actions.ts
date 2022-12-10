@@ -181,17 +181,34 @@ export interface ISwapParams {
 	amountOut: string;
 }
 
-export interface IComputeSwapOutParams {
+export interface IComputeSwapMaxOutParams {
 	poolAddress: string;
-	tokenIn: string;
-	tokenOut: string;
+	tokenIn: IToken;
+	tokenOut: IToken;
 	amountIn: string;
 }
 
-export interface IComputeSwapOutResult {
-	tokenOut: string;
+export interface IComputeSwapMaxOutResult {
+	tokenIn: IToken;
+	amountIn: string;
+	tokenOut: IToken;
 	amountOut: string;
 	priceOut: string;
+}
+
+export interface IComputeSwapRequiredInParams {
+	poolAddress: string;
+	tokenIn: IToken;
+	tokenOut: IToken;
+	amountOut: string;
+}
+
+export interface IComputeSwapRequiredInResult {
+	tokenIn: IToken;
+	amountIn: string;
+	tokenOut: IToken;
+	amountOut: string;
+	priceIn: string;
 }
 
 export interface ISwapEvent {
@@ -214,16 +231,30 @@ export interface IRemovePoolLiquidityParams {
 	amountLP: string;
 }
 
-export interface IComputePoolPriceParams {
+export interface IGetPoolReserveParams {
 	poolAddress: string;
 	tokenX: string;
+}
+
+export interface IGetPoolReserveResult {
+	tokenX: string;
+	reserveX: string;
 	tokenY: string;
+	reserveY: string;
+}
+
+export interface IComputePoolPriceParams {
+	poolAddress: string;
+	tokenX: IToken;
 	amountX: string;
+	tokenY: IToken;
 }
 
 export interface IComputePoolPriceResult {
-	tokenY: string;
-	priceY: string;
+	tokenX: IToken;
+	amountX: string;
+	tokenY: IToken;
+	amountY: string;
 }
 
 export interface ILPMintedEvent {
@@ -372,11 +403,17 @@ export const LIST_POOLS = createAsyncAction(
 	'LIST_POOLS_FAILURE',
 )<IListPoolsParams, IListPoolsResult, string>();
 
-export const COMPUTE_SWAP_OUT = createAsyncAction(
-	'COMPUTE_SWAP_OUT_REQUEST',
-	'COMPUTE_SWAP_OUT_SUCCESS',
-	'COMPUTE_SWAP_OUT_FAILURE',
-)<IComputeSwapOutParams, IComputeSwapOutResult, string>();
+export const COMPUTE_SWAP_MAX_OUT = createAsyncAction(
+	'COMPUTE_SWAP_MAX_OUT_REQUEST',
+	'COMPUTE_SWAP_MAX_OUT_SUCCESS',
+	'COMPUTE_SWAP_MAX_OUT_FAILURE',
+)<IComputeSwapMaxOutParams, IComputeSwapMaxOutResult, string>();
+
+export const COMPUTE_SWAP_REQUIRED_IN = createAsyncAction(
+	'COMPUTE_SWAP_REQUIRED_IN_REQUEST',
+	'COMPUTE_SWAP_REQUIRED_IN_SUCCESS',
+	'COMPUTE_SWAP_REQUIRED_IN_FAILURE',
+)<IComputeSwapRequiredInParams, IComputeSwapRequiredInResult, string>();
 
 export const SWAP = createAsyncAction(
 	'SWAP_REQUEST',
@@ -401,6 +438,12 @@ export const COMPUTE_POOL_PRICE = createAsyncAction(
 	'COMPUTE_POOL_PRICE_SUCCESS',
 	'COMPUTE_POOL_PRICEFAILURE',
 )<IComputePoolPriceParams, IComputePoolPriceResult, string>();
+
+export const GET_POOL_RESERVE = createAsyncAction(
+	'GET_POOL_RESERVE_REQUEST',
+	'GET_POOL_RESERVE_SUCCESS',
+	'GET_POOL_RESERVE_FAILURE',
+)<IGetPoolReserveParams, IGetPoolReserveResult, string>();
 
 export const GET_TOKEN_BALANCE = createAsyncAction(
 	'GET_TOKEN_BALANCE_REQUEST',

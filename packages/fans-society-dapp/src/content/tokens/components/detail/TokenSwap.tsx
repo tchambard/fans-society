@@ -17,7 +17,8 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 
 import { RootState } from 'state-types';
 import {
-	COMPUTE_SWAP_OUT,
+	COMPUTE_SWAP_MAX_OUT,
+	COMPUTE_SWAP_REQUIRED_IN,
 	GET_ETH_USD_PRICE,
 	GET_TOKEN_BALANCE,
 	IPoolInfo,
@@ -41,18 +42,13 @@ export default ({ pool }: IProps) => {
 	const theme = useTheme();
 	const dispatch = useDispatch();
 
-	const {
-		account,
-		contracts,
-		balances,
-		swapInfo,
-		ethUsdPrice,
-	} = useSelector((state: RootState) => state.amm);
+	const { account, contracts, balances, swapInfo, ethUsdPrice, txPending } =
+		useSelector((state: RootState) => state.amm);
 
 	const [swapped, setSwapped] = useState<{ amount: string; symbol: string }>();
 	const [tokenIn, setTokenIn] = useState<IToken>();
 	const [tokenOut, setTokenOut] = useState<IToken>();
-
+	const [amountControl, setAmountControl] = useState<keyof ITokenSwapForm>();
 	const [values, setValues] = useState<ITokenSwapForm>({
 		amountIn: '',
 		amountOut: '',
@@ -60,7 +56,6 @@ export default ({ pool }: IProps) => {
 
 	useEffect(() => {
 		if (pool) {
-			dispatch(GET_ETH_USD_PRICE.request());
 			setTokenIn(pool.tokenY);
 			setTokenOut(pool.tokenX);
 			dispatch(GET_TOKEN_BALANCE.request(pool.tokenX.address));
@@ -69,39 +64,81 @@ export default ({ pool }: IProps) => {
 	}, []);
 
 	useEffect(() => {
+		console.log('swapInfo', JSON.stringify(swapInfo, null, 2));
 		if (swapInfo?.result) {
-			const form: ITokenSwapForm =
-				swapInfo?.result?.tokenOut === tokenOut?.address
-					? {
-							...values,
-							amountOut: swapInfo?.result?.amountOut || '',
-					  }
-					: {
-							...values,
-							amountIn: swapInfo?.result?.amountOut || '',
-					  };
-			setValues(form);
+			setValues({
+				amountIn: swapInfo.result.amountIn,
+				amountOut: swapInfo.result.amountOut,
+			});
 		}
 	}, [swapInfo?.result]);
 
-	const handleChange =
+	const onInputChange =
 		(prop: keyof ITokenSwapForm) => (event: ChangeEvent<HTMLInputElement>) => {
 			setValues({ ...values, [prop]: event.target.value });
 
 			if (event.target.value.length) {
-				const tokenInChanged = prop === 'amountIn';
-				dispatch(
-					COMPUTE_SWAP_OUT.request({
-						poolAddress: pool.poolAddress,
-						tokenIn: tokenInChanged ? tokenIn.address : tokenOut.address,
-						tokenOut: tokenInChanged ? tokenOut.address : tokenIn.address,
-						amountIn: event.target.value,
-					}),
-				);
+				setAmountControl(prop);
+
+				if (prop === 'amountIn') {
+					console.log('============== amountIn change');
+					dispatch(
+						COMPUTE_SWAP_MAX_OUT.request({
+							poolAddress: pool.poolAddress,
+							tokenIn,
+							tokenOut,
+							amountIn: event.target.value,
+						}),
+					);
+				} else if (prop === 'amountOut') {
+					console.log('============== amountOut change');
+					dispatch(
+						COMPUTE_SWAP_REQUIRED_IN.request({
+							poolAddress: pool.poolAddress,
+							tokenIn,
+							tokenOut,
+							amountOut: event.target.value,
+						}),
+					);
+				}
 			} else {
 				setValues({ amountIn: '', amountOut: '' });
 			}
 		};
+
+	const onSwitchTokens = () => {
+		setTokenOut(tokenIn);
+		setTokenIn(tokenOut);
+		if (amountControl === 'amountOut') {
+			console.log('============== amountOut switch');
+
+			setAmountControl('amountIn');
+			setValues({ amountIn: values.amountOut, amountOut: '' });
+
+			dispatch(
+				COMPUTE_SWAP_MAX_OUT.request({
+					poolAddress: pool.poolAddress,
+					tokenIn: tokenOut,
+					tokenOut: tokenIn,
+					amountIn: values.amountOut,
+				}),
+			);
+		} else if (amountControl === 'amountIn') {
+			console.log('============== amountIn switch');
+
+			setAmountControl('amountOut');
+			setValues({ amountIn: '', amountOut: values.amountIn });
+
+			dispatch(
+				COMPUTE_SWAP_REQUIRED_IN.request({
+					poolAddress: pool.poolAddress,
+					tokenIn: tokenOut,
+					tokenOut: tokenIn,
+					amountOut: values.amountIn,
+				}),
+			);
+		}
+	};
 
 	const onSwap = async () => {
 		const destroyListener = await listenSwap(
@@ -113,10 +150,10 @@ export default ({ pool }: IProps) => {
 				dispatch(GET_TOKEN_BALANCE.request(data.tokenIn));
 				dispatch(GET_TOKEN_BALANCE.request(data.tokenOut));
 				dispatch(
-					COMPUTE_SWAP_OUT.request({
+					COMPUTE_SWAP_MAX_OUT.request({
 						poolAddress: pool.poolAddress,
-						tokenIn: tokenIn.address,
-						tokenOut: tokenOut.address,
+						tokenIn,
+						tokenOut,
 						amountIn: values.amountIn,
 					}),
 				);
@@ -134,7 +171,6 @@ export default ({ pool }: IProps) => {
 		);
 	};
 
-	const { txPending } = useSelector((state: RootState) => state.amm);
 	return (
 		<>
 			<Helmet>
@@ -151,9 +187,9 @@ export default ({ pool }: IProps) => {
 					</Box>
 					<Box sx={{ display: 'grid' }}>
 						<OutlinedInput
-							id={'amount'}
-							value={values.amountIn}
-							onChange={handleChange('amountIn')}
+							id={'swap-amount-in'}
+							value={values?.amountIn}
+							onChange={onInputChange('amountIn')}
 							endAdornment={
 								<>
 									<InputAdornment position="end">{tokenIn?.symbol}</InputAdornment>
@@ -164,14 +200,11 @@ export default ({ pool }: IProps) => {
 									/>
 								</>
 							}
-							aria-describedby="amount-helper-text"
-							inputProps={{
-								'aria-label': 'Input',
-							}}
+							aria-describedby="swap-amount-in-helper-text"
 							autoComplete={'off'}
 						/>
 						<Box
-							id={'amount-helper-text'}
+							id={'swap-amount-in-helper-text'}
 							sx={{
 								display: 'flex',
 								justifyContent: 'space-between',
@@ -184,9 +217,7 @@ export default ({ pool }: IProps) => {
 									<Typography>Send: - $</Typography>
 								)
 							) : ethUsdPrice != null && swapInfo?.result ? (
-								<Typography>
-									Send: {+swapInfo.result.priceOut * ethUsdPrice} $
-								</Typography>
+								<Typography>Send: {+swapInfo.result.price * ethUsdPrice} $</Typography>
 							) : (
 								<Typography>Send: - $</Typography>
 							)}
@@ -206,30 +237,16 @@ export default ({ pool }: IProps) => {
 								}}
 								color={'inherit'}
 								size={'small'}
-								onClick={() => {
-									setTokenOut(tokenIn);
-									setTokenIn(tokenOut);
-									setValues({ ...values, amountIn: values.amountOut });
-									if (values.amountOut?.length) {
-										dispatch(
-											COMPUTE_SWAP_OUT.request({
-												poolAddress: pool.poolAddress,
-												tokenIn: tokenOut.address,
-												tokenOut: tokenIn.address,
-												amountIn: values.amountOut,
-											}),
-										);
-									}
-								}}
+								onClick={onSwitchTokens}
 							>
 								<SwapVertIcon fontSize={'small'} />
 							</IconButton>
 						</Box>
 						<br />
 						<OutlinedInput
-							id={'amount'}
-							value={values.amountOut}
-							onChange={handleChange('amountOut')}
+							id={'swap-amount-out'}
+							value={values?.amountOut}
+							onChange={onInputChange('amountOut')}
 							endAdornment={
 								<>
 									<InputAdornment position="end">{tokenOut?.symbol}</InputAdornment>
@@ -240,14 +257,11 @@ export default ({ pool }: IProps) => {
 									/>
 								</>
 							}
-							aria-describedby={'expected-helper-text'}
-							inputProps={{
-								'aria-label': 'Input',
-							}}
+							aria-describedby={'swap-amount-out-helper-text'}
 							autoComplete={'off'}
 						/>
 						<Box
-							id={'expected-helper-text'}
+							id={'swap-amount-out-helper-text'}
 							sx={{
 								display: 'flex',
 								justifyContent: 'space-between',
@@ -272,11 +286,10 @@ export default ({ pool }: IProps) => {
 							<Alert severity={'error'}>{swapInfo?.error}</Alert>
 						)}
 						<br />
-						{swapInfo?.result?.priceOut && (
+						{swapInfo?.result?.price && (
 							<Box sx={{ display: 'flex' }}>
 								<Typography>
-									Price: {swapInfo.result.priceOut} {tokenOut?.symbol} per{' '}
-									{tokenIn?.symbol}
+									Price: {swapInfo.result.price} {tokenOut?.symbol} per {tokenIn?.symbol}
 								</Typography>
 							</Box>
 						)}

@@ -30,7 +30,7 @@ import {
 	IPoolInfo,
 	SWAP,
 	GET_TOKEN_BALANCE,
-	COMPUTE_SWAP_OUT,
+	COMPUTE_SWAP_MAX_OUT,
 	LIST_TOKENS_WITH_BALANCE,
 	ITokenWithBalance,
 	LIST_PROJECTS_DETAILS_WITH_COMMITMENTS,
@@ -39,6 +39,8 @@ import {
 	ADD_POOL_LIQUIDITY,
 	REMOVE_POOL_LIQUIDITY,
 	GET_ETH_USD_PRICE,
+	GET_POOL_RESERVE,
+	COMPUTE_SWAP_REQUIRED_IN,
 } from './actions';
 import {
 	getAMMContract,
@@ -181,7 +183,7 @@ export const createProject: Epic<
 							web3.utils.toWei(maxInvest, 'ether'),
 						],
 						partnerAddress,
-						totalSupply,
+						web3.utils.toWei(totalSupply, 'ether'),
 					)
 					.send({ from: account });
 
@@ -578,14 +580,14 @@ export const listTokenPools: Epic<
 	);
 };
 
-export const computeSwapAmountOut: Epic<
+export const computeSwapMaxAmountOut: Epic<
 	RootAction,
 	RootAction,
 	RootState,
 	Services
 > = (action$, state$, { web3 }) => {
 	return action$.pipe(
-		filter(isActionOf(COMPUTE_SWAP_OUT.request)),
+		filter(isActionOf(COMPUTE_SWAP_MAX_OUT.request)),
 		mergeMap(async (action) => {
 			try {
 				const { poolAddress, tokenIn, tokenOut, amountIn } = action.payload;
@@ -595,24 +597,68 @@ export const computeSwapAmountOut: Epic<
 				const contract = await getPoolContract(web3, poolAddress);
 
 				const { _reserveX, _reserveY } = await contract.methods
-					.getReserves(tokenIn)
+					.getReserves(tokenIn.address)
 					.call();
 
 				const [amountOut, priceOut] = await Promise.all([
 					contract.methods
 						.computeMaxOutputAmount(_amountIn, _reserveX, _reserveY)
 						.call(),
-					contract.methods.computePriceOut(tokenIn, _amountIn).call(),
+					contract.methods.computePriceOut(tokenIn.address, _amountIn).call(),
 				]);
 
-				return COMPUTE_SWAP_OUT.success({
+				return COMPUTE_SWAP_MAX_OUT.success({
+					tokenIn,
+					amountIn,
 					tokenOut,
 					amountOut: web3.utils.fromWei(amountOut, 'ether'),
 					priceOut: web3.utils.fromWei(priceOut, 'ether'),
 				});
 			} catch (e) {
 				loggerService.log(e.message);
-				return COMPUTE_SWAP_OUT.failure(findRpcMessage(e));
+				return COMPUTE_SWAP_MAX_OUT.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const computeSwapRequiredAmountIn: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3 }) => {
+	return action$.pipe(
+		filter(isActionOf(COMPUTE_SWAP_REQUIRED_IN.request)),
+		mergeMap(async (action) => {
+			try {
+				const { poolAddress, tokenIn, tokenOut, amountOut } = action.payload;
+
+				const _amountOut = web3.utils.toWei(amountOut, 'ether');
+
+				const contract = await getPoolContract(web3, poolAddress);
+
+				const { _reserveX, _reserveY } = await contract.methods
+					.getReserves(tokenIn.address)
+					.call();
+
+				const amountIn = await contract.methods
+					.computeRequiredInputAmount(_amountOut, _reserveX, _reserveY)
+					.call();
+				const _priceIn = await contract.methods
+					.computePriceOut(tokenIn.address, amountIn)
+					.call();
+
+				return COMPUTE_SWAP_REQUIRED_IN.success({
+					tokenIn,
+					amountIn: web3.utils.fromWei(amountIn, 'ether'),
+					tokenOut,
+					amountOut,
+					priceIn: web3.utils.fromWei(_priceIn, 'ether'),
+				});
+			} catch (e) {
+				loggerService.log(e.message);
+				return COMPUTE_SWAP_REQUIRED_IN.failure(findRpcMessage(e));
 			}
 		}),
 	);
@@ -669,17 +715,50 @@ export const computePoolPrice: Epic<
 				const _amountX = web3.utils.toWei(amountX, 'ether');
 				const contract = await getPoolContract(web3, poolAddress);
 
-				const priceY = await contract.methods
-					.computePriceOut(tokenX, _amountX)
+				const _amountY = await contract.methods
+					.computePriceOut(tokenX.address, _amountX)
 					.call();
 
 				return COMPUTE_POOL_PRICE.success({
+					tokenX,
+					amountX,
 					tokenY,
-					priceY: web3.utils.fromWei(priceY, 'ether'),
+					amountY: web3.utils.fromWei(_amountY, 'ether'),
 				});
 			} catch (e) {
 				loggerService.log(e.message);
 				return COMPUTE_POOL_PRICE.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+export const getPoolReserve: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3 }) => {
+	return action$.pipe(
+		filter(isActionOf(GET_POOL_RESERVE.request)),
+		mergeMap(async (action) => {
+			try {
+				const { poolAddress, tokenX } = action.payload;
+				const contract = await getPoolContract(web3, poolAddress);
+
+				const { _tokenX, _reserveX, _tokenY, _reserveY } = await contract.methods
+					.getReserves(tokenX)
+					.call();
+
+				return GET_POOL_RESERVE.success({
+					tokenX: _tokenX,
+					reserveX: web3.utils.fromWei(_reserveX, 'ether'),
+					tokenY: _tokenY,
+					reserveY: web3.utils.fromWei(_reserveY, 'ether'),
+				});
+			} catch (e) {
+				loggerService.log(e.message);
+				return GET_POOL_RESERVE.failure(findRpcMessage(e));
 			}
 		}),
 	);

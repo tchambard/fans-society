@@ -8,7 +8,7 @@ import {
 	ADD_PROJECT_COMMITMENT,
 	CLEAR_TX_ERROR,
 	COMMIT_ON_PROJECT,
-	COMPUTE_SWAP_OUT,
+	COMPUTE_SWAP_MAX_OUT,
 	CREATE_PROJECT,
 	GET_PROJECT,
 	GET_TOKEN,
@@ -44,6 +44,12 @@ import {
 	ADD_POOL_LIQUIDITY,
 	REMOVE_POOL_LIQUIDITY,
 	GET_ETH_USD_PRICE,
+	IToken,
+	IComputePoolPriceResult,
+	IComputeSwapMaxOutResult,
+	IGetPoolReserveResult,
+	GET_POOL_RESERVE,
+	COMPUTE_SWAP_REQUIRED_IN,
 } from './actions';
 
 export interface IProjectsState {
@@ -80,17 +86,17 @@ export interface IProjectsState {
 	};
 	swapInfo?: {
 		result?: {
-			tokenOut: string;
+			tokenIn: IToken;
+			amountIn: string;
+			tokenOut: IToken;
 			amountOut: string;
-			priceOut: string;
+			price: string;
 		};
 		error?: string;
 	};
 	poolInfo?: {
-		result?: {
-			tokenY: string;
-			priceY: string;
-		};
+		price?: IComputePoolPriceResult;
+		reserve?: IGetPoolReserveResult;
 		error?: string;
 	};
 	dashboard: {
@@ -747,10 +753,10 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[COMPUTE_SWAP_OUT.failure],
+		[COMPUTE_SWAP_MAX_OUT.failure],
 		(
 			state: IProjectsState,
-			action: ActionType<typeof COMPUTE_SWAP_OUT.failure>,
+			action: ActionType<typeof COMPUTE_SWAP_MAX_OUT.failure>,
 		): IProjectsState => {
 			return {
 				...state,
@@ -762,18 +768,57 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[COMPUTE_SWAP_OUT.success],
+		[COMPUTE_SWAP_MAX_OUT.success],
 		(
 			state: IProjectsState,
-			action: ActionType<typeof COMPUTE_SWAP_OUT.success>,
+			action: ActionType<typeof COMPUTE_SWAP_MAX_OUT.success>,
 		): IProjectsState => {
 			return {
 				...state,
 				swapInfo: {
 					result: {
+						tokenIn: action.payload.tokenIn,
+						amountIn: action.payload.amountIn,
 						tokenOut: action.payload.tokenOut,
 						amountOut: action.payload.amountOut,
-						priceOut: action.payload.priceOut,
+						price: action.payload.priceOut,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[COMPUTE_SWAP_REQUIRED_IN.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof COMPUTE_SWAP_REQUIRED_IN.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				swapInfo: {
+					error: action.payload,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[COMPUTE_SWAP_REQUIRED_IN.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof COMPUTE_SWAP_REQUIRED_IN.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				swapInfo: {
+					result: {
+						...state.swapInfo.result,
+						tokenIn: action.payload.tokenIn,
+						amountIn: action.payload.amountIn,
+						tokenOut: action.payload.tokenOut,
+						amountOut: action.payload.amountOut,
+						price: action.payload.priceIn,
 					},
 				},
 			};
@@ -804,9 +849,47 @@ export default createReducer(initialState)
 			return {
 				...state,
 				poolInfo: {
-					result: {
+					...state.poolInfo,
+					price: {
+						tokenX: action.payload.tokenX,
+						amountX: action.payload.amountX,
 						tokenY: action.payload.tokenY,
-						priceY: action.payload.priceY,
+						amountY: action.payload.amountY,
+					},
+				},
+			};
+		},
+	)
+	.handleAction(
+		[GET_POOL_RESERVE.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof GET_POOL_RESERVE.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				poolInfo: {
+					error: action.payload,
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[GET_POOL_RESERVE.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof GET_POOL_RESERVE.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				poolInfo: {
+					...state.poolInfo,
+					reserve: {
+						tokenX: action.payload.tokenX,
+						reserveX: action.payload.reserveX,
+						tokenY: action.payload.tokenY,
+						reserveY: action.payload.reserveY,
 					},
 				},
 			};

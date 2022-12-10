@@ -1,4 +1,5 @@
 // tslint:disable:no-console
+import * as _ from 'lodash';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import services from 'src/services';
@@ -62,20 +63,25 @@ export async function getContractInfo(
 
 export function findRpcMessage(error: Error): string {
 	let result: string;
-	[
-		'VM Exception while processing transaction: revert ',
-		'execution reverted: ',
-	].forEach((searchText) => {
-		const rpcError = error.message.match(/{(.*)}/g);
-		let rpcMsg = rpcError?.length && JSON.parse(rpcError[0]);
-		if (rpcMsg) {
-			result = rpcMsg?.value.data.message.replace(searchText, '');
-		} else {
+	_.forEach(
+		[
+			'VM Exception while processing transaction: revert ',
+			'execution reverted: ',
+		],
+		(searchText) => {
+			const rpcError = error.message.match(/{(.*)}/g);
+			let rpcMsg = rpcError?.length && JSON.parse(rpcError[0]);
+			if (rpcMsg) {
+				result = rpcMsg?.value.data.message.replace(searchText, '');
+				return false;
+			}
 			rpcMsg = error.message.match(new RegExp(`"${searchText}(.*)"`, 'g'));
 			const message = rpcMsg?.[0].replace(searchText, '');
 			result = message?.substring(1, message.length - 1);
-		}
-	});
+			return false;
+		},
+	);
+
 	return result || error.message;
 }
 

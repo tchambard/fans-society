@@ -225,6 +225,7 @@ contract Pool is Initializable, LPTokenERC20 {
 		// 1% fees
 		uint256 amountInWithFee = (_amountIn * 990) / 1000;
 		amountOut = (_reserveOut * amountInWithFee) / (_reserveIn + amountInWithFee);
+		require(_reserveOut > amountOut, 'Not enough liquidity');
 	}
 
 	/**
@@ -236,7 +237,10 @@ contract Pool is Initializable, LPTokenERC20 {
 		uint256 _reserveOut
 	) external pure returns (uint256 amountIn) {
 		require(_amountOut > 0, 'Not enough output');
-		require(_reserveIn > 0 && _reserveIn > 0, 'Not enough liquidity');
+		require(
+			_reserveIn > 0 && _reserveIn > 0 && _reserveOut > _amountOut,
+			'Not enough liquidity'
+		);
 		// 1% fees
 		amountIn =
 			1 +
