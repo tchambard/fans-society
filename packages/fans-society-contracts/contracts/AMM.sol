@@ -54,10 +54,29 @@ contract AMM is Projects {
 	);
 	event Swapped(
 		address indexed caller,
+		address indexed poolAddress,
 		address tokenIn,
 		uint256 amountIn,
 		address tokenOut,
 		uint256 amountOut
+	);
+	event LiquidityAdded(
+		address indexed caller,
+		address indexed poolAddress,
+		address tokenX,
+		uint256 amountX,
+		address tokenY,
+		uint256 amountY,
+		uint256 liquidity
+	);
+	event LiquidityRemoved(
+		address indexed caller,
+		address indexed poolAddress,
+		address tokenX,
+		uint256 amountX,
+		address tokenY,
+		uint256 amountY,
+		uint256 liquidity
 	);
 
 	constructor(
@@ -268,7 +287,23 @@ contract AMM is Projects {
 			IProjectTokenERC20(_tokenY).safeTransferFrom(msg.sender, _pool, amountY);
 		}
 
-		IPool(_pool).mintLP(msg.sender);
+		(
+			address __tokenX,
+			uint256 __amountX,
+			address __tokenY,
+			uint256 __amountY,
+			uint256 __liquidity
+		) = IPool(_pool).mintLP(msg.sender);
+
+		emit LiquidityAdded(
+			msg.sender,
+			_pool,
+			__tokenX,
+			__amountX,
+			__tokenY,
+			__amountY,
+			__liquidity
+		);
 	}
 
 	/**
@@ -284,9 +319,13 @@ contract AMM is Projects {
 	{
 		IPool(_pool).safeTransferFrom(msg.sender, _pool, _amountLP);
 
-		(address tokenX, uint256 amountX, address tokenY, uint256 amountY) = IPool(
-			_pool
-		).burnLP(msg.sender);
+		(
+			address tokenX,
+			uint256 amountX,
+			address tokenY,
+			uint256 amountY,
+			uint256 liquidity
+		) = IPool(_pool).burnLP(msg.sender);
 
 		if (tokenX == weth) {
 			IWETH(weth).withdraw(amountX);
@@ -303,6 +342,16 @@ contract AMM is Projects {
 		} else {
 			IERC20(tokenY).transfer(msg.sender, amountY);
 		}
+
+		emit LiquidityRemoved(
+			msg.sender,
+			_pool,
+			tokenX,
+			amountX,
+			tokenY,
+			amountY,
+			liquidity
+		);
 	}
 
 	/**
@@ -358,7 +407,7 @@ contract AMM is Projects {
 			(bool success, ) = msg.sender.call{ value: amountOut }('');
 			require(success, 'withdraw ETH failed');
 		}
-		emit Swapped(msg.sender, tokenX, amountIn, tokenY, amountOut);
+		emit Swapped(msg.sender, _pool, tokenX, amountIn, tokenY, amountOut);
 	}
 
 	/**

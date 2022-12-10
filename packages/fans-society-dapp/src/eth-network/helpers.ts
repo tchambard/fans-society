@@ -62,6 +62,10 @@ export async function getContractInfo(
 }
 
 export function findRpcMessage(error: Error): string {
+	const evmRevertMsg = 'Transaction has been reverted by the EVM';
+	if (error.message.startsWith(evmRevertMsg)) {
+		return evmRevertMsg;
+	}
 	let result: string;
 	_.forEach(
 		[
@@ -71,7 +75,7 @@ export function findRpcMessage(error: Error): string {
 		(searchText) => {
 			const rpcError = error.message.match(/{(.*)}/g);
 			let rpcMsg = rpcError?.length && JSON.parse(rpcError[0]);
-			if (rpcMsg) {
+			if (rpcMsg?.value) {
 				result = rpcMsg?.value.data.message.replace(searchText, '');
 				return false;
 			}

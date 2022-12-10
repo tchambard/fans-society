@@ -4,6 +4,8 @@ import { filter, mergeMap } from 'rxjs/operators';
 import { isActionOf } from 'typesafe-actions';
 
 import {
+	LiquidityAdded,
+	LiquidityRemoved,
 	ProjectCreated,
 	TokensClaimed,
 } from 'fans-society-contracts/types/web3/contracts/AMM';
@@ -40,6 +42,8 @@ import {
 	GET_POOL_RESERVE,
 	COMPUTE_SWAP_REQUIRED_IN,
 	GET_CURRENT_PROJECT_COMMITMENT,
+	LIST_POOL_LIQUIDITY_SUMMARIES,
+	IPoolLiquiditySummary,
 } from './actions';
 import {
 	getAMMContract,
@@ -53,8 +57,6 @@ import { PoolCreated } from 'fans-society-contracts/types/web3/contracts/pools/P
 import { TokenCreated } from 'fans-society-contracts/types/web3/contracts/tokens/ProjectTokenFactory';
 import { contracts } from 'fans-society-contracts';
 import Web3 from 'web3';
-import { CollectionsOutlined } from '@mui/icons-material';
-import { BN } from 'bn.js';
 
 export const loadContractsInfo: Epic<
 	RootAction,
@@ -429,22 +431,25 @@ export const getCurrentProjectCommitments: Epic<
 		filter(isActionOf(GET_CURRENT_PROJECT_COMMITMENT.request)),
 		mergeMap(async (action) => {
 			try {
+				const projectId = action.payload.projectId;
 				const account = state$.value.ethNetwork.account;
 				if (!account) {
-					return GET_CURRENT_PROJECT_COMMITMENT.success({});
+					return GET_CURRENT_PROJECT_COMMITMENT.success({
+						projectId,
+						commitment: 0,
+					});
 				}
 				const contract = state$.value.amm.contracts.amm.contract;
-				const projectId = action.payload.projectId;
-				const commitment = await getProjectsCommitments(
-					web3,
-					contract,
-					account,
-					projectId,
+				const commitment = (
+					await getProjectsCommitments(web3, contract, account, projectId)
 				)[projectId];
 
-				logger.log('=== Commitment ===\n', JSON.stringify(commitment, null, 2));
+				logger.log('=== Commitment ===', projectId, commitment);
 
-				return GET_CURRENT_PROJECT_COMMITMENT.success(commitment);
+				return GET_CURRENT_PROJECT_COMMITMENT.success({
+					projectId,
+					commitment,
+				});
 			} catch (e) {
 				logger.log(e.message);
 				return GET_CURRENT_PROJECT_COMMITMENT.failure(findRpcMessage(e));
@@ -985,6 +990,135 @@ export const listProjectsClaims: Epic<
 			} catch (e) {
 				logger.log(e.message);
 				return LIST_PROJECTS_DETAILS_WITH_COMMITMENTS.failure(findRpcMessage(e));
+			}
+		}),
+	);
+};
+
+async function getPoolWithLiquidities(
+	web3: Web3,
+	ammContract: contracts.AMM,
+	account: string,
+): Promise<string[]> {
+	const [addEvents, removeEvents] = await Promise.all([
+		ammContract.getPastEvents('LiquidityAdded', {
+			fromBlock: 0,
+			filter: {
+				caller: account,
+			},
+		}) as unknown as Promise<LiquidityAdded[]>,
+		ammContract.getPastEvents('LiquidityRemoved', {
+			fromBlock: 0,
+			filter: {
+				caller: account,
+			},
+		}) as unknown as Promise<LiquidityRemoved[]>,
+	]);
+	const orderedEvents = _.sortBy([...addEvents, ...removeEvents], 'blockNumber');
+	const poolWithLiquidity = orderedEvents.reduce((acc, _event) => {
+		const { event, returnValues: v } = _event;
+		acc[v.poolAddress] = event === 'LiquidityAdded';
+		return acc;
+	}, {} as { [id: string]: boolean });
+
+	return _.reduce(
+		poolWithLiquidity,
+		(acc, hasLiquidity, address) => {
+			if (hasLiquidity) acc.push(address);
+			return acc;
+		},
+		[] as string[],
+	);
+}
+
+export const listPoolLiquiditySummarie: Epic<
+	RootAction,
+	RootAction,
+	RootState,
+	Services
+> = (action$, state$, { web3, logger }) => {
+	return action$.pipe(
+		filter(isActionOf(LIST_POOL_LIQUIDITY_SUMMARIES.request)),
+		mergeMap(async (action) => {
+			try {
+				const account = state$.value.ethNetwork.account;
+				if (!account) {
+					return LIST_POOL_LIQUIDITY_SUMMARIES.success([]);
+				}
+				const wethAddress = await getWethAddress(web3);
+				const ammContract = state$.value.amm.contracts.amm.contract;
+				const tokenFactoryContract =
+					state$.value.amm.contracts.tokensFactory.contract;
+
+				const poolAddresses = await getPoolWithLiquidities(
+					web3,
+					ammContract,
+					account,
+				);
+
+				const pools: IPoolLiquiditySummary[] = await Promise.all(
+					poolAddresses.flatMap(async (poolAddress) => {
+						const poolContract = await getPoolContract(web3, poolAddress);
+						const poolInfo = await poolContract.methods.getPoolInfo().call();
+
+						let tokenX;
+						let tokenY;
+						if (poolInfo._tokenX === wethAddress) {
+							tokenX = {
+								address: poolInfo._tokenY,
+								symbol: poolInfo._symbolY,
+								reserve: poolInfo._reserveY,
+							};
+							tokenY = {
+								address: poolInfo._tokenX,
+								symbol: poolInfo._symbolX,
+								reserve: poolInfo._reserveX,
+							};
+						} else {
+							tokenX = {
+								address: poolInfo._tokenX,
+								symbol: poolInfo._symbolX,
+								reserve: poolInfo._reserveX,
+							};
+							tokenY = {
+								address: poolInfo._tokenY,
+								symbol: poolInfo._symbolY,
+								reserve: poolInfo._reserveY,
+							};
+						}
+
+						const [token] = await tokenFactoryContract.getPastEvents('TokenCreated', {
+							fromBlock: 0,
+							filter: {
+								token: tokenX.address,
+							},
+						});
+						const projectId = token?.returnValues.projectId;
+						if (!projectId) {
+							throw new Error(`project ID not found for pool ${projectId}`);
+						}
+						return {
+							projectId,
+							poolAddress,
+							tokenX: {
+								symbol: tokenX.symbol,
+								reserve: web3.utils.fromWei(tokenX.reserve, 'ether'),
+							},
+							tokenY: {
+								symbol: tokenY.symbol,
+								reserve: web3.utils.fromWei(tokenY.reserve, 'ether'),
+							},
+							supply: web3.utils.fromWei(poolInfo._supply, 'ether'),
+							balance: web3.utils.fromWei(poolInfo._balance, 'ether'),
+						};
+					}),
+				);
+				logger.log('=== pools liquidities ===');
+				logger.table(pools);
+				return LIST_POOL_LIQUIDITY_SUMMARIES.success(pools);
+			} catch (e) {
+				logger.log(e.message);
+				return LIST_POOL_LIQUIDITY_SUMMARIES.failure(findRpcMessage(e));
 			}
 		}),
 	);

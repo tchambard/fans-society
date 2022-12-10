@@ -17,7 +17,7 @@ contract ProjectTokenFactory is IProjectTokenFactory, AMMFactorySecurity {
 
 	event TokenCreated(
 		uint256 indexed projectId,
-		address token,
+		address indexed token,
 		string name,
 		string symbol
 	);

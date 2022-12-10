@@ -51,6 +51,8 @@ import {
 	GET_POOL_RESERVE,
 	COMPUTE_SWAP_REQUIRED_IN,
 	CLAIMED,
+	LIST_POOL_LIQUIDITY_SUMMARIES,
+	IPoolLiquiditySummary,
 } from './actions';
 import BN from 'bn.js';
 
@@ -102,12 +104,16 @@ export interface IProjectsState {
 		error?: string;
 	};
 	dashboard: {
-		tokens: {
-			items: { [address: string]: ITokenWithBalance };
-			loading: boolean;
-		};
 		projects: {
 			items: { [projectId: string]: IProjectDetail };
+			loading: boolean;
+		};
+		tokens: {
+			items: { [projectId: string]: ITokenWithBalance };
+			loading: boolean;
+		};
+		pools: {
+			items: { [projectId: string]: IPoolLiquiditySummary };
 			loading: boolean;
 		};
 	};
@@ -130,6 +136,7 @@ const initialState: IProjectsState = {
 	dashboard: {
 		tokens: { items: {}, loading: false },
 		projects: { items: {}, loading: false },
+		pools: { items: {}, loading: false },
 	},
 	txPending: false,
 };
@@ -473,16 +480,16 @@ export default createReducer(initialState)
 					item: {
 						...state.currentProject.item,
 						$capabilities: {
-							...state.currentProject.item.$capabilities,
+							...state.currentProject.item?.$capabilities,
 							$canCommit:
-								state.currentProject.item.status < ProjectStatus.Completed &&
-								state.currentProject.item.fund < state.currentProject.item.target &&
-								currentProjectCommitment < state.currentProject.item.maxInvest,
+								state.currentProject.item?.status < ProjectStatus.Completed &&
+								state.currentProject.item?.fund < state.currentProject.item?.target &&
+								currentProjectCommitment < state.currentProject.item?.maxInvest,
 							$canWithdraw:
-								state.currentProject.item.status < ProjectStatus.Completed &&
+								state.currentProject.item?.status < ProjectStatus.Completed &&
 								currentProjectCommitment > 0,
 							$canClaim:
-								state.currentProject.item.status >= ProjectStatus.Launched &&
+								state.currentProject.item?.status >= ProjectStatus.Launched &&
 								currentProjectCommitment > 0,
 						},
 					},
@@ -614,9 +621,9 @@ export default createReducer(initialState)
 							...state.dashboard.tokens.items,
 							[action.payload.id]: {
 								...state.dashboard.tokens.items[action.payload.id],
-								balance: new BN(state.dashboard.tokens.items[action.payload.id].balance)
-									.add(new BN(action.payload.amount))
-									.toString(),
+								balance:
+									state.dashboard.tokens.items[action.payload.id].balance +
+									action.payload.amount,
 							},
 						},
 					},
@@ -1093,6 +1100,64 @@ export default createReducer(initialState)
 					projects: {
 						items: action.payload.reduce((acc, project) => {
 							acc[project.id] = project;
+							return acc;
+						}, {}),
+						loading: false,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_POOL_LIQUIDITY_SUMMARIES.request],
+		(state: IProjectsState): IProjectsState => {
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					pools: {
+						items: {},
+						loading: true,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_POOL_LIQUIDITY_SUMMARIES.failure],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof LIST_POOL_LIQUIDITY_SUMMARIES.failure>,
+		): IProjectsState => {
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					pools: {
+						...state.dashboard.pools,
+						loading: false,
+					},
+				},
+				error: action.payload,
+			};
+		},
+	)
+
+	.handleAction(
+		[LIST_POOL_LIQUIDITY_SUMMARIES.success],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof LIST_POOL_LIQUIDITY_SUMMARIES.success>,
+		): IProjectsState => {
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					pools: {
+						items: action.payload.reduce((acc, pool) => {
+							acc[pool.projectId] = pool;
 							return acc;
 						}, {}),
 						loading: false,

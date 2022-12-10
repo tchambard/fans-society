@@ -178,6 +178,7 @@ export const listenSwap = async (
 	const web3 = ClientFactory.web3();
 	const eventHandler = async ({ returnValues }: Swapped) => {
 		const swap: ISwapEvent = {
+			poolAddress: returnValues.poolAddress,
 			tokenIn: returnValues.tokenIn,
 			amountIn: web3.utils.fromWei(returnValues.amountIn, 'ether'),
 			tokenOut: returnValues.tokenOut,
