@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import DeleteIcon from '@mui/icons-material/Delete';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
 import SavingsIcon from '@mui/icons-material/Savings';
@@ -56,7 +57,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			title: 'Abort',
 			description: 'Delete project',
 			color: 'error',
-			icon: <DeleteIcon fontSize={'small'} />,
+			icon: <CancelIcon fontSize={'small'} />,
 			url: '',
 			hidden: !capabilities?.$canAbort,
 			onClick: () => setAbortDialogVisible(!abortDialogVisible),
@@ -65,7 +66,7 @@ export default ({ projectId, capabilities }: IProps) => {
 			title: 'Validate',
 			description: 'Validate project',
 			color: 'info',
-			icon: <DeleteIcon fontSize={'small'} />,
+			icon: <CheckCircleOutlineIcon fontSize={'small'} />,
 			url: '',
 			hidden: !capabilities?.$canValidate,
 			onClick: () => setValidateDialogVisible(!validateDialogVisible),

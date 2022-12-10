@@ -38,7 +38,7 @@ export default ({}) => {
 				<TableBody>
 					{_.map(dashboard.tokens.items, (token) => {
 						return (
-							<TableRow key={token.address} hover>
+							<TableRow key={token.projectId} hover>
 								<TableCell>
 									<Typography
 										variant={'body1'}

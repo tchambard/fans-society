@@ -23,7 +23,7 @@ import {
 	ITokenListItem,
 	ITokensFactoryContractInfo,
 	LAUNCH_PROJECT,
-	GET_CURRENT_PROJECT_COMMITMENTS,
+	GET_CURRENT_PROJECT_COMMITMENT,
 	LIST_POOLS,
 	LIST_PROJECTS,
 	LOAD_CONTRACTS_INFO,
@@ -50,7 +50,9 @@ import {
 	IGetPoolReserveResult,
 	GET_POOL_RESERVE,
 	COMPUTE_SWAP_REQUIRED_IN,
+	CLAIMED,
 } from './actions';
+import BN from 'bn.js';
 
 export interface IProjectsState {
 	account?: {
@@ -422,7 +424,7 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[GET_CURRENT_PROJECT_COMMITMENTS.request],
+		[GET_CURRENT_PROJECT_COMMITMENT.request],
 		(state: IProjectsState): IProjectsState => {
 			return {
 				...state,
@@ -435,10 +437,10 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[GET_CURRENT_PROJECT_COMMITMENTS.failure],
+		[GET_CURRENT_PROJECT_COMMITMENT.failure],
 		(
 			state: IProjectsState,
-			action: ActionType<typeof GET_CURRENT_PROJECT_COMMITMENTS.failure>,
+			action: ActionType<typeof GET_CURRENT_PROJECT_COMMITMENT.failure>,
 		): IProjectsState => {
 			return {
 				...state,
@@ -452,14 +454,14 @@ export default createReducer(initialState)
 	)
 
 	.handleAction(
-		[GET_CURRENT_PROJECT_COMMITMENTS.success],
+		[GET_CURRENT_PROJECT_COMMITMENT.success],
 		(
 			state: IProjectsState,
-			action: ActionType<typeof GET_CURRENT_PROJECT_COMMITMENTS.success>,
+			action: ActionType<typeof GET_CURRENT_PROJECT_COMMITMENT.success>,
 		): IProjectsState => {
 			const commitmentsItems = {
 				...state.commitments.items,
-				...action.payload,
+				[action.payload.projectId]: action.payload.commitment,
 			};
 			const currentProjectCommitment =
 				commitmentsItems[state.currentProject.item?.id] ?? 0;
@@ -587,6 +589,40 @@ export default createReducer(initialState)
 						[action.payload.id]:
 							(state.commitments.items[action.payload.id] || 0) -
 							action.payload.amount,
+					},
+				},
+			};
+		},
+	)
+
+	.handleAction(
+		[CLAIMED],
+		(
+			state: IProjectsState,
+			action: ActionType<typeof CLAIMED>,
+		): IProjectsState => {
+			const projectItems = { ...state.dashboard.projects.items };
+			delete projectItems[action.payload.id];
+
+			return {
+				...state,
+				dashboard: {
+					...state.dashboard,
+					tokens: {
+						...state.dashboard.tokens,
+						items: {
+							...state.dashboard.tokens.items,
+							[action.payload.id]: {
+								...state.dashboard.tokens.items[action.payload.id],
+								balance: new BN(state.dashboard.tokens.items[action.payload.id].balance)
+									.add(new BN(action.payload.amount))
+									.toString(),
+							},
+						},
+					},
+					projects: {
+						...state.dashboard.projects,
+						items: projectItems,
 					},
 				},
 			};
@@ -998,7 +1034,7 @@ export default createReducer(initialState)
 					...state.dashboard,
 					tokens: {
 						items: action.payload.reduce((acc, token) => {
-							acc[token.address] = token;
+							acc[token.projectId] = token;
 							return acc;
 						}, {}),
 						loading: false,

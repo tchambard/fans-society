@@ -19,6 +19,8 @@ export default ({}) => {
 
 	const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({
 		tokens: true,
+		projects: false,
+		liquidities: false,
 	});
 
 	const handleChange =
