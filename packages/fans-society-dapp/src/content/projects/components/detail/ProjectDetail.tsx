@@ -12,10 +12,12 @@ import { useSelector } from 'react-redux';
 import { RootState } from 'state-types';
 
 import SuspenseLoader from 'src/components/SuspenseLoader';
-import { Routes } from 'src/router';
+import { buildRoute, Routes } from 'src/router';
 import { ProjectStatus } from 'src/store/amm/actions';
 import ProjectWrapper from '../../../../components/ProjectWrapper/index';
 import ProjectActions from 'src/content/projects/components/detail/ProjectActions';
+import { useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router';
 
 const LinearProgressWrapper = styled(LinearProgress)(
 	({ theme }) => `
@@ -34,11 +36,19 @@ const LinearProgressWrapper = styled(LinearProgress)(
 
 export default ({}) => {
 	const theme = useTheme();
+	const navigate = useNavigate();
 
 	const { currentProject, commitments } = useSelector(
 		(state: RootState) => state.amm,
 	);
 
+	useEffect(() => {
+		if (currentProject?.item?.status === ProjectStatus.Launched) {
+			navigate(
+				buildRoute(Routes.TOKEN_DETAIL, { projectId: currentProject.item.id }),
+			);
+		}
+	}, [currentProject?.item?.status]);
 	if (!currentProject.item || currentProject.loading) {
 		return <SuspenseLoader />;
 	}
@@ -101,7 +111,6 @@ export default ({}) => {
 							</Box>
 						</>
 					)}
-					{currentProject.item.status === ProjectStatus.Launched && <div>TODO</div>}
 				</>
 			}
 		/>

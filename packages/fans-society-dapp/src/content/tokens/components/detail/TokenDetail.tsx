@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as qs from 'qs';
-import { ChangeEvent, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { ChangeEvent, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import Grid from '@mui/material/Grid';
 import { Tab, Tabs } from '@mui/material';
 
@@ -13,8 +13,11 @@ import ProjectWrapper from 'src/components/ProjectWrapper';
 import TokenSwap from './TokenSwap';
 import TokenLiquidity from './TokenLiquidity';
 import CopyAddress from 'src/components/CopyAddress';
+import { GET_ETH_USD_PRICE } from 'src/store/amm/actions';
 
 export default ({}) => {
+	const dispatch = useDispatch();
+
 	let tabHash = qs.parse(window.location.hash.substring(1))?.tab?.toString();
 	if (!tabHash) {
 		tabHash = 'swap';
@@ -22,6 +25,10 @@ export default ({}) => {
 	}
 	const { currentToken, pools } = useSelector((state: RootState) => state.amm);
 	const [currentTab, setCurrentTab] = useState<string>(tabHash);
+
+	useEffect(() => {
+		dispatch(GET_ETH_USD_PRICE.request());
+	}, []);
 
 	if (!currentToken.item || currentToken.loading || pools.loading) {
 		return <SuspenseLoader />;
@@ -94,3 +101,6 @@ export default ({}) => {
 		/>
 	);
 };
+function dispatch(arg0: any) {
+	throw new Error('Function not implemented.');
+}
