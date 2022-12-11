@@ -106,6 +106,8 @@ export interface ITokenListItem {
 	name: string;
 	description: string;
 	symbol: string;
+	avatarCid: string;
+	coverCid: string;
 }
 
 export interface IProjectStatusChangedEvent {
@@ -328,7 +330,7 @@ export const PROJECT_ADDED = createAction('PROJECT_ADDED', (action) => {
 });
 
 export const TOKEN_ADDED = createAction('TOKEN_ADDED', (action) => {
-	return (project: ITokenCreated) => action(project);
+	return (project: ITokenListItem) => action(project);
 });
 
 export const CREATE_PROJECT = createAsyncAction(

@@ -1,13 +1,13 @@
 import {
+	Box,
 	Card,
+	CardActionArea,
+	CardContent,
+	CardMedia,
 	Container,
 	Grid,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
+	styled,
+	Tooltip,
 	Typography,
 } from '@mui/material';
 import { useSelector } from 'react-redux';
@@ -22,6 +22,28 @@ import PageTitleWrapper from 'src/components/PageTitleWrapper';
 import ProjectListHeader from './ProjectListHeader';
 import SuspenseLoader from 'src/components/SuspenseLoader';
 
+function web3Url(cid: string) {
+	return `https://${cid}.ipfs.w3s.link`;
+}
+
+const CardCover = styled(Card)(
+	({ theme }) => `
+		position: relative;
+		maxWidth: 350
+		.MuiCardMedia-root {
+			height: ${theme.spacing(26)};
+		}
+	`,
+);
+
+const ActionsWrapper = styled(Box)(
+	({ theme }) => `
+		position: absolute;
+		right: ${theme.spacing(2)};
+		bottom: ${theme.spacing(2)};
+	`,
+);
+
 export default () => {
 	const { projects } = useSelector((state: RootState) => state.amm);
 
@@ -29,6 +51,7 @@ export default () => {
 		return <SuspenseLoader />;
 	}
 
+	console.log('projects.items', JSON.stringify(projects.items, null, 2));
 	return (
 		<>
 			<Helmet>
@@ -37,77 +60,64 @@ export default () => {
 			<PageTitleWrapper>
 				<ProjectListHeader />
 			</PageTitleWrapper>
-			<Container maxWidth={'xl'}>
+			<Container sx={{ mt: 5, minHeight: '1024px' }} maxWidth="xl">
 				<Grid
 					container
-					direction={'row'}
-					justifyContent={'center'}
-					alignItems={'stretch'}
-					spacing={3}
+					rowSpacing={{ xs: 4, sm: 4, md: 8 }}
+					columnSpacing={{ xs: 2, sm: 2, md: 3 }}
+					columns={{ xs: 1, sm: 4, md: 12 }}
 				>
-					<Grid item xs={12}>
-						<Card>
-							<TableContainer>
-								<Table>
-									<TableHead>
-										<TableRow>
-											<TableCell>Name</TableCell>
-											<TableCell>Description</TableCell>
-											<TableCell align={'right'}>Actions</TableCell>
-										</TableRow>
-									</TableHead>
-
-									<TableBody>
-										{_.map(projects.items, (project) => {
-											return (
-												<TableRow hover key={project.id}>
-													<TableCell>
-														<Link to={`/projects/${project.id}`}>
-															<Typography
-																variant={'body1'}
-																fontWeight={'bold'}
-																color={'text.primary'}
-																gutterBottom
-																noWrap
-															>
-																{project.name}
-															</Typography>
-														</Link>
-													</TableCell>
-													<TableCell>
-														<div
-															style={{
-																overflow: 'hidden',
-																textOverflow: 'ellipsis',
-																width: '30rem',
-															}}
-														>
-															<Typography
-																variant={'body1'}
-																fontWeight={'bold'}
-																color={'text.primary'}
-																gutterBottom
-																noWrap
-															>
-																{project.description}
-															</Typography>
-														</div>
-													</TableCell>
-													<TableCell align={'right'}>
-														<ProjectListItemActions
-															currentView={'list'}
-															projectId={project.id}
-															capabilities={project.$capabilities}
-														/>
-													</TableCell>
-												</TableRow>
-											);
-										})}
-									</TableBody>
-								</Table>
-							</TableContainer>
-						</Card>
-					</Grid>
+					{_.map(projects.items, (project) => {
+						return (
+							<Grid item xs={12} sm={4} md={3}>
+								<Card sx={{ maxWidth: 350 }}>
+									<CardActionArea>
+										<CardCover>
+											<Link to={`/projects/${project.id}`}>
+												<CardMedia
+													component="img"
+													height="300"
+													image={web3Url(project.avatarCid)}
+													sx={{ backgroundColor: 'white' }}
+													alt="ico"
+												/>
+											</Link>
+											<ActionsWrapper>
+												<ProjectListItemActions
+													projectId={project.id}
+													capabilities={project.$capabilities}
+												/>
+											</ActionsWrapper>
+										</CardCover>
+										<Link to={`/projects/${project.id}`}>
+											<CardContent>
+												<Typography gutterBottom variant="h5" component="div">
+													{project.name}
+												</Typography>
+												<Tooltip
+													key={`tooltip-${project.id}`}
+													placement={'bottom'}
+													title={project.description}
+												>
+													<div
+														style={{
+															overflow: 'hidden',
+															textOverflow: 'ellipsis',
+															width: '15rem',
+														}}
+													>
+														<Typography noWrap variant="body2" color="text.secondary">
+															{project.description}
+														</Typography>
+													</div>
+												</Tooltip>
+											</CardContent>
+										</Link>
+									</CardActionArea>
+								</Card>
+							</Grid>
+						);
+					})}
 				</Grid>
 			</Container>
 		</>

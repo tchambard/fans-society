@@ -242,6 +242,8 @@ export default createReducer(initialState)
 						name: p.name,
 						description: p.description,
 						symbol: p.symbol,
+						avatarCid: p.avatarCid,
+						coverCid: p.coverCid,
 					};
 				} else {
 					projects[p.id] = p;
@@ -293,7 +295,6 @@ export default createReducer(initialState)
 			action: ActionType<typeof TOKEN_ADDED>,
 		): IProjectsState => {
 			const projectId = action.payload.projectId;
-			const tokenProject = state.projects.items[projectId];
 
 			return {
 				...state,
@@ -311,8 +312,10 @@ export default createReducer(initialState)
 						[projectId]: {
 							projectId,
 							name: action.payload.name,
-							description: tokenProject.description,
+							description: action.payload.description,
 							symbol: action.payload.symbol,
+							avatarCid: action.payload.avatarCid,
+							coverCid: action.payload.coverCid,
 						},
 					},
 				},

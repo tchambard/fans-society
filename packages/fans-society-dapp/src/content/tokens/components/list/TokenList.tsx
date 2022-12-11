@@ -1,13 +1,19 @@
 import {
+	Box,
 	Card,
+	CardActionArea,
+	CardContent,
+	CardMedia,
 	Container,
 	Grid,
+	styled,
 	Table,
 	TableBody,
 	TableCell,
 	TableContainer,
 	TableHead,
 	TableRow,
+	Tooltip,
 	Typography,
 } from '@mui/material';
 import { useSelector } from 'react-redux';
@@ -19,6 +25,28 @@ import { RootState } from 'state-types';
 
 import SuspenseLoader from 'src/components/SuspenseLoader';
 import TokensActions from './TokensActions';
+
+function web3Url(cid: string) {
+	return `https://${cid}.ipfs.w3s.link`;
+}
+
+const CardCover = styled(Card)(
+	({ theme }) => `
+		position: relative;
+		maxWidth: 350
+		.MuiCardMedia-root {
+			height: ${theme.spacing(26)};
+		}
+	`,
+);
+
+const ActionsWrapper = styled(Box)(
+	({ theme }) => `
+		position: absolute;
+		right: ${theme.spacing(2)};
+		bottom: ${theme.spacing(2)};
+	`,
+);
 
 export default () => {
 	const { tokens } = useSelector((state: RootState) => state.amm);
@@ -32,73 +60,62 @@ export default () => {
 			<Helmet>
 				<title>Tokens</title>
 			</Helmet>
-			<Container maxWidth={'xl'}>
+
+			<Container sx={{ mt: 5, minHeight: '1024px' }} maxWidth="xl">
 				<Grid
 					container
-					direction={'row'}
-					justifyContent={'center'}
-					alignItems={'stretch'}
-					spacing={3}
+					rowSpacing={{ xs: 4, sm: 4, md: 8 }}
+					columnSpacing={{ xs: 2, sm: 2, md: 3 }}
+					columns={{ xs: 1, sm: 4, md: 12 }}
 				>
-					<Grid item xs={12}>
-						<Card>
-							<TableContainer>
-								<Table>
-									<TableHead>
-										<TableRow>
-											<TableCell>Name</TableCell>
-											<TableCell>Description</TableCell>
-											<TableCell align={'right'}>Actions</TableCell>
-										</TableRow>
-									</TableHead>
-
-									<TableBody>
-										{_.map(tokens.items, (token) => {
-											return (
-												<TableRow hover key={token.projectId}>
-													<TableCell>
-														<Link to={`/tokens/${token.projectId}`}>
-															<Typography
-																variant={'body1'}
-																fontWeight={'bold'}
-																color={'text.primary'}
-																gutterBottom
-																noWrap
-															>
-																{token.name}
-															</Typography>
-														</Link>
-													</TableCell>
-													<TableCell>
-														<div
-															style={{
-																overflow: 'hidden',
-																textOverflow: 'ellipsis',
-																width: '30rem',
-															}}
-														>
-															<Typography
-																variant={'body1'}
-																fontWeight={'bold'}
-																color={'text.primary'}
-																gutterBottom
-																noWrap
-															>
-																{token.description}
-															</Typography>
-														</div>
-													</TableCell>
-													<TableCell align={'right'}>
-														<TokensActions projectId={token.projectId} />
-													</TableCell>
-												</TableRow>
-											);
-										})}
-									</TableBody>
-								</Table>
-							</TableContainer>
-						</Card>
-					</Grid>
+					{_.map(tokens.items, (token) => {
+						return (
+							<Grid item xs={12} sm={4} md={3}>
+								<Card sx={{ maxWidth: 350 }}>
+									<CardActionArea>
+										<CardCover>
+											<Link to={`/projects/${token.projectId}`}>
+												<CardMedia
+													component="img"
+													height="300"
+													image={web3Url(token.avatarCid)}
+													sx={{ backgroundColor: 'white' }}
+													alt="ico"
+												/>
+											</Link>
+											<ActionsWrapper>
+												<TokensActions projectId={token.projectId} />
+											</ActionsWrapper>
+										</CardCover>
+										<Link to={`/projects/${token.projectId}`}>
+											<CardContent>
+												<Typography gutterBottom variant="h5" component="div">
+													{token.name}
+												</Typography>
+												<Tooltip
+													key={`tooltip-${token.projectId}`}
+													placement={'bottom'}
+													title={token.description}
+												>
+													<div
+														style={{
+															overflow: 'hidden',
+															textOverflow: 'ellipsis',
+															width: '15rem',
+														}}
+													>
+														<Typography noWrap variant="body2" color="text.secondary">
+															{token.description}
+														</Typography>
+													</div>
+												</Tooltip>
+											</CardContent>
+										</Link>
+									</CardActionArea>
+								</Card>
+							</Grid>
+						);
+					})}
 				</Grid>
 			</Container>
 		</>
