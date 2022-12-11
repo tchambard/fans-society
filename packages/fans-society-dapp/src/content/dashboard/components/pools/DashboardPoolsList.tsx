@@ -11,7 +11,7 @@ import TableHead from '@mui/material/TableHead';
 
 import { RootState } from 'state-types';
 
-import { LIST_TOKENS_WITH_BALANCE } from 'src/store/amm/actions';
+import { LIST_POOL_LIQUIDITY_SUMMARIES } from 'src/store/amm/actions';
 import DashboardTokensActions from '../DashboardTokensActions';
 
 export default ({}) => {
@@ -20,7 +20,7 @@ export default ({}) => {
 	const { dashboard } = useSelector((state: RootState) => state.amm);
 
 	useEffect(() => {
-		dispatch(LIST_TOKENS_WITH_BALANCE.request());
+		dispatch(LIST_POOL_LIQUIDITY_SUMMARIES.request());
 	}, []);
 
 	return (
@@ -28,16 +28,16 @@ export default ({}) => {
 			<Table>
 				<TableHead>
 					<TableRow>
-						<TableCell>Name</TableCell>
+						<TableCell>Pool</TableCell>
 						<TableCell>Balance</TableCell>
 						<TableCell align={'right'}>Actions</TableCell>
 					</TableRow>
 				</TableHead>
 
 				<TableBody>
-					{_.map(dashboard.tokens.items, (token) => {
+					{_.map(dashboard.pools.items, (pool) => {
 						return (
-							<TableRow key={token.projectId} hover>
+							<TableRow key={pool.projectId} hover>
 								<TableCell>
 									<Typography
 										variant={'body1'}
@@ -46,7 +46,7 @@ export default ({}) => {
 										gutterBottom
 										noWrap
 									>
-										{token.name}
+										{pool.tokenX.symbol} / {pool.tokenY.symbol}
 									</Typography>
 								</TableCell>
 								<TableCell>
@@ -57,11 +57,12 @@ export default ({}) => {
 										gutterBottom
 										noWrap
 									>
-										{token.balance} {token.symbol}
+										{pool.balance} LP
 									</Typography>
 								</TableCell>
+
 								<TableCell align={'right'}>
-									<DashboardTokensActions projectId={token.projectId} />
+									<DashboardTokensActions projectId={pool.projectId} />
 								</TableCell>
 							</TableRow>
 						);

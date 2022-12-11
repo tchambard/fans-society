@@ -3,7 +3,7 @@
   "chainId": "1337",
   "contracts": {
     "WETHToken": {
-      "address": "0x95D7fF1684a8F2e202097F28Dc2e56F773A55D02",
+      "address": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
       "abi": [
         {
           "anonymous": false,
@@ -292,7 +292,7 @@
       ]
     },
     "AMM": {
-      "address": "0x897945A56464616a525C9e5F11a8D400a72a8f3A",
+      "address": "0x84eA74d481Ee0A5332c457a4d796187F6Ba67fEB",
       "abi": [
         {
           "inputs": [
@@ -338,6 +338,104 @@
             }
           ],
           "name": "Committed",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "caller",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "poolAddress",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "tokenX",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amountX",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "tokenY",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amountY",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "liquidity",
+              "type": "uint256"
+            }
+          ],
+          "name": "LiquidityAdded",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "caller",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "poolAddress",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "tokenX",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amountX",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "tokenY",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amountY",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "liquidity",
+              "type": "uint256"
+            }
+          ],
+          "name": "LiquidityRemoved",
           "type": "event"
         },
         {
@@ -466,6 +564,12 @@
               "indexed": true,
               "internalType": "address",
               "name": "caller",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "poolAddress",
               "type": "address"
             },
             {
@@ -969,7 +1073,7 @@
       ]
     },
     "ProjectTokenERC20": {
-      "address": "0x633a7eB9b8912b22f3616013F3153de687F96074",
+      "address": "0x9E545E3C0baAB3E08CdfD552C960A1050f373042",
       "abi": [
         {
           "anonymous": false,
@@ -1363,7 +1467,7 @@
       ]
     },
     "ProjectTokenFactory": {
-      "address": "0x1E53bea57Dd5dDa7bFf1a1180a2f64a5c9e222f5",
+      "address": "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9",
       "abi": [
         {
           "inputs": [
@@ -1391,7 +1495,7 @@
               "type": "uint256"
             },
             {
-              "indexed": false,
+              "indexed": true,
               "internalType": "address",
               "name": "token",
               "type": "address"
@@ -1467,7 +1571,7 @@
       ]
     },
     "Pool": {
-      "address": "0x27f7785b17c6B4d034094a1B16Bc928bD697f386",
+      "address": "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8",
       "abi": [
         {
           "anonymous": false,
@@ -1795,6 +1899,11 @@
               "internalType": "uint256",
               "name": "amountY",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "liquidity",
+              "type": "uint256"
             }
           ],
           "stateMutability": "nonpayable",
@@ -1920,6 +2029,54 @@
           "type": "function"
         },
         {
+          "inputs": [],
+          "name": "getPoolInfo",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "_tokenX",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_tokenY",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "_symbolX",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_symbolY",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_reserveX",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_reserveY",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_supply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_balance",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
           "inputs": [
             {
               "internalType": "address",
@@ -2015,6 +2172,26 @@
           ],
           "name": "mintLP",
           "outputs": [
+            {
+              "internalType": "address",
+              "name": "_tokenX",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountX",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "_tokenY",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountY",
+              "type": "uint256"
+            },
             {
               "internalType": "uint256",
               "name": "liquidity",
@@ -2171,7 +2348,7 @@
       ]
     },
     "PoolFactory": {
-      "address": "0x17f4B55A352Be71CC03856765Ad04147119Aa09B",
+      "address": "0x851356ae760d987E095750cCeb3bC6014560891C",
       "abi": [
         {
           "inputs": [

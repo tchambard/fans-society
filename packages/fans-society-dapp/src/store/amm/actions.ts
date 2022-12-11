@@ -217,6 +217,7 @@ export interface IComputeSwapRequiredInResult {
 }
 
 export interface ISwapEvent {
+	poolAddress: string;
 	tokenIn: string;
 	amountIn: string;
 	tokenOut: string;
@@ -295,6 +296,21 @@ export interface IProjectWithShare {
 	projectId: string;
 }
 
+export interface IPoolLiquiditySummary {
+	projectId: string;
+	poolAddress: string;
+	tokenX: {
+		symbol: string;
+		reserve: string;
+	};
+	tokenY: {
+		symbol: string;
+		reserve: string;
+	};
+	balance: string;
+	supply: string;
+}
+
 export const LOAD_CONTRACTS_INFO = createAsyncAction(
 	'LOAD_CONTRACTS_INFO_REQUEST',
 	'LOAD_CONTRACTS_INFO_SUCCESS',
@@ -337,7 +353,11 @@ export const GET_CURRENT_PROJECT_COMMITMENT = createAsyncAction(
 	'GET_CURRENT_PROJECT_COMMITMENT_REQUEST',
 	'GET_CURRENT_PROJECT_COMMITMENT_SUCCESS',
 	'GET_CURRENT_PROJECT_COMMITMENT_FAILURE',
-)<IGetCurrentProjectCommitmentParams, { [id: string]: number }, string>();
+)<
+	IGetCurrentProjectCommitmentParams,
+	IGetCurrentProjectCommitmentResult,
+	string
+>();
 
 export const COMMIT_ON_PROJECT = createAsyncAction(
 	'COMMIT_ON_PROJECT_REQUEST',
@@ -467,6 +487,12 @@ export const LIST_PROJECTS_DETAILS_WITH_COMMITMENTS = createAsyncAction(
 	'LIST_PROJECTS_DETAILS_WITH_COMMITMENTS_SUCCESS',
 	'LIST_PROJECTS_DETAILS_WITH_COMMITMENTS_FAILURE',
 )<void, IProjectDetail[], string>();
+
+export const LIST_POOL_LIQUIDITY_SUMMARIES = createAsyncAction(
+	'LIST_POOL_LIQUIDITY_SUMMARIES_REQUEST',
+	'LIST_POOL_LIQUIDITY_SUMMARIES_SUCCESS',
+	'LIST_POOL_LIQUIDITY_SUMMARIES_FAILURE',
+)<void, IPoolLiquiditySummary[], string>();
 
 export const GET_ETH_USD_PRICE = createAsyncAction(
 	'GET_ETH_USD_PRICE_REQUEST',

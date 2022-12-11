@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import { Initializable } from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 import { SafeERC20 } from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import { IERC20MetadataUpgradeable } from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol';
 import { Math } from '@openzeppelin/contracts/utils/math/Math.sol';
 
 import { IPool } from './interfaces/IPool.sol';
@@ -87,14 +88,21 @@ contract Pool is Initializable, LPTokenERC20 {
 	function mintLP(address _provider)
 		external
 		onlyAmm
-		returns (uint256 liquidity)
+		returns (
+			address _tokenX,
+			uint256 amountX,
+			address _tokenY,
+			uint256 amountY,
+			uint256 liquidity
+		)
 	{
+		(_tokenX, _tokenY) = (tokenX, tokenY);
 		(uint256 _reserveX, uint256 _reserveY) = (reserveX, reserveY);
 
 		uint256 balanceX = IERC20(tokenX).balanceOf(address(this));
 		uint256 balanceY = IERC20(tokenY).balanceOf(address(this));
-		uint256 amountX = balanceX - _reserveX;
-		uint256 amountY = balanceY - _reserveY;
+		amountX = balanceX - _reserveX;
+		amountY = balanceY - _reserveY;
 
 		_mintFansSocietyFees(_reserveX, _reserveY);
 
@@ -128,7 +136,8 @@ contract Pool is Initializable, LPTokenERC20 {
 			address _tokenX,
 			uint256 amountX,
 			address _tokenY,
-			uint256 amountY
+			uint256 amountY,
+			uint256 liquidity
 		)
 	{
 		(uint256 _reserveX, uint256 _reserveY) = (reserveX, reserveY);
@@ -138,7 +147,7 @@ contract Pool is Initializable, LPTokenERC20 {
 
 		uint256 balanceX = IERC20(_tokenX).balanceOf(address(this));
 		uint256 balanceY = IERC20(_tokenY).balanceOf(address(this));
-		uint256 liquidity = balanceOf(address(this));
+		liquidity = balanceOf(address(this));
 
 		_mintFansSocietyFees(_reserveX, _reserveY);
 
@@ -246,6 +255,35 @@ contract Pool is Initializable, LPTokenERC20 {
 			1 +
 			(_reserveIn * _amountOut * 1000) /
 			((_reserveOut - _amountOut) * 990);
+	}
+
+	/**
+	 * @dev See {IPool-getPoolInfo}.
+	 */
+	function getPoolInfo()
+		public
+		view
+		returns (
+			address _tokenX,
+			address _tokenY,
+			string memory _symbolX,
+			string memory _symbolY,
+			uint256 _reserveX,
+			uint256 _reserveY,
+			uint256 _supply,
+			uint256 _balance
+		)
+	{
+		(_tokenX, _tokenY, _reserveX, _reserveY) = (
+			tokenX,
+			tokenY,
+			reserveX,
+			reserveY
+		);
+		_symbolX = IERC20MetadataUpgradeable(_tokenX).symbol();
+		_symbolY = IERC20MetadataUpgradeable(_tokenY).symbol();
+		_supply = totalSupply();
+		_balance = balanceOf(msg.sender);
 	}
 
 	function _updateReserves(uint256 _balanceX, uint256 _balanceY) private {

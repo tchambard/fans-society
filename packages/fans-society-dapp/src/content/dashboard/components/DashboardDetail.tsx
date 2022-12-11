@@ -11,6 +11,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { RootState } from 'state-types';
 import DashboardTokensList from './tokens/DashboardTokensList';
 import DashboardProjectsList from './projects/DashboardProjectsList';
+import DashboardPoolsList from './pools/DashboardPoolsList';
 
 export default ({}) => {
 	const theme = useTheme();
@@ -19,8 +20,8 @@ export default ({}) => {
 
 	const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({
 		tokens: true,
-		projects: false,
-		liquidities: false,
+		projects: true,
+		liquidities: true,
 	});
 
 	const handleChange =
@@ -34,24 +35,6 @@ export default ({}) => {
 
 	return (
 		<>
-			<Accordion expanded={expanded.tokens} onChange={handleChange('tokens')}>
-				<AccordionSummary
-					expandIcon={<ExpandMoreIcon />}
-					aria-controls="tokens-content"
-					id="tokens-header"
-				>
-					<Typography
-						sx={{ fontSize: '1.5em', lineHeight: 2, width: '33%', flexShrink: 0 }}
-					>
-						Tokens
-					</Typography>
-				</AccordionSummary>
-				<AccordionDetails
-					sx={{ backgroundColor: theme.palette.background.default }}
-				>
-					<DashboardTokensList />
-				</AccordionDetails>
-			</Accordion>
 			<Accordion expanded={expanded.projects} onChange={handleChange('projects')}>
 				<AccordionSummary
 					expandIcon={<ExpandMoreIcon />}
@@ -68,6 +51,24 @@ export default ({}) => {
 					sx={{ backgroundColor: theme.palette.background.default }}
 				>
 					<DashboardProjectsList />
+				</AccordionDetails>
+			</Accordion>
+			<Accordion expanded={expanded.tokens} onChange={handleChange('tokens')}>
+				<AccordionSummary
+					expandIcon={<ExpandMoreIcon />}
+					aria-controls="tokens-content"
+					id="tokens-header"
+				>
+					<Typography
+						sx={{ fontSize: '1.5em', lineHeight: 2, width: '33%', flexShrink: 0 }}
+					>
+						Tokens
+					</Typography>
+				</AccordionSummary>
+				<AccordionDetails
+					sx={{ backgroundColor: theme.palette.background.default }}
+				>
+					<DashboardTokensList />
 				</AccordionDetails>
 			</Accordion>
 			<Accordion
@@ -88,7 +89,7 @@ export default ({}) => {
 				<AccordionDetails
 					sx={{ backgroundColor: theme.palette.background.default }}
 				>
-					<Typography>TODO.</Typography>
+					<DashboardPoolsList />
 				</AccordionDetails>
 			</Accordion>
 		</>

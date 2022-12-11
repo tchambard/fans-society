@@ -9,19 +9,19 @@ interface IPool {
 	/**
 	 * Allow anyone to exchange ERC20 tokens (ETH is supported)
 	 * @param _tokenIn One of the two tokens address. This should be used by caller to control order of tokens returned and associated reserves
-	 * @return tokenX The address of first token
-	 * @return tokenY The address of second token
-	 * @return reserveX The reserve of first token
-	 * @return reserveY The reserve of second token
+	 * @return _tokenX The address of first token
+	 * @return _tokenY The address of second token
+	 * @return _reserveX The reserve of first token
+	 * @return _reserveY The reserve of second token
 	 */
 	function getReserves(address _tokenIn)
 		external
 		view
 		returns (
-			address tokenX,
-			address tokenY,
-			uint256 reserveX,
-			uint256 reserveY
+			address _tokenX,
+			address _tokenY,
+			uint256 _reserveX,
+			uint256 _reserveY
 		);
 
 	/**
@@ -34,9 +34,21 @@ interface IPool {
 	 * As proof of its deposit, initial AMM caller will be rewarded with LP tokens minted here
 	 *
 	 * @param _provider The address of liquidity provider
+	 * @return tokenX The address of first token
+	 * @return amountX The amount of first token
+	 * @return tokenY The address of second token
+	 * @return amountY The amount of second token
 	 * @return liquidity The LP token amount minted
 	 */
-	function mintLP(address _provider) external returns (uint256 liquidity);
+	function mintLP(address _provider)
+		external
+		returns (
+			address tokenX,
+			uint256 amountX,
+			address tokenY,
+			uint256 amountY,
+			uint256 liquidity
+		);
 
 	/**
 	 * Allows liquidity provider to give back LP tokens and get back projects ERC20 tokens.
@@ -51,6 +63,7 @@ interface IPool {
 	 * @return amountX The amount of first token
 	 * @return tokenY The address of second token
 	 * @return amountY The amount of second token
+	 * @return liquidity The LP token amount minted
 	 */
 	function burnLP(address _provider)
 		external
@@ -58,7 +71,8 @@ interface IPool {
 			address tokenX,
 			uint256 amountX,
 			address tokenY,
-			uint256 amountY
+			uint256 amountY,
+			uint256 liquidity
 		);
 
 	/**
@@ -128,4 +142,30 @@ interface IPool {
 		address to,
 		uint256 value
 	) external;
+
+	/**
+	 * Allows to pool information.
+	 *
+	 * @return _tokenX The address of first token
+	 * @return _tokenY The address of second token
+	 * @return _symbolX The symbol of first token
+	 * @return _symbolY The symbol of second token
+	 * @return _reserveX The reserve of first token
+	 * @return _reserveY The reserve of second token
+	 * @return supply The tLP tokens supply
+	 * @return balance The LP token balance of caller
+	 */
+	function getPoolInfo()
+		external
+		view
+		returns (
+			address _tokenX,
+			address _tokenY,
+			string memory _symbolX,
+			string memory _symbolY,
+			uint256 _reserveX,
+			uint256 _reserveY,
+			uint256 supply,
+			uint256 balance
+		);
 }
