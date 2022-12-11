@@ -18,6 +18,7 @@ import * as _ from 'lodash';
 import { RootState } from 'state-types';
 
 import SuspenseLoader from 'src/components/SuspenseLoader';
+import TokensActions from './TokensActions';
 
 export default () => {
 	const { tokens } = useSelector((state: RootState) => state.amm);
@@ -69,15 +70,26 @@ export default () => {
 														</Link>
 													</TableCell>
 													<TableCell>
-														<Typography
-															variant={'body1'}
-															fontWeight={'bold'}
-															color={'text.primary'}
-															gutterBottom
-															noWrap
+														<div
+															style={{
+																overflow: 'hidden',
+																textOverflow: 'ellipsis',
+																width: '30rem',
+															}}
 														>
-															{token.description}
-														</Typography>
+															<Typography
+																variant={'body1'}
+																fontWeight={'bold'}
+																color={'text.primary'}
+																gutterBottom
+																noWrap
+															>
+																{token.description}
+															</Typography>
+														</div>
+													</TableCell>
+													<TableCell align={'right'}>
+														<TokensActions projectId={token.projectId} />
 													</TableCell>
 												</TableRow>
 											);

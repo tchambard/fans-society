@@ -12,7 +12,7 @@ import TableHead from '@mui/material/TableHead';
 import { RootState } from 'state-types';
 
 import { LIST_POOL_LIQUIDITY_SUMMARIES } from 'src/store/amm/actions';
-import DashboardTokensActions from '../DashboardTokensActions';
+import TokensActions from '../../../tokens/components/list/TokensActions';
 
 export default ({}) => {
 	const dispatch = useDispatch();
@@ -62,7 +62,7 @@ export default ({}) => {
 								</TableCell>
 
 								<TableCell align={'right'}>
-									<DashboardTokensActions projectId={pool.projectId} />
+									<TokensActions projectId={pool.projectId} />
 								</TableCell>
 							</TableRow>
 						);

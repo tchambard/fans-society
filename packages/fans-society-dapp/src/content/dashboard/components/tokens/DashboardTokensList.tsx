@@ -12,7 +12,7 @@ import TableHead from '@mui/material/TableHead';
 import { RootState } from 'state-types';
 
 import { LIST_TOKENS_WITH_BALANCE } from 'src/store/amm/actions';
-import DashboardTokensActions from '../DashboardTokensActions';
+import DashboardTokensActions from '../../../tokens/components/list/TokensActions';
 
 export default ({}) => {
 	const dispatch = useDispatch();

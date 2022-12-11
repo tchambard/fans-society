@@ -26,7 +26,7 @@ export default () => {
 	const { projects } = useSelector((state: RootState) => state.amm);
 
 	if (projects.loading) {
-		return <SuspenseLoader/>;
+		return <SuspenseLoader />;
 	}
 
 	return (
@@ -35,7 +35,7 @@ export default () => {
 				<title>Projects</title>
 			</Helmet>
 			<PageTitleWrapper>
-				<ProjectListHeader/>
+				<ProjectListHeader />
 			</PageTitleWrapper>
 			<Container maxWidth={'xl'}>
 				<Grid
@@ -75,15 +75,23 @@ export default () => {
 														</Link>
 													</TableCell>
 													<TableCell>
-														<Typography
-															variant={'body1'}
-															fontWeight={'bold'}
-															color={'text.primary'}
-															gutterBottom
-															noWrap
+														<div
+															style={{
+																overflow: 'hidden',
+																textOverflow: 'ellipsis',
+																width: '30rem',
+															}}
 														>
-															{project.description}
-														</Typography>
+															<Typography
+																variant={'body1'}
+																fontWeight={'bold'}
+																color={'text.primary'}
+																gutterBottom
+																noWrap
+															>
+																{project.description}
+															</Typography>
+														</div>
 													</TableCell>
 													<TableCell align={'right'}>
 														<ProjectListItemActions
