@@ -24,6 +24,7 @@ import {
 	IProjectWithdraw,
 	ISwapEvent,
 	ITokenCreated,
+	ITokenListItem,
 	ITokensFactoryContractInfo,
 	ProjectStatus,
 } from './actions';
@@ -151,8 +152,9 @@ export const listenClaimed = (
 };
 
 export const listenTokenCreated = (
-	contractInfo: ITokensFactoryContractInfo,
-	onData: (data: ITokenCreated) => void,
+	ammContractInfo: IAMMContractInfo,
+	factoryContractInfo: ITokensFactoryContractInfo,
+	onData: (data: ITokenListItem) => void,
 ): (() => void) => {
 	const eventHandler = async ({ returnValues }: TokenCreated) => {
 		const tokenCreated: ITokenCreated = {
@@ -161,10 +163,20 @@ export const listenTokenCreated = (
 			name: returnValues.name,
 			symbol: returnValues.symbol,
 		};
+
+		const project = await ammContractInfo.contract.methods
+			.projects(returnValues.projectId)
+			.call();
+
 		logger.log('=== Token created ===\n', JSON.stringify(tokenCreated, null, 2));
-		onData(tokenCreated);
+		onData({
+			...tokenCreated,
+			description: project.info[2],
+			avatarCid: project.info[3],
+			coverCid: project.info[4],
+		} as ITokenListItem);
 	};
-	const emitter = contractInfo.contract.events
+	const emitter = factoryContractInfo.contract.events
 		.TokenCreated()
 		.on('data', eventHandler);
 	return () => emitter.removeListener('data', eventHandler);

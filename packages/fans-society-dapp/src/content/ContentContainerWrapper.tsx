@@ -50,8 +50,10 @@ export default ({ children }: IProjectContainerWrapperProps) => {
 	useEffect(() => {
 		let destroyListener;
 		if (contracts.tokensFactory?.contract) {
-			destroyListener = listenTokenCreated(contracts.tokensFactory, (data) =>
-				dispatch(TOKEN_ADDED(data)),
+			destroyListener = listenTokenCreated(
+				contracts.amm,
+				contracts.tokensFactory,
+				(data) => dispatch(TOKEN_ADDED(data)),
 			);
 		}
 		return () => destroyListener?.();

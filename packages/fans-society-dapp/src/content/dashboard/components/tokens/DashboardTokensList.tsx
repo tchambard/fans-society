@@ -13,6 +13,7 @@ import { RootState } from 'state-types';
 
 import { LIST_TOKENS_WITH_BALANCE } from 'src/store/amm/actions';
 import DashboardTokensActions from '../../../tokens/components/list/TokensActions';
+import CopyAddress from 'src/components/CopyAddress';
 
 export default ({}) => {
 	const dispatch = useDispatch();
@@ -46,7 +47,12 @@ export default ({}) => {
 										gutterBottom
 										noWrap
 									>
-										{token.name}
+										{token.name}{' '}
+										<CopyAddress
+											address={token.address}
+											title={'Copy token address'}
+											size={'small'}
+										/>
 									</Typography>
 								</TableCell>
 								<TableCell>

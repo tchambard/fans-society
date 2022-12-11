@@ -13,6 +13,7 @@ import { RootState } from 'state-types';
 
 import { LIST_POOL_LIQUIDITY_SUMMARIES } from 'src/store/amm/actions';
 import TokensActions from '../../../tokens/components/list/TokensActions';
+import CopyAddress from 'src/components/CopyAddress';
 
 export default ({}) => {
 	const dispatch = useDispatch();
@@ -46,7 +47,12 @@ export default ({}) => {
 										gutterBottom
 										noWrap
 									>
-										{pool.tokenX.symbol} / {pool.tokenY.symbol}
+										{pool.tokenX.symbol} / {pool.tokenY.symbol}{' '}
+										<CopyAddress
+											address={pool.poolAddress}
+											title={'Copy pool address'}
+											size={'small'}
+										/>
 									</Typography>
 								</TableCell>
 								<TableCell>
