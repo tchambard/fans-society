@@ -1,8 +1,10 @@
-import { HardhatUserConfig } from 'hardhat/config';
+import { HardhatUserConfig, task } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
 import '@nomiclabs/hardhat-truffle5';
 import 'hardhat-gas-reporter';
 import 'hardhat-deploy';
+
+import { task__createProjects } from './tasks/create-projects';
 
 require('dotenv').config();
 const { GOERLI_PRIVATE_KEY, ALCHEMY_FANS_SOCIETY_API_KEY } = process.env;
@@ -39,5 +41,7 @@ if (ALCHEMY_FANS_SOCIETY_API_KEY && GOERLI_PRIVATE_KEY) {
 		accounts: [GOERLI_PRIVATE_KEY],
 	};
 }
+
+task('create-projects', 'Create projects').setAction(task__createProjects);
 
 export default config;

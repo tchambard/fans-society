@@ -70,7 +70,7 @@ export default () => {
 				>
 					{_.map(tokens.items, (token) => {
 						return (
-							<Grid item xs={12} sm={4} md={3}>
+							<Grid key={token.projectId} item xs={12} sm={4} md={3}>
 								<Card sx={{ maxWidth: 350 }}>
 									<CardActionArea>
 										<CardCover>

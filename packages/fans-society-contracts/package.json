@@ -10,10 +10,14 @@
 		"coverage": "yarn g:hardhat-coverage",
 		"migrate": "yarn g:hardhat-migrate",
 		"deploy:localhost": "yarn g:hardhat-deploy:localhost",
-		"deploy:goerli": "yarn g:hardhat-deploy:goerli"
+		"deploy:goerli": "yarn g:hardhat-deploy:goerli",
+		"create-projects:localhost": "yarn g:task:create-projects:localhost",
+		"create-projects:goerli": "yarn g:task:create-projects:goerli"
+
 	},
 	"devDependencies": {
 		"@chainlink/contracts": "^0.5.1",
+		"@nomicfoundation/hardhat-toolbox": "^2.0.0",
 		"@openzeppelin/contracts": "^4.7.3",
 		"@openzeppelin/contracts-upgradeable": "^4.8.0"
 	},
