@@ -1031,7 +1031,7 @@ async function getPoolWithLiquidities(
 	);
 }
 
-export const listPoolLiquiditySummarie: Epic<
+export const listPoolLiquiditySummaries: Epic<
 	RootAction,
 	RootAction,
 	RootState,
@@ -1059,7 +1059,9 @@ export const listPoolLiquiditySummarie: Epic<
 				const pools: IPoolLiquiditySummary[] = await Promise.all(
 					poolAddresses.flatMap(async (poolAddress) => {
 						const poolContract = await getPoolContract(web3, poolAddress);
-						const poolInfo = await poolContract.methods.getPoolInfo().call();
+						const poolInfo = await poolContract.methods
+							.getPoolInfo()
+							.call({ from: account });
 
 						let tokenX;
 						let tokenY;

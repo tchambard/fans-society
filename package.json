@@ -27,6 +27,8 @@
     "g:hardhat-coverage": "cd $INIT_CWD && hardhat coverage",
     "g:hardhat-deploy:localhost": "cd $INIT_CWD && hardhat deploy --network localhost --export deployments/localhost.json",
     "g:hardhat-deploy:goerli": "cd $INIT_CWD && hardhat deploy --network goerli --export deployments/goerli.json",
+    "g:task:create-projects:localhost": "cd $INIT_CWD && hardhat create-projects --network localhost",
+    "g:task:create-projects:goerli": "cd $INIT_CWD && hardhat create-projects --network goerli",
     "g:typechain-web3": "cd $INIT_CWD && typechain --target=web3-v1 --out-dir types/web3 'artifacts/!(build-info)/**/!(*.dbg).json'"
   },
   "devDependencies": {

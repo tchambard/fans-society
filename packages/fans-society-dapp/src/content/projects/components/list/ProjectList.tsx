@@ -17,7 +17,6 @@ import * as _ from 'lodash';
 
 import { RootState } from 'state-types';
 
-import ProjectListItemActions from './ProjectListItemActions';
 import PageTitleWrapper from 'src/components/PageTitleWrapper';
 import ProjectListHeader from './ProjectListHeader';
 import SuspenseLoader from 'src/components/SuspenseLoader';
@@ -36,14 +35,6 @@ const CardCover = styled(Card)(
 	`,
 );
 
-const ActionsWrapper = styled(Box)(
-	({ theme }) => `
-		position: absolute;
-		right: ${theme.spacing(2)};
-		bottom: ${theme.spacing(2)};
-	`,
-);
-
 export default () => {
 	const { projects } = useSelector((state: RootState) => state.amm);
 
@@ -51,7 +42,6 @@ export default () => {
 		return <SuspenseLoader />;
 	}
 
-	console.log('projects.items', JSON.stringify(projects.items, null, 2));
 	return (
 		<>
 			<Helmet>
@@ -69,7 +59,7 @@ export default () => {
 				>
 					{_.map(projects.items, (project) => {
 						return (
-							<Grid item xs={12} sm={4} md={3}>
+							<Grid key={project.id} item xs={12} sm={4} md={3}>
 								<Card sx={{ maxWidth: 350 }}>
 									<CardActionArea>
 										<CardCover>
@@ -82,12 +72,6 @@ export default () => {
 													alt="ico"
 												/>
 											</Link>
-											<ActionsWrapper>
-												<ProjectListItemActions
-													projectId={project.id}
-													capabilities={project.$capabilities}
-												/>
-											</ActionsWrapper>
 										</CardCover>
 										<Link to={`/projects/${project.id}`}>
 											<CardContent>
