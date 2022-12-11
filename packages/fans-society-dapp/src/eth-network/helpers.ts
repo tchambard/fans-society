@@ -77,12 +77,18 @@ export function findRpcMessage(error: Error): string {
 			let rpcMsg = rpcError?.length && JSON.parse(rpcError[0]);
 			if (rpcMsg?.value) {
 				result = rpcMsg?.value.data.message.replace(searchText, '');
+				if (result) {
+					return false;
+				}
+			}
+			rpcMsg = error.message.match(new RegExp(`${searchText}(.*)`, 'g'));
+			const message = rpcMsg?.[0].replace(searchText, '');
+			result = message?.startsWith('"')
+				? message?.substring(1, message.length - 1)
+				: message;
+			if (result) {
 				return false;
 			}
-			rpcMsg = error.message.match(new RegExp(`"${searchText}(.*)"`, 'g'));
-			const message = rpcMsg?.[0].replace(searchText, '');
-			result = message?.substring(1, message.length - 1);
-			return false;
 		},
 	);
 
