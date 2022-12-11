@@ -3,7 +3,7 @@
   "chainId": "5",
   "contracts": {
     "AMM": {
-      "address": "0x5851A5f68Ffe55f69b80284E32Bfc5Dd72994cc0",
+      "address": "0xDe24402e6A73962dF4bC5906731Fe010938160D0",
       "abi": [
         {
           "inputs": [
@@ -784,7 +784,7 @@
       ]
     },
     "ProjectTokenERC20": {
-      "address": "0xa023780df96fE1A1F9B7AA0105d41cE20a3902B9",
+      "address": "0x42E50C81B2D7E5F63E98895aFD7CF257c34d8416",
       "abi": [
         {
           "anonymous": false,
@@ -1178,7 +1178,7 @@
       ]
     },
     "ProjectTokenFactory": {
-      "address": "0x21f2543781A4293f0ba82209ac78868AFefBC95A",
+      "address": "0x25FB44c06717AFdaA83dAC22afd7E979D624d51E",
       "abi": [
         {
           "inputs": [
@@ -1282,7 +1282,7 @@
       ]
     },
     "Pool": {
-      "address": "0x58a8ee9E0468be17eaaC9177b4CD46a32BDE4405",
+      "address": "0x92114eb0AeB04641E7c41e9F3e50C240b631aE19",
       "abi": [
         {
           "anonymous": false,
@@ -2059,7 +2059,7 @@
       ]
     },
     "PoolFactory": {
-      "address": "0xe2b79C70Da10E83BCa816e7a517DC1Bd6C6cF742",
+      "address": "0x346007c55a887bE6f58ec3230fc5684Fd5C60e79",
       "abi": [
         {
           "inputs": [
