@@ -7,12 +7,6 @@ import {
 	Container,
 	Grid,
 	styled,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
 	Tooltip,
 	Typography,
 } from '@mui/material';
@@ -25,6 +19,7 @@ import { RootState } from 'state-types';
 
 import SuspenseLoader from 'src/components/SuspenseLoader';
 import TokensActions from './TokensActions';
+import { Fragment } from 'react';
 
 function web3Url(cid: string) {
 	return `https://${cid}.ipfs.w3s.link`;
@@ -72,22 +67,22 @@ export default () => {
 						return (
 							<Grid key={token.projectId} item xs={12} sm={4} md={3}>
 								<Card sx={{ maxWidth: 350 }}>
+									<CardCover>
+										<Link to={`/tokens/${token.projectId}`}>
+											<CardMedia
+												component="img"
+												height="300"
+												image={web3Url(token.avatarCid)}
+												sx={{ backgroundColor: 'white' }}
+												alt="ico"
+											/>
+										</Link>
+										<ActionsWrapper>
+											<TokensActions projectId={token.projectId} />
+										</ActionsWrapper>
+									</CardCover>
 									<CardActionArea>
-										<CardCover>
-											<Link to={`/projects/${token.projectId}`}>
-												<CardMedia
-													component="img"
-													height="300"
-													image={web3Url(token.avatarCid)}
-													sx={{ backgroundColor: 'white' }}
-													alt="ico"
-												/>
-											</Link>
-											<ActionsWrapper>
-												<TokensActions projectId={token.projectId} />
-											</ActionsWrapper>
-										</CardCover>
-										<Link to={`/projects/${token.projectId}`}>
+										<Link to={`/tokens/${token.projectId}`}>
 											<CardContent>
 												<Typography gutterBottom variant="h5" component="div">
 													{token.name}

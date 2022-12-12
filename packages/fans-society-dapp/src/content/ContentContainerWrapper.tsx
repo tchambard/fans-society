@@ -7,7 +7,6 @@ import { RootState } from 'state-types';
 
 import {
 	CLEAR_TX_ERROR,
-	LIST_PROJECTS,
 	LOAD_CONTRACTS_INFO,
 	PROJECT_ADDED,
 	TOKEN_ADDED,
@@ -37,7 +36,6 @@ export default ({ children }: IProjectContainerWrapperProps) => {
 	useEffect(() => {
 		let destroyListener;
 		if (contracts.amm?.contract) {
-			dispatch(LIST_PROJECTS.request());
 			destroyListener = listenProjectCreated(
 				account.address,
 				contracts.amm,

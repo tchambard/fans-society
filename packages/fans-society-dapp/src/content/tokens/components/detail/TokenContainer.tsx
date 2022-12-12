@@ -13,31 +13,27 @@ export default () => {
 
 	const dispatch = useDispatch();
 
-	const { account } = useSelector((state: RootState) => state.ethNetwork);
-
 	const { currentToken, contracts } = useSelector(
 		(state: RootState) => state.amm,
 	);
 
 	useEffect(() => {
 		if (contracts.amm?.contract && contracts.tokensFactory?.contract) {
-			if (
-				currentToken.loading == false &&
-				currentToken.item?.projectId !== projectId
-			) {
+			if (currentToken.item?.projectId !== projectId) {
 				dispatch(GET_TOKEN.request(projectId));
+			} else if (
+				currentToken.item?.projectId === projectId &&
+				currentToken.item?.address
+			) {
+				dispatch(LIST_POOLS.request({ token: currentToken.item.address }));
 			}
 		}
-	}, [contracts.amm, contracts.tokensFactory, currentToken.item?.projectId]);
-
-	useEffect(() => {
-		if (
-			currentToken.item?.projectId === projectId &&
-			currentToken.item?.address
-		) {
-			dispatch(LIST_POOLS.request({ token: currentToken.item.address }));
-		}
-	}, [currentToken.item?.address]);
+	}, [
+		contracts.amm,
+		contracts.tokensFactory,
+		currentToken.item?.projectId,
+		currentToken.item?.address,
+	]);
 
 	return (
 		<ContentContainerWrapper>

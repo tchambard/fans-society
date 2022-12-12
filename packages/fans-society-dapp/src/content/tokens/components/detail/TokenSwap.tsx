@@ -19,7 +19,6 @@ import { RootState } from 'state-types';
 import {
 	COMPUTE_SWAP_MAX_OUT,
 	COMPUTE_SWAP_REQUIRED_IN,
-	GET_ETH_USD_PRICE,
 	GET_TOKEN_BALANCE,
 	IPoolInfo,
 	IToken,
@@ -64,7 +63,6 @@ export default ({ pool }: IProps) => {
 	}, []);
 
 	useEffect(() => {
-		console.log('swapInfo', JSON.stringify(swapInfo, null, 2));
 		if (swapInfo?.result) {
 			setValues({
 				amountIn: swapInfo.result.amountIn,
@@ -81,7 +79,6 @@ export default ({ pool }: IProps) => {
 				setAmountControl(prop);
 
 				if (prop === 'amountIn') {
-					console.log('============== amountIn change');
 					dispatch(
 						COMPUTE_SWAP_MAX_OUT.request({
 							poolAddress: pool.poolAddress,
@@ -91,7 +88,6 @@ export default ({ pool }: IProps) => {
 						}),
 					);
 				} else if (prop === 'amountOut') {
-					console.log('============== amountOut change');
 					dispatch(
 						COMPUTE_SWAP_REQUIRED_IN.request({
 							poolAddress: pool.poolAddress,
@@ -110,8 +106,6 @@ export default ({ pool }: IProps) => {
 		setTokenOut(tokenIn);
 		setTokenIn(tokenOut);
 		if (amountControl === 'amountOut') {
-			console.log('============== amountOut switch');
-
 			setAmountControl('amountIn');
 			setValues({ amountIn: values.amountOut, amountOut: '' });
 
@@ -124,8 +118,6 @@ export default ({ pool }: IProps) => {
 				}),
 			);
 		} else if (amountControl === 'amountIn') {
-			console.log('============== amountIn switch');
-
 			setAmountControl('amountOut');
 			setValues({ amountIn: '', amountOut: values.amountIn });
 

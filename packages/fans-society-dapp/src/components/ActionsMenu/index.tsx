@@ -98,7 +98,7 @@ export default ({ items, mode }: IProps) => {
 					})}
 				</Stack>
 			) : (
-				<Fragment>
+				<>
 					<IconButton
 						onClick={handleClick}
 						size={'small'}
@@ -177,7 +177,7 @@ export default ({ items, mode }: IProps) => {
 							}),
 						)}
 					</Menu>
-				</Fragment>
+				</>
 			)}
 		</>
 	);
