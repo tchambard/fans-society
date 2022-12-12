@@ -453,13 +453,13 @@ contract AMM is Projects {
 			uint112 fansSocietyTokenShares
 		)
 	{
-		partnerTokenShares = (_totalSupply * 200) / 1000;
+		partnerTokenShares = (_totalSupply * 2000) / 10000;
 		// 20%
-		investorsTokenShares = (_totalSupply * 490) / 1000;
+		investorsTokenShares = (_totalSupply * 4900) / 10000;
 		// 49%
-		poolTokenShares = (_totalSupply * 180) / 1000;
+		poolTokenShares = (_totalSupply * 1800) / 10000;
 		// 18%
-		fansSocietyTokenShares = (_totalSupply * 130) / 1000;
+		fansSocietyTokenShares = (_totalSupply * 1300) / 10000;
 		// 13%
 	}
 
@@ -468,9 +468,9 @@ contract AMM is Projects {
 		pure
 		returns (uint256 poolFundsShares, uint256 partnerFundsShares)
 	{
-		poolFundsShares = (_funds * 100) / 1000;
+		poolFundsShares = (_funds * 1000) / 10000;
 		// 10%
-		partnerFundsShares = (_funds * 900) / 1000;
+		partnerFundsShares = (_funds * 9000) / 10000;
 		// 90%
 	}
 
