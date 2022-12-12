@@ -11,6 +11,7 @@ const {
 	DEPLOYER_PRIVATE_KEY,
 	ALCHEMY_FANS_SOCIETY_GOERLI_API_KEY,
 	ALCHEMY_FANS_SOCIETY_MUMBAI_API_KEY,
+	ETHERSCAN_API_KEY,
 } = process.env;
 
 const config: HardhatUserConfig = {
@@ -37,6 +38,9 @@ const config: HardhatUserConfig = {
 		enabled: process.env.REPORT_GAS ? true : false,
 		showTimeSpent: true,
 	},
+	etherscan: {
+		apiKey: {} as any,
+	},
 };
 
 if (ALCHEMY_FANS_SOCIETY_GOERLI_API_KEY && DEPLOYER_PRIVATE_KEY) {
@@ -51,6 +55,10 @@ if (ALCHEMY_FANS_SOCIETY_MUMBAI_API_KEY && DEPLOYER_PRIVATE_KEY) {
 		url: `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_FANS_SOCIETY_MUMBAI_API_KEY}`,
 		accounts: [DEPLOYER_PRIVATE_KEY],
 	};
+}
+
+if (ETHERSCAN_API_KEY) {
+	(config.etherscan!.apiKey as any).goerli = ETHERSCAN_API_KEY;
 }
 
 task('create-projects', 'Create projects').setAction(task__createProjects);

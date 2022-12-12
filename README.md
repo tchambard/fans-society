@@ -22,6 +22,11 @@ yarn install
 
 [Voir la vidéo sur Ubstream](https://ubstream.com/_h/wRFXBD)
 
+## Dapp
+
+[Production](https://fans-society.vercel.app)
+[Goerli AMM contract](https://goerli.etherscan.io/address/0x9DC7855CE2bE63fa182915692fb5D9F870929e6d#code)
+
 ## Packages
 
 - [fans-society-contracts](./packages/fans-society-contracts/)
