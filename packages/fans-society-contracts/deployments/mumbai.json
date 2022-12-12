@@ -1,9 +1,9 @@
 {
-  "name": "goerli",
-  "chainId": "5",
+  "name": "mumbai",
+  "chainId": "80001",
   "contracts": {
     "AMM": {
-      "address": "0x9DC7855CE2bE63fa182915692fb5D9F870929e6d",
+      "address": "0xE469e67763510c12F1956312a14e5Ea0811Fa495",
       "abi": [
         {
           "inputs": [
@@ -784,7 +784,7 @@
       ]
     },
     "ProjectTokenERC20": {
-      "address": "0xD42bBAB12589f1210F3B1e45023bAa3C07a74065",
+      "address": "0x6193C4E2407D4AcE2975C43DD3285e1E66CbEA5A",
       "abi": [
         {
           "anonymous": false,
@@ -1178,7 +1178,7 @@
       ]
     },
     "ProjectTokenFactory": {
-      "address": "0xCE2B4690272D66004Dd08c4699764B665e75B11a",
+      "address": "0xB3aE797e404ec6eE7A1B2D35c17F92d2EB46dc1b",
       "abi": [
         {
           "inputs": [
@@ -1282,7 +1282,7 @@
       ]
     },
     "Pool": {
-      "address": "0x9C926a054358c0AD6adB83Da49fF1441C5606718",
+      "address": "0xB8784912F0678D0D50e49D19167eb121511b4c6E",
       "abi": [
         {
           "anonymous": false,
@@ -2059,7 +2059,7 @@
       ]
     },
     "PoolFactory": {
-      "address": "0xCd31E8095CB67c5C60Df398c4958bc02d8325f16",
+      "address": "0x3Af773F0f5036fAbbCbDb37B48A878cc05e74Ce7",
       "abi": [
         {
           "inputs": [

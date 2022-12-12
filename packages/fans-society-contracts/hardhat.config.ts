@@ -7,7 +7,11 @@ import 'hardhat-deploy';
 import { task__createProjects } from './tasks/create-projects';
 
 require('dotenv').config();
-const { GOERLI_PRIVATE_KEY, ALCHEMY_FANS_SOCIETY_API_KEY } = process.env;
+const {
+	DEPLOYER_PRIVATE_KEY,
+	ALCHEMY_FANS_SOCIETY_GOERLI_API_KEY,
+	ALCHEMY_FANS_SOCIETY_MUMBAI_API_KEY,
+} = process.env;
 
 const config: HardhatUserConfig = {
 	solidity: {
@@ -35,10 +39,17 @@ const config: HardhatUserConfig = {
 	},
 };
 
-if (ALCHEMY_FANS_SOCIETY_API_KEY && GOERLI_PRIVATE_KEY) {
+if (ALCHEMY_FANS_SOCIETY_GOERLI_API_KEY && DEPLOYER_PRIVATE_KEY) {
 	config.networks!.goerli = {
-		url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_FANS_SOCIETY_API_KEY}`,
-		accounts: [GOERLI_PRIVATE_KEY],
+		url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_FANS_SOCIETY_GOERLI_API_KEY}`,
+		accounts: [DEPLOYER_PRIVATE_KEY],
+	};
+}
+
+if (ALCHEMY_FANS_SOCIETY_MUMBAI_API_KEY && DEPLOYER_PRIVATE_KEY) {
+	config.networks!.mumbai = {
+		url: `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_FANS_SOCIETY_MUMBAI_API_KEY}`,
+		accounts: [DEPLOYER_PRIVATE_KEY],
 	};
 }
 

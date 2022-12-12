@@ -25,11 +25,13 @@ export interface IDynamicContractImportDefinitions {
 
 export const NETWORKS = {
 	5: 'goerli',
+	80001: 'mumbai',
 	1337: 'localhost',
 };
 
 export const WETH_ADDRESSES: any = {
 	goerli: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
+	mumbai: '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa',
 };
 
 export async function getNetworkInfo(

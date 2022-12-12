@@ -3,10 +3,12 @@ import { DeployFunction } from 'hardhat-deploy/types';
 
 const weth = {
 	goerli: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
+	mumbai: '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa',
 };
 
 const ethUsdAggregator = {
 	goerli: '0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e',
+	mumbai: '0x0715A7794a1dc8e42615F059dD6e406A6594651A',
 };
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {

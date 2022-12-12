@@ -11,11 +11,17 @@ const ico = {
 		minInvest: '0.001',
 		maxInvest: '0.05',
 	},
+	mumbai: {
+		target: '0.05',
+		minInvest: '0.001',
+		maxInvest: '0.05',
+	},
 };
 
 const partnerAddress = {
 	localhost: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
 	goerli: '0x5d7a8B923be416b46a41854a0A62C5D270D46B13',
+	mumbai: '0x5d7a8B923be416b46a41854a0A62C5D270D46B13',
 };
 
 interface IProject {

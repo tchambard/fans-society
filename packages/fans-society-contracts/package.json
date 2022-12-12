@@ -11,8 +11,10 @@
 		"migrate": "yarn g:hardhat-migrate",
 		"deploy:localhost": "yarn g:hardhat-deploy:localhost",
 		"deploy:goerli": "yarn g:hardhat-deploy:goerli",
+		"deploy:mumbai": "yarn g:hardhat-deploy:mumbai",
 		"create-projects:localhost": "yarn g:task:create-projects:localhost",
-		"create-projects:goerli": "yarn g:task:create-projects:goerli"
+		"create-projects:goerli": "yarn g:task:create-projects:goerli",
+		"create-projects:mumbai": "yarn g:task:create-projects:mumbai"
 
 	},
 	"devDependencies": {

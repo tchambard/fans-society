@@ -11,7 +11,7 @@ import {
 const imports: IDynamicContractImportDefinitions = {
 	localhost: () => import('fans-society-contracts/deployments/localhost.json'),
 	goerli: () => import('fans-society-contracts/deployments/goerli.json'),
-	// mumbai: () => import('fans-society-contracts/deployments/mumbai.json'),
+	mumbai: () => import('fans-society-contracts/deployments/mumbai.json'),
 };
 
 export async function getAMMContract(web3: Web3): Promise<contracts.AMM> {
