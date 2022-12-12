@@ -25,6 +25,8 @@ yarn install
 ## Dapp
 
 [Production](https://fans-society.vercel.app)
+
+## Main Contract
 [Goerli AMM contract](https://goerli.etherscan.io/address/0x9DC7855CE2bE63fa182915692fb5D9F870929e6d#code)
 
 ## Packages
